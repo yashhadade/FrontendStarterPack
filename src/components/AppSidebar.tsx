@@ -6,14 +6,14 @@ import {
   LogOut,
   Shield,
   Wifi,
-  WifiOff,
-} from "lucide-react";
+  WifiOff } from
+"lucide-react";
 
 const navItems = [
-  { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { title: "Blockchain Transactions", path: "/blockchain", icon: Link2 },
-  { title: "Token Transfers", path: "/transfers", icon: ArrowLeftRight },
-];
+{ title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+{ title: "Blockchain Transactions", path: "/blockchain", icon: Link2 },
+{ title: "Token Transfers", path: "/transfers", icon: ArrowLeftRight }];
+
 
 const AppSidebar = () => {
   const location = useLocation();
@@ -42,15 +42,15 @@ const AppSidebar = () => {
               key={item.path}
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                isActive
-                  ? "sidebar-active text-primary font-medium"
-                  : "text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent"
-              }`}
-            >
+              isActive ?
+              "sidebar-active text-primary font-medium" :
+              "text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent"}`
+              }>Token Transfers Requests
+
               <item.icon className="w-4 h-4" />
               {item.title}
-            </NavLink>
-          );
+            </NavLink>);
+
         })}
       </nav>
 
@@ -74,8 +74,8 @@ const AppSidebar = () => {
           Logout
         </button>
       </div>
-    </aside>
-  );
+    </aside>);
+
 };
 
 export default AppSidebar;
