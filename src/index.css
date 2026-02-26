@@ -6,62 +6,62 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 92%;
+    --background: 210 20% 98%;
+    --foreground: 220 20% 10%;
 
-    --card: 220 18% 10%;
-    --card-foreground: 210 20% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 157 100% 50%;
-    --primary-foreground: 220 20% 7%;
+    --primary: 157 100% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 100% 56%;
-    --secondary-foreground: 210 20% 92%;
+    --secondary: 210 100% 50%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 15% 16%;
-    --muted-foreground: 215 15% 55%;
+    --muted: 210 15% 93%;
+    --muted-foreground: 215 15% 40%;
 
-    --accent: 210 100% 56%;
-    --accent-foreground: 210 20% 92%;
+    --accent: 210 100% 50%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 20% 92%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 157 100% 50%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 157 100% 35%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 220 20% 5%;
-    --sidebar-foreground: 210 20% 70%;
-    --sidebar-primary: 157 100% 50%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 15% 12%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 15% 14%;
-    --sidebar-ring: 157 100% 50%;
+    --sidebar-background: 210 20% 96%;
+    --sidebar-foreground: 220 20% 35%;
+    --sidebar-primary: 157 100% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 92%;
+    --sidebar-accent-foreground: 220 20% 10%;
+    --sidebar-border: 220 15% 90%;
+    --sidebar-ring: 157 100% 35%;
 
     /* Custom tokens */
-    --neon-green: 157 100% 50%;
-    --electric-blue: 210 100% 56%;
+    --neon-green: 157 100% 35%;
+    --electric-blue: 210 100% 50%;
     --warning: 45 93% 47%;
-    --warning-foreground: 220 20% 7%;
-    --success: 157 72% 40%;
-    --success-foreground: 220 20% 7%;
+    --warning-foreground: 0 0% 100%;
+    --success: 157 72% 35%;
+    --success-foreground: 0 0% 100%;
 
     /* Glassmorphism */
-    --glass-bg: 220 20% 10%;
-    --glass-border: 220 15% 20%;
+    --glass-bg: 0 0% 100%;
+    --glass-border: 220 15% 90%;
     --glass-blur: 12px;
 
     /* Glows */
-    --glow-green: 0 0 20px hsl(157 100% 50% / 0.3), 0 0 40px hsl(157 100% 50% / 0.1);
-    --glow-blue: 0 0 20px hsl(210 100% 56% / 0.3), 0 0 40px hsl(210 100% 56% / 0.1);
-    --glow-green-strong: 0 0 12px hsl(157 100% 50% / 0.5), 0 0 30px hsl(157 100% 50% / 0.2);
+    --glow-green: 0 0 20px hsl(157 100% 35% / 0.15), 0 0 40px hsl(157 100% 35% / 0.05);
+    --glow-blue: 0 0 20px hsl(210 100% 50% / 0.15), 0 0 40px hsl(210 100% 50% / 0.05);
+    --glow-green-strong: 0 0 12px hsl(157 100% 35% / 0.25), 0 0 30px hsl(157 100% 35% / 0.1);
   }
 }
 
