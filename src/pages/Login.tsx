@@ -1,26 +1,52 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Lock, Eye, EyeOff } from "lucide-react";
+import { Shield, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import custodianServices from "@/services/custodianServices";
+import { setStorageItem } from "@/utils/storageUtils";
 
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) setStep("otp");
-  };
+    setError(null);
+    setLoading(true);
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate("/dashboard");
+    try {
+      const res: any = await custodianServices.custodianLogin({
+        usernameOrEmail:email,
+        password:password,
+      });
+      if (res?.data?.token) {
+        setStorageItem("access", res.data.token);
+        if (res.data.refresh) {
+          setStorageItem("refresh", res.data.refresh);
+        }
+        if (res.data?.custodian?._id) {
+          setStorageItem("userId", String(res.data?.custodian?._id));
+        }
+        if (res.data?.custodian) {
+          setStorageItem("user", JSON.stringify(res.data?.custodian));
+        }
+
+        navigate("/dashboard");
+      } else {
+        setError(
+          (res && (res?.error)) || "Login failed. Please try again."
+        );
+      }
+    } catch {
+      setError("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,8 +73,7 @@ const Login = () => {
 
         {/* Login Card */}
         <div className="glass-card p-8">
-          {step === "credentials" ? (
-            <form onSubmit={handleCredentialsSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-muted-foreground text-sm">Email Address</Label>
                 <Input
@@ -84,49 +109,18 @@ const Login = () => {
                 </div>
               </div>
 
-              <button type="submit" className="glow-button w-full rounded-lg text-sm">
-                Continue to 2FA
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleOtpSubmit} className="space-y-6">
-              <div className="text-center space-y-2">
-                <Lock className="w-8 h-8 text-primary mx-auto" />
-                <p className="text-sm text-muted-foreground">
-                  Enter the 6-digit code from your authenticator app
-                </p>
-              </div>
-
-              <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                  <InputOTPGroup>
-                    {[0, 1, 2, 3, 4, 5].map((i) => (
-                      <InputOTPSlot
-                        key={i}
-                        index={i}
-                        className="bg-muted/50 border-border/50 text-foreground w-11 h-12"
-                      />
-                    ))}
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
-
-              <button type="submit" className="glow-button w-full rounded-lg text-sm">
-                <span className="flex items-center justify-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Secure Login
-                </span>
-              </button>
+              {error && (
+                <p className="text-xs text-red-500 text-center">{error}</p>
+              )}
 
               <button
-                type="button"
-                onClick={() => setStep("credentials")}
-                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                type="submit"
+                className="glow-button w-full rounded-lg text-sm disabled:opacity-70"
+                disabled={loading}
               >
-                ← Back to credentials
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </form>
-          )}
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">

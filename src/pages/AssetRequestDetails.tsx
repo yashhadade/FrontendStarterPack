@@ -1,0 +1,788 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  CheckCircle2,
+  XCircle,
+  Eye,
+  FileText,
+  Coins,
+  ArrowRight,
+  ChevronRight,
+  Shield,
+  User,
+  Building2,
+  MapPin,
+  Hash,
+  CreditCard,
+  Image,
+  Copy,
+  Info,
+  Check,
+} from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import assetsServices from "@/services/assetsServices";
+import { toast } from "sonner";
+
+type TransferInvestor = {
+  name: string;
+  amountInvested: string;
+  tokensOwned: string;
+  percentOwned: string;
+  walletAddress: string;
+  status: "ready" | "initiated" | "completed" | "failed";
+};
+
+const kycInvestors = [
+  { name: "Raj Mehta", address: "Flat 201, Tower B, Mumbai", phone: "+91 98765 43210", email: "raj@example.com", govtId: "ABCDE1234F", pan: "ABCPD1234F", bank: "1234567890", ifsc: "HDFC0001234", status: "approved" as const },
+  { name: "Priya Sharma", address: "Block C, Pune City", phone: "+91 91234 56789", email: "priya@example.com", govtId: "XYZAB5678G", pan: "XYZPS5678G", bank: "0987654321", ifsc: "ICIC0005678", status: "pending" as const },
+  { name: "Vikram Singh", address: "Sector 14, Delhi NCR", phone: "+91 99887 76655", email: "vikram@example.com", govtId: "MNOPQ9012H", pan: "MNOPV9012H", bank: "5678901234", ifsc: "SBIN0009012", status: "pending" as const },
+  { name: "Anika Joshi", address: "JP Nagar, Bengaluru", phone: "+91 88776 65544", email: "anika@example.com", govtId: "RSTUV3456I", pan: "RSTUA3456I", bank: "3456789012", ifsc: "UTIB0003456", status: "rejected" as const },
+];
+
+const transferInvestors: TransferInvestor[] = [
+  { name: "Pratik Raut", amountInvested: "₹3,90,010", tokensOwned: "58991 FRAX", percentOwned: "6.83%", walletAddress: "0x7F21a8Bc93E4dD12Dc5b", status: "ready" },
+  { name: "Raj Mehta", amountInvested: "₹12,50,000", tokensOwned: "189000 FRAX", percentOwned: "21.88%", walletAddress: "0x3A4b5C6d7E8f9012Ab3c", status: "ready" },
+  { name: "Priya Sharma", amountInvested: "₹8,20,000", tokensOwned: "124000 FRAX", percentOwned: "14.35%", walletAddress: "0x9D8e7F6a5B4c3D2e1F0a", status: "initiated" },
+  { name: "Vikram Singh", amountInvested: "₹5,60,000", tokensOwned: "84700 FRAX", percentOwned: "9.80%", walletAddress: "0x1B2c3D4e5F6a7B8c9D0e", status: "completed" },
+];
+
+const steps = [
+  { label: "Asset Review", key: "PENDING" },
+  { label: "KYC Review", key: "APPROVED" },
+  { label: "Mint & Transfer", key: "MINTED" },
+];
+
+const stepIndex = (status: string) => {
+  const normalized = status.toUpperCase();
+
+  if (normalized === "REJECTED" || normalized === "PENDING") return 0;
+  if (normalized === "APPROVED") return 1;
+  if (normalized === "TRANSFERING" || normalized === "COMPLETED") return 2;
+
+  const idx = steps.findIndex((s) => s.key === normalized);
+  return idx >= 0 ? idx : 0;
+};
+
+const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+const statusBadgeClass = (status: TransferInvestor["status"]) => {
+  switch (status) {
+    case "ready": return "bg-purple-100 text-purple-700 border border-purple-200";
+    case "initiated": return "bg-yellow-100 text-yellow-700 border border-yellow-200";
+    case "completed": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
+    case "failed": return "bg-red-100 text-red-700 border border-red-200";
+  }
+};
+
+const statusLabel = (status: TransferInvestor["status"]) => {
+  switch (status) {
+    case "ready": return "Ready for Transfer";
+    case "initiated": return "Transfer Initiated";
+    case "completed": return "Transfer Completed";
+    case "failed": return "Failed";
+  }
+};
+
+const AssetRequestDetails = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const [asset, setAsset] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeStep, setActiveStep] = useState(0);
+  const [selectedInvestor, setSelectedInvestor] = useState<number | null>(null);
+  const [transferTab, setTransferTab] = useState<"pending" | "initiated" | "completed">("pending");
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [showGasModal, setShowGasModal] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectError, setRejectError] = useState("");
+  const fetchAssetRequest = async () => {
+    try {
+      const res = await assetsServices.getAssetRequestById(id);
+      setAsset(res?.data);
+      setActiveStep(stepIndex(res?.data?.status));
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    
+
+    fetchAssetRequest();
+  }, [id]);
+
+  const filteredInvestors = transferInvestors.filter((inv) => {
+    if (transferTab === "pending") return inv.status === "ready";
+    if (transferTab === "initiated") return inv.status === "initiated";
+    return inv.status === "completed";
+  });
+
+  const toggleRow = (idx: number) => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else if (next.size < 80) next.add(idx);
+      return next;
+    });
+  };
+
+  const selectFirst80 = () => {
+    const indices = new Set<number>();
+    filteredInvestors.forEach((_, i) => { if (indices.size < 80) indices.add(i); });
+    setSelectedRows(indices);
+  };
+
+  const copyAddress = (addr: string, idx: number) => {
+    navigator.clipboard.writeText(addr);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 1500);
+  };
+
+  const handleOpenReject = () => {
+    setRejectError("");
+    setShowRejectModal(true);
+  };
+
+  const handleApprove = async () => {
+    const data = {
+      assetId: asset?._id,
+      status: "APPROVED",
+    };
+
+    const res: any = await assetsServices.assetApproveReject(data);
+
+    if (res && res.success === false) {
+      toast.error(res.message || "Failed to approve asset");
+      return;
+    }
+
+    if (!res) {
+      toast.error("Failed to approve asset");
+      return;
+    }
+
+    toast.success("Asset approved successfully");
+    setActiveStep(1);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
+      setRejectError("Please enter a reason before rejecting.");
+      return;
+    }
+    const data = {
+      assetId: asset?._id,
+      status: "REJECTED",
+      reason: rejectReason,
+    };
+
+    const res: any = await assetsServices.assetApproveReject(data);
+
+    if (res && res.success === false) {
+      toast.error(res.message || "Failed to reject asset");
+      return;
+    }
+
+    if (!res) {
+      toast.error("Failed to reject asset");
+      return;
+    }
+
+    toast.success("Asset rejected successfully");
+    await fetchAssetRequest();
+    setShowRejectModal(false);
+    setRejectReason("");
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <p className="text-sm text-muted-foreground">Loading asset request…</p>
+      </div>
+    );
+  }
+const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
+  if (!asset) {
+    return (
+      <div className="p-8 space-y-4">
+        <button
+          onClick={() => navigate("/assets-requests")}
+          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+        >
+          ← Back to Assets Requests
+        </button>
+        <p className="text-sm text-muted-foreground">Asset request not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-6 animate-fade-in">
+      {/* Back + Title */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate("/assets-requests")}
+          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+        >
+          ← Back
+        </button>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        <h1 className="text-xl font-bold text-foreground">{asset?.assetName}</h1>
+      </div>
+
+      {/* Progress Indicator */}
+      <div className="glass-card p-4">
+        <div className="flex items-center gap-2">
+          {steps.map((step, i) => (
+            <div key={step.key} className="flex items-center gap-2 flex-1">
+              <div
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  i < activeStep
+                    ? "progress-step-done"
+                    : i === activeStep
+                    ? "progress-step-active border"
+                    : "progress-step-pending border"
+                }`}
+              >
+                <span className="w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[10px]">
+                  {i + 1}
+                </span>
+                {step.label}
+              </div>
+              {i < steps.length - 1 && <ArrowRight className="w-3 h-3 text-border flex-shrink-0" />}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 0: Asset Review */}
+      {activeStep === 0 && (
+        <div className="glass-card p-6 space-y-5">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Digital Asset Details</h2>
+            <p className="text-xs text-muted-foreground">Client Submitted — Awaiting Custodian Review</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { icon: User, label: "Seller Name", value: asset.sellerName ?? asset.clientName ?? "-" },
+              { icon: Building2, label: "Asset Name", value: asset.assetName ?? `Asset #${asset.id}` },
+              { icon: CreditCard, label: "Total Asset Value", value: `${asset?.totalAssetValueInInr ?? "-"} (${asset?.totalAssetUnits ?? "-"} units)` },
+              {
+                icon: Hash,
+                label: "Unit Calculation",
+                value: `₹${unitCalculation} per unit`
+              },
+              // { icon: FileText, label: "Ownership Contract", value: asset.ownershipContractId ?? "REG/MH/2024/001234" },
+              { icon: Coins, label: "Total Tokens to Mint", value: asset?.totalAssetUnits ?? "-" },
+              { icon: User, label: "Investors Listed", value: asset.investorsCount ? `${asset.investorsCount} investors` : "4 investors with DLT accounts" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
+                <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</p>
+                  <p className="text-sm text-foreground font-medium">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {asset?.rejectionReason?.length > 0 && (
+            <div className="mt-4 space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Rejection / Revision History</h3>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {asset.rejectionReason.map((item: any) => {
+                  const fromClient = item.reasonFrom === "CLIENT";
+                  const timestamp = item.createdAt
+                    ? new Date(item.createdAt).toLocaleString()
+                    : "";
+
+                  return (
+                    <div
+                      key={item._id}
+                      className={`flex ${fromClient ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-xs rounded-2xl px-3 py-2 text-xs shadow-sm border ${
+                          fromClient
+                            ? "bg-primary/10 text-foreground border-primary/20"
+                            : "bg-muted/60 text-foreground border-border/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide">
+                            {fromClient ? "Client" : "Whitebox Admin"}
+                          </span>
+                          {timestamp && (
+                            <span className="text-[9px] text-muted-foreground">
+                              {timestamp}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs leading-snug whitespace-pre-wrap">
+                          {item.reason}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(asset?.assetImages?.length || asset?.legalNotes?.length) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              {asset?.assetImages?.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Image className="w-4 h-4 text-primary" />
+                    Asset Images
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {asset.assetImages.map((img: any) => (
+                      <div
+                        key={img.docUrl}
+                        className="rounded-lg overflow-hidden border border-border/40 bg-muted/40"
+                      >
+                        <img
+                          src={`${asset.url ?? ""}${img.docUrl}`}
+                          alt={img.docName}
+                          className="w-full h-32 object-cover"
+                        />
+                        <div className="px-2 py-1.5">
+                          <p className="text-[10px] text-muted-foreground truncate">{img.docName}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {asset?.legalNotes?.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    Legal Documents
+                  </h3>
+                  <div className="space-y-2">
+                    {asset.legalNotes.map((doc: any) => (
+                      <a
+                        key={doc.docUrl}
+                        href={`${asset.url ?? ""}${doc.docUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={doc.docName}
+                        className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-muted/40 hover:bg-muted/70 transition-colors text-xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-secondary" />
+                          <span className="text-foreground truncate max-w-[180px]">{doc.docName}</span>
+                        </div>
+                        <span className="text-[10px] text-primary font-medium">Download</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {asset?.status === "PENDING" && <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={handleApprove}
+              className="glow-button rounded-lg text-sm flex items-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Approve
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenReject}
+              className="glass-card px-5 py-2.5 text-sm text-destructive border border-destructive/40 hover:border-destructive transition-colors flex items-center gap-2"
+            >
+              <XCircle className="w-4 h-4" />
+              Reject
+            </button>
+          </div>}
+        </div>
+      )}
+
+      {/* Step 1: KYC Review */}
+      {activeStep === 1 && (
+        <div className="space-y-4">
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Investor KYC Verification</h2>
+                <p className="text-xs text-muted-foreground">Custodian must individually review each investor.</p>
+              </div>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50">
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Investor</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Govt ID</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">PAN</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kycInvestors.map((inv, i) => (
+                  <tr
+                    key={i}
+                    className={`border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer ${selectedInvestor === i ? "bg-muted/40" : ""}`}
+                    onClick={() => setSelectedInvestor(i)}
+                  >
+                    <td className="py-3 px-3 text-foreground font-medium">{inv.name}</td>
+                    <td className="py-3 px-3 text-muted-foreground text-xs">{inv.email}</td>
+                    <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{inv.govtId}</td>
+                    <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{inv.pan}</td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                          inv.status === "approved" ? "status-approved" : inv.status === "rejected" ? "status-rejected" : "status-pending"
+                        }`}
+                      >
+                        {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <button className="text-xs text-secondary hover:text-foreground transition-colors">
+                        <Eye className="w-4 h-4 inline" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {selectedInvestor !== null && (
+            <div className="glass-card p-6 animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Documents</h3>
+                  {["Government ID", "PAN Card", "Bank Proof"].map((doc) => (
+                    <div key={doc} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
+                      <Image className="w-8 h-8 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-foreground font-medium">{doc}</p>
+                        <p className="text-[10px] text-muted-foreground">Click to preview</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground">Review</h3>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Notes</label>
+                    <textarea
+                      className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-sm text-foreground mt-1 h-24 resize-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+                      placeholder="Add review notes..."
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Approve
+                    </button>
+                    <button className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center justify-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <button onClick={() => setActiveStep(2)} className="glow-button rounded-lg text-sm">
+              Proceed to Mint & Transfer →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2: Mint & Transfer (Combined) */}
+      {activeStep === 2 && (
+        <div className="space-y-5">
+          {/* Header with action buttons */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Mint & Transfer Tokens</h2>
+              <p className="text-xs text-muted-foreground">Whitelist accounts, mint tokens, and process batch transfers.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm">
+                Whitelist DLT Accounts
+              </button>
+              <button className="px-5 py-2.5 rounded-lg text-sm font-medium border border-border bg-card text-foreground hover:bg-muted/50 transition-colors">
+                Mint Tokens
+              </button>
+            </div>
+          </div>
+
+          {/* Transfer Status Tabs */}
+          <div className="border-b border-border">
+            <div className="flex gap-6">
+              {([
+                { key: "pending", label: "Transfer Pending" },
+                { key: "initiated", label: "Transfer Initiated" },
+                { key: "completed", label: "Transfer Completed" },
+              ] as const).map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => { setTransferTab(tab.key); setSelectedRows(new Set()); }}
+                  className={`pb-3 text-sm transition-all border-b-2 ${
+                    transferTab === tab.key
+                      ? "border-purple-600 text-purple-700 font-semibold"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Info Alert */}
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-purple-50 border border-purple-200">
+            <Info className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-purple-800">Polygon Batching Protocol</p>
+              <p className="text-xs text-purple-600 mt-1 leading-relaxed">
+                To optimize gas fees and ensure transaction success, transfers are processed in batches. You can select a maximum of 80 investors per single transaction. If more than 80 investors are pending, process them in multiple rounds.
+              </p>
+            </div>
+          </div>
+
+          {/* Batch Selection Section */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
+                Polygon Chain
+              </span>
+              <span className="text-sm text-foreground font-medium">{filteredInvestors.length} Investors</span>
+              <span className="text-xs text-muted-foreground">Selected: {selectedRows.size} / 80</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={selectFirst80}
+                className="px-4 py-2 rounded-lg text-xs font-medium border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors"
+              >
+                Select First 80 Pending
+              </button>
+              <button
+                onClick={() => selectedRows.size > 0 && setShowGasModal(true)}
+                disabled={selectedRows.size === 0}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${
+                  selectedRows.size > 0
+                    ? "bg-purple-600 hover:bg-purple-700"
+                    : "bg-purple-300 cursor-not-allowed"
+                }`}
+              >
+                Process Batch Transfer ({selectedRows.size})
+              </button>
+            </div>
+          </div>
+
+          {/* Investors Table */}
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 w-10">
+                    <Checkbox
+                      checked={filteredInvestors.length > 0 && selectedRows.size === filteredInvestors.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) selectFirst80();
+                        else setSelectedRows(new Set());
+                      }}
+                    />
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Owner Name</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Invested</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Tokens Owned</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">% Owned</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Wallet Address</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInvestors.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-muted-foreground text-sm">
+                      No investors in this category.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredInvestors.map((inv, i) => (
+                    <tr
+                      key={i}
+                      className={`border-b border-border/30 transition-colors cursor-pointer ${
+                        selectedRows.has(i) ? "bg-purple-50/50" : "hover:bg-muted/30"
+                      }`}
+                      onClick={() => toggleRow(i)}
+                    >
+                      <td className="py-3 px-4">
+                        <Checkbox
+                          checked={selectedRows.has(i)}
+                          onCheckedChange={() => toggleRow(i)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                      <td className="py-3 px-4 text-foreground font-medium">{inv.name}</td>
+                      <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.amountInvested}</td>
+                      <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.tokensOwned}</td>
+                      <td className="py-3 px-4 text-xs text-muted-foreground">{inv.percentOwned}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs text-muted-foreground">{truncateAddress(inv.walletAddress)}</span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); copyAddress(inv.walletAddress, i); }}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {copiedIdx === i ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${statusBadgeClass(inv.status)}`}>
+                          {statusLabel(inv.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Rows per page:</span>
+                <select className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground">
+                  <option>10</option>
+                  <option>25</option>
+                  <option>50</option>
+                  <option>80</option>
+                </select>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                1–{filteredInvestors.length} of {filteredInvestors.length}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gas Fee Confirmation Modal */}
+      {showGasModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-md space-y-5 animate-fade-in">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto">
+                <Shield className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">Confirm Batch Transfer</h3>
+              <p className="text-xs text-muted-foreground">Review the details before processing.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <span className="text-xs text-muted-foreground">Investors Selected</span>
+                <span className="text-sm font-semibold text-foreground">{selectedRows.size}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <span className="text-xs text-muted-foreground">Estimated Gas Fee</span>
+                <span className="text-sm font-semibold font-mono text-foreground">~0.045 MATIC</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
+                <span className="text-xs text-muted-foreground">Network</span>
+                <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">Polygon</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowGasModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowGasModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+              >
+                Confirm Transfer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Asset Reject Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-md space-y-4 animate-fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <XCircle className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Reject Asset Request</h3>
+                <p className="text-xs text-muted-foreground">
+                  Please provide a reason. This will be visible in the rejection history.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground">Rejection reason</label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => {
+                  setRejectReason(e.target.value);
+                  if (rejectError) setRejectError("");
+                }}
+                className="w-full bg-muted/50 border border-border/60 rounded-lg px-3 py-2 text-sm text-foreground h-24 resize-none focus:border-destructive/60 focus:outline-none focus:ring-1 focus:ring-destructive/30"
+                placeholder="Describe why this asset is being rejected..."
+              />
+              {rejectError && (
+                <p className="text-[11px] text-destructive mt-1">{rejectError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                  setRejectError("");
+                }}
+                className="px-4 py-2.5 rounded-lg text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReject}
+                className="px-4 py-2.5 rounded-lg text-xs font-semibold bg-destructive text-white hover:bg-destructive/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={!rejectReason.trim()}
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AssetRequestDetails;
+
