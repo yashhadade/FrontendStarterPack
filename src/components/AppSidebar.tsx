@@ -1,14 +1,22 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Link2, ArrowLeftRight, LogOut, Shield, Wifi, WifiOff } from "lucide-react";
+import { logout } from "@/utils/logout";
+import { getStorageItem } from "@/utils/storageUtils";
 
 const navItems = [
   { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { title: "Blockchain Transactions", path: "/blockchain", icon: Link2 },
-  { title: "Token Transfers", path: "/transfers", icon: ArrowLeftRight },
+  { title: "Assets Requests", path: "/assets-requests", icon: ArrowLeftRight },
 ];
 
 const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <aside className="w-64 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -51,10 +59,13 @@ const AppSidebar = () => {
         <div className="glass-card p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Custodian</span>
-            <span className="text-xs font-medium text-foreground">Admin-01</span>
+            <span className="text-xs font-medium text-foreground">{JSON.parse(getStorageItem("user"))?.username}</span>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors w-full">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors w-full"
+        >
           <LogOut className="w-4 h-4" />
           Logout
         </button>

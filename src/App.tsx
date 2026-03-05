@@ -8,8 +8,10 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import BlockchainTransactions from "./pages/BlockchainTransactions";
 import TokenTransfers from "./pages/TokenTransfers";
+import AssetRequestDetails from "./pages/AssetRequestDetails";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,14 +22,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/blockchain" element={<BlockchainTransactions />} />
-            <Route path="/transfers" element={<TokenTransfers />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Index />} />
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/blockchain" element={<BlockchainTransactions />} />
+              <Route path="/assets-requests" element={<TokenTransfers />} />
+              <Route path="/assets-requests/:id" element={<AssetRequestDetails />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
