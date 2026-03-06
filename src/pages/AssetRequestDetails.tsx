@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   CheckCircle2,
   XCircle,
-  Eye,
   FileText,
   Coins,
   ArrowRight,
@@ -20,6 +19,7 @@ import {
   Check,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import InvestorKycSection from "@/components/InvestorKycSection";
 import assetsServices from "@/services/assetsServices";
 import { toast } from "sonner";
 
@@ -409,101 +409,12 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
 
       {/* Step 1: KYC Review */}
       {activeStep === 1 && (
-        <div className="space-y-4">
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Investor KYC Verification</h2>
-                <p className="text-xs text-muted-foreground">Custodian must individually review each investor.</p>
-              </div>
-            </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Investor</th>
-                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
-                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Govt ID</th>
-                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">PAN</th>
-                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kycInvestors.map((inv, i) => (
-                  <tr
-                    key={i}
-                    className={`border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer ${selectedInvestor === i ? "bg-muted/40" : ""}`}
-                    onClick={() => setSelectedInvestor(i)}
-                  >
-                    <td className="py-3 px-3 text-foreground font-medium">{inv.name}</td>
-                    <td className="py-3 px-3 text-muted-foreground text-xs">{inv.email}</td>
-                    <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{inv.govtId}</td>
-                    <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{inv.pan}</td>
-                    <td className="py-3 px-3">
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                          inv.status === "approved" ? "status-approved" : inv.status === "rejected" ? "status-rejected" : "status-pending"
-                        }`}
-                      >
-                        {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <button className="text-xs text-secondary hover:text-foreground transition-colors">
-                        <Eye className="w-4 h-4 inline" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {selectedInvestor !== null && (
-            <div className="glass-card p-6 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">Documents</h3>
-                  {["Government ID", "PAN Card", "Bank Proof"].map((doc) => (
-                    <div key={doc} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
-                      <Image className="w-8 h-8 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-foreground font-medium">{doc}</p>
-                        <p className="text-[10px] text-muted-foreground">Click to preview</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-foreground">Review</h3>
-                  <div>
-                    <label className="text-xs text-muted-foreground">Notes</label>
-                    <textarea
-                      className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-sm text-foreground mt-1 h-24 resize-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
-                      placeholder="Add review notes..."
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <button className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Approve
-                    </button>
-                    <button className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center justify-center gap-2">
-                      <XCircle className="w-4 h-4" />
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end">
-            <button onClick={() => setActiveStep(2)} className="glow-button rounded-lg text-sm">
-              Proceed to Mint & Transfer →
-            </button>
-          </div>
-        </div>
+        <InvestorKycSection
+          assetId={id}
+          // selectedInvestor={selectedInvestor}
+          // setSelectedInvestor={setSelectedInvestor}
+          onProceedToMint={() => setActiveStep(2)}
+        />
       )}
 
       {/* Step 2: Mint & Transfer (Combined) */}

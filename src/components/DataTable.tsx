@@ -37,6 +37,10 @@ type DataTableProps<T> = {
    * Placeholder text for the search input.
    */
   searchPlaceholder?: string;
+  /**
+   * Optional title displayed above the table.
+   */
+  title?: string;
 };
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50];
@@ -48,6 +52,7 @@ function DataTable<T extends Record<string, any>>({
   getRowId,
   onRowClick,
   searchPlaceholder = "Search…",
+  title = "Assets Requests",
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -126,7 +131,7 @@ function DataTable<T extends Record<string, any>>({
   return (
     <div className="glass-card p-5 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm font-medium text-foreground">Assets Requests</div>
+        <div className="text-sm font-medium text-foreground">{title}</div>
         <div className="relative w-full max-w-xs">
           <input
             type="text"
