@@ -17,6 +17,8 @@ import {
   Copy,
   Info,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import InvestorKycSection from "@/components/InvestorKycSection";
@@ -90,6 +92,7 @@ const AssetRequestDetails = () => {
   const [asset, setAsset] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
+  const [viewStep, setViewStep] = useState<number | null>(null);
   const [selectedInvestor, setSelectedInvestor] = useState<number | null>(null);
   const [transferTab, setTransferTab] = useState<"pending" | "initiated" | "completed">("pending");
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -98,11 +101,19 @@ const AssetRequestDetails = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
+  const [showIpfsModal, setShowIpfsModal] = useState(false);
+  const [ipfsPassword, setIpfsPassword] = useState("");
+  const [approveLoading, setApproveLoading] = useState(false);
+  const [showIpfsPassword, setShowIpfsPassword] = useState(false);
+  const [showExistingIpfsPassword, setShowExistingIpfsPassword] = useState(false);
+  const [investorsCount, setInvestorsCount] = useState(0);
   const fetchAssetRequest = async () => {
     try {
       const res = await assetsServices.getAssetRequestById(id);
       setAsset(res?.data);
-      setActiveStep(stepIndex(res?.data?.status));
+      const statusStep = stepIndex(res?.data?.status);
+      setActiveStep(statusStep);
+      setViewStep(null);
     } finally {
       setLoading(false);
     }
@@ -146,25 +157,35 @@ const AssetRequestDetails = () => {
   };
 
   const handleApprove = async () => {
+    if (!ipfsPassword.trim()) {
+      toast.error("Please enter IPFS password");
+      return;
+    }
+
     const data = {
       assetId: asset?._id,
       status: "APPROVED",
+      ipfsPassword,
     };
 
-    const res: any = await assetsServices.assetApproveReject(data);
+    try {
+      setApproveLoading(true);
+      const res: any = await assetsServices.assetApproveReject(data);
 
-    if (res && res.success === false) {
-      toast.error(res.message || "Failed to approve asset");
-      return;
-    }
-
-    if (!res) {
+      if (res?.data) {
+        toast.success("Asset approved successfully");
+        setActiveStep(1);
+        setViewStep(null);
+        setShowIpfsModal(false);
+        setIpfsPassword("");
+      } else {
+        toast.error(res?.error || "Failed to approve asset");
+      }
+    } catch (error) {
       toast.error("Failed to approve asset");
-      return;
+    } finally {
+      setApproveLoading(false);
     }
-
-    toast.success("Asset approved successfully");
-    setActiveStep(1);
   };
 
   const handleConfirmReject = async () => {
@@ -204,6 +225,7 @@ const AssetRequestDetails = () => {
     );
   }
 const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
+  const currentStep = viewStep ?? activeStep;
   if (!asset) {
     return (
       <div className="p-8 space-y-4">
@@ -235,30 +257,36 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
       {/* Progress Indicator */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-2">
-          {steps.map((step, i) => (
-            <div key={step.key} className="flex items-center gap-2 flex-1">
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  i < activeStep
-                    ? "progress-step-done"
-                    : i === activeStep
-                    ? "progress-step-active border"
-                    : "progress-step-pending border"
-                }`}
-              >
-                <span className="w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[10px]">
-                  {i + 1}
-                </span>
-                {step.label}
+          {steps.map((step, i) => {
+            const isClickable = i <= activeStep;
+            return (
+              <div key={step.key} className="flex items-center gap-2 flex-1">
+                <button
+                  type="button"
+                  disabled={!isClickable}
+                  onClick={() => isClickable && setViewStep(i)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    i < activeStep
+                      ? "progress-step-done"
+                      : i === activeStep
+                      ? "progress-step-active border"
+                      : "progress-step-pending border"
+                  } ${isClickable ? "cursor-pointer hover:bg-muted/40" : "cursor-default opacity-70"}`}
+                >
+                  <span className="w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[10px]">
+                    {i + 1}
+                  </span>
+                  {step.label}
+                </button>
+                {i < steps.length - 1 && <ArrowRight className="w-3 h-3 text-border flex-shrink-0" />}
               </div>
-              {i < steps.length - 1 && <ArrowRight className="w-3 h-3 text-border flex-shrink-0" />}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* Step 0: Asset Review */}
-      {activeStep === 0 && (
+      {currentStep === 0 && (
         <div className="glass-card p-6 space-y-5">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Digital Asset Details</h2>
@@ -276,7 +304,7 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
               },
               // { icon: FileText, label: "Ownership Contract", value: asset.ownershipContractId ?? "REG/MH/2024/001234" },
               { icon: Coins, label: "Total Tokens to Mint", value: asset?.totalAssetUnits ?? "-" },
-              { icon: User, label: "Investors Listed", value: asset.investorsCount ? `${asset.investorsCount} investors` : "4 investors with DLT accounts" },
+              { icon: User, label: "Investors Listed", value: `${investorsCount} investors with DLT accounts` },
             ].map((item) => (
               <div key={item.label} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
                 <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -287,6 +315,28 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
               </div>
             ))}
           </div>
+
+          {asset?.ipfsPassword && (
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center gap-2 text-xs text-emerald-600">
+                <Shield className="w-3.5 h-3.5" />
+                <span>IPFS password is configured for this asset.</span>
+              </div>
+              <div className="relative inline-flex items-center">
+                <div className="px-3 py-1.5 rounded-md border border-border bg-muted/40 text-xs font-mono text-foreground pr-9">
+                  {showExistingIpfsPassword ? asset.ipfsPassword : "••••••••••"}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowExistingIpfsPassword((prev) => !prev)}
+                  className="absolute right-1.5 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  aria-label={showExistingIpfsPassword ? "Hide IPFS password" : "Show IPFS password"}
+                >
+                  {showExistingIpfsPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          )}
 
           {asset?.rejectionReason?.length > 0 && (
             <div className="mt-4 space-y-3">
@@ -389,7 +439,8 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
           )}
           {asset?.status === "PENDING" && <div className="flex items-center gap-3 pt-2">
             <button
-              onClick={handleApprove}
+              type="button"
+              onClick={() => setShowIpfsModal(true)}
               className="glow-button rounded-lg text-sm flex items-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
@@ -408,17 +459,19 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
       )}
 
       {/* Step 1: KYC Review */}
-      {activeStep === 1 && (
+      {currentStep === 1 && (
         <InvestorKycSection
           assetId={id}
-          // selectedInvestor={selectedInvestor}
-          // setSelectedInvestor={setSelectedInvestor}
-          onProceedToMint={() => setActiveStep(2)}
+          setInvestorsCount={setInvestorsCount}
+          onProceedToMint={() => {
+            setActiveStep(2);
+            setViewStep(null);
+          }}
         />
       )}
 
       {/* Step 2: Mint & Transfer (Combined) */}
-      {activeStep === 2 && (
+      {currentStep === 2 && (
         <div className="space-y-5">
           {/* Header with action buttons */}
           <div className="flex items-center justify-between">
@@ -585,6 +638,68 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
               <span className="text-xs text-muted-foreground">
                 1–{filteredInvestors.length} of {filteredInvestors.length}
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IPFS Password Modal */}
+      {showIpfsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-md space-y-4 animate-fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Enter IPFS Password</h3>
+                <p className="text-xs text-muted-foreground">
+                  This password will be securely sent to the backend as part of the approval process.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground">IPFS Password</label>
+              <div className="relative">
+                <input
+                  type={showIpfsPassword ? "text" : "password"}
+                  value={ipfsPassword}
+                  onChange={(e) => setIpfsPassword(e.target.value)}
+                  className="w-full bg-muted/50 border border-border/60 rounded-lg px-3 py-2 pr-10 text-sm text-foreground focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  placeholder="Enter IPFS password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowIpfsPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                  aria-label={showIpfsPassword ? "Hide password" : "Show password"}
+                >
+                  {showIpfsPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowIpfsModal(false);
+                  setIpfsPassword("");
+                }}
+                className="px-4 py-2.5 rounded-lg text-xs font-medium border border-border text-foreground hover:bg-muted/50 transition-colors"
+                disabled={approveLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApprove}
+                className="px-4 py-2.5 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={approveLoading || !ipfsPassword.trim()}
+              >
+                {approveLoading ? "Approving..." : "Confirm Approve"}
+              </button>
             </div>
           </div>
         </div>

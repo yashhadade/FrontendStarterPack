@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 type InvestorKycSectionProps = {
   assetId: string;
+  setInvestorsCount: (count: number) => void;
   onProceedToMint: () => void;
 };
 
@@ -28,7 +29,7 @@ type KycInvestor = {
   [key: string]: any;
 };
 
-const InvestorKycSection = ({ assetId, onProceedToMint }: InvestorKycSectionProps) => {
+const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
   const [kycInvestors, setKycInvestors] = useState<KycInvestor[]>([]);
   const [selectedInvestor, setSelectedInvestor] = useState<KycInvestor | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
@@ -39,6 +40,7 @@ const InvestorKycSection = ({ assetId, onProceedToMint }: InvestorKycSectionProp
     try {
       const res = await investorsServices.getInvestorsByAssetId(assetId);
       setKycInvestors(res?.data || []);
+      setInvestorsCount(res?.data?.length || 0);
     } catch (error) {
       console.log(error);
     }
