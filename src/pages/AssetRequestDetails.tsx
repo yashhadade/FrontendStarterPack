@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import InvestorKycSection from "@/components/InvestorKycSection";
+import { MintAndTransferSection } from "@/components/MintAndTransferSection";
 import assetsServices from "@/services/assetsServices";
 import { toast } from "sonner";
 
@@ -34,12 +35,6 @@ type TransferInvestor = {
   status: "ready" | "initiated" | "completed" | "failed";
 };
 
-const kycInvestors = [
-  { name: "Raj Mehta", address: "Flat 201, Tower B, Mumbai", phone: "+91 98765 43210", email: "raj@example.com", govtId: "ABCDE1234F", pan: "ABCPD1234F", bank: "1234567890", ifsc: "HDFC0001234", status: "approved" as const },
-  { name: "Priya Sharma", address: "Block C, Pune City", phone: "+91 91234 56789", email: "priya@example.com", govtId: "XYZAB5678G", pan: "XYZPS5678G", bank: "0987654321", ifsc: "ICIC0005678", status: "pending" as const },
-  { name: "Vikram Singh", address: "Sector 14, Delhi NCR", phone: "+91 99887 76655", email: "vikram@example.com", govtId: "MNOPQ9012H", pan: "MNOPV9012H", bank: "5678901234", ifsc: "SBIN0009012", status: "pending" as const },
-  { name: "Anika Joshi", address: "JP Nagar, Bengaluru", phone: "+91 88776 65544", email: "anika@example.com", govtId: "RSTUV3456I", pan: "RSTUA3456I", bank: "3456789012", ifsc: "UTIB0003456", status: "rejected" as const },
-];
 
 const transferInvestors: TransferInvestor[] = [
   { name: "Pratik Raut", amountInvested: "₹3,90,010", tokensOwned: "58991 FRAX", percentOwned: "6.83%", walletAddress: "0x7F21a8Bc93E4dD12Dc5b", status: "ready" },
@@ -59,7 +54,7 @@ const stepIndex = (status: string) => {
 
   if (normalized === "REJECTED" || normalized === "PENDING") return 0;
   if (normalized === "APPROVED") return 1;
-  if (normalized === "TRANSFERING" || normalized === "COMPLETED") return 2;
+  if (normalized === "ASSET_CREATION_PROCESSING" || normalized === "COMPLETED") return 2;
 
   const idx = steps.findIndex((s) => s.key === normalized);
   return idx >= 0 ? idx : 0;
@@ -107,6 +102,25 @@ const AssetRequestDetails = () => {
   const [showIpfsPassword, setShowIpfsPassword] = useState(false);
   const [showExistingIpfsPassword, setShowExistingIpfsPassword] = useState(false);
   const [investorsCount, setInvestorsCount] = useState(0);
+console.log("id", id);
+  const handleProceedToMint = async () => {
+    try {
+      const res = await assetsServices.assetApproveReject({
+        assetId: id,
+        status: "ASSET_CREATION_PROCESSING",
+      });
+      if(res?.data) {
+        toast.success("Asset creation processing started successfully");
+        setActiveStep(2);
+        setViewStep(null);
+        fetchAssetRequest();
+      } else {
+        toast.error(res?.error || "Failed to proceed to Asset creation");
+      }
+    } catch (error) {
+      toast.error(error?.message || "Failed to proceed to Asset creation");
+    }
+  }
   const fetchAssetRequest = async () => {
     try {
       const res = await assetsServices.getAssetRequestById(id);
@@ -464,183 +478,29 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
           assetId={id}
           setInvestorsCount={setInvestorsCount}
           onProceedToMint={() => {
-            setActiveStep(2);
-            setViewStep(null);
+           handleProceedToMint();
           }}
         />
       )}
 
       {/* Step 2: Mint & Transfer (Combined) */}
       {currentStep === 2 && (
-        <div className="space-y-5">
-          {/* Header with action buttons */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Mint & Transfer Tokens</h2>
-              <p className="text-xs text-muted-foreground">Whitelist accounts, mint tokens, and process batch transfers.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm">
-                Whitelist DLT Accounts
-              </button>
-              <button className="px-5 py-2.5 rounded-lg text-sm font-medium border border-border bg-card text-foreground hover:bg-muted/50 transition-colors">
-                Mint Tokens
-              </button>
-            </div>
-          </div>
-
-          {/* Transfer Status Tabs */}
-          <div className="border-b border-border">
-            <div className="flex gap-6">
-              {([
-                { key: "pending", label: "Transfer Pending" },
-                { key: "initiated", label: "Transfer Initiated" },
-                { key: "completed", label: "Transfer Completed" },
-              ] as const).map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => { setTransferTab(tab.key); setSelectedRows(new Set()); }}
-                  className={`pb-3 text-sm transition-all border-b-2 ${
-                    transferTab === tab.key
-                      ? "border-purple-600 text-purple-700 font-semibold"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Info Alert */}
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-purple-50 border border-purple-200">
-            <Info className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-purple-800">Polygon Batching Protocol</p>
-              <p className="text-xs text-purple-600 mt-1 leading-relaxed">
-                To optimize gas fees and ensure transaction success, transfers are processed in batches. You can select a maximum of 80 investors per single transaction. If more than 80 investors are pending, process them in multiple rounds.
-              </p>
-            </div>
-          </div>
-
-          {/* Batch Selection Section */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
-                Polygon Chain
-              </span>
-              <span className="text-sm text-foreground font-medium">{filteredInvestors.length} Investors</span>
-              <span className="text-xs text-muted-foreground">Selected: {selectedRows.size} / 80</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={selectFirst80}
-                className="px-4 py-2 rounded-lg text-xs font-medium border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors"
-              >
-                Select First 80 Pending
-              </button>
-              <button
-                onClick={() => selectedRows.size > 0 && setShowGasModal(true)}
-                disabled={selectedRows.size === 0}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${
-                  selectedRows.size > 0
-                    ? "bg-purple-600 hover:bg-purple-700"
-                    : "bg-purple-300 cursor-not-allowed"
-                }`}
-              >
-                Process Batch Transfer ({selectedRows.size})
-              </button>
-            </div>
-          </div>
-
-          {/* Investors Table */}
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 w-10">
-                    <Checkbox
-                      checked={filteredInvestors.length > 0 && selectedRows.size === filteredInvestors.length}
-                      onCheckedChange={(checked) => {
-                        if (checked) selectFirst80();
-                        else setSelectedRows(new Set());
-                      }}
-                    />
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Owner Name</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Invested</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Tokens Owned</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">% Owned</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Wallet Address</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInvestors.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-muted-foreground text-sm">
-                      No investors in this category.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredInvestors.map((inv, i) => (
-                    <tr
-                      key={i}
-                      className={`border-b border-border/30 transition-colors cursor-pointer ${
-                        selectedRows.has(i) ? "bg-purple-50/50" : "hover:bg-muted/30"
-                      }`}
-                      onClick={() => toggleRow(i)}
-                    >
-                      <td className="py-3 px-4">
-                        <Checkbox
-                          checked={selectedRows.has(i)}
-                          onCheckedChange={() => toggleRow(i)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-foreground font-medium">{inv.name}</td>
-                      <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.amountInvested}</td>
-                      <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.tokensOwned}</td>
-                      <td className="py-3 px-4 text-xs text-muted-foreground">{inv.percentOwned}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-muted-foreground">{truncateAddress(inv.walletAddress)}</span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); copyAddress(inv.walletAddress, i); }}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {copiedIdx === i ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${statusBadgeClass(inv.status)}`}>
-                          {statusLabel(inv.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Rows per page:</span>
-                <select className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground">
-                  <option>10</option>
-                  <option>25</option>
-                  <option>50</option>
-                  <option>80</option>
-                </select>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                1–{filteredInvestors.length} of {filteredInvestors.length}
-              </span>
-            </div>
-          </div>
-        </div>
+        <MintAndTransferSection
+          assetId={id}
+          asset={asset}
+          transferTab={transferTab}
+          setTransferTab={setTransferTab}
+          filteredInvestors={filteredInvestors}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          selectFirst80={selectFirst80}
+          setShowGasModal={setShowGasModal}
+          truncateAddress={truncateAddress}
+          copyAddress={copyAddress}
+          statusBadgeClass={statusBadgeClass}
+          statusLabel={statusLabel}
+          fetchAssetRequest={() => fetchAssetRequest()}
+        />
       )}
 
       {/* IPFS Password Modal */}

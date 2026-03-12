@@ -30,9 +30,53 @@ const assetApproveReject = (data: any) =>{
         return err.response.data;
     })
 }
+const signedLegalNotes = (id: string) =>{
+    return server.get(`requestAssets/signedLegalNotes/${id}`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+const createDigitalAsset = (id: string) =>{
+    return server.get(`requestAssets/createDigitalAsset/${id}`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+const batchWhitelistUsers = (id: string) =>{
+    return server.get(`requestAssets/batchWhitelistUsers/${id}`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+const mintTokens = (id: string) =>{
+    return server.get(`requestAssets/mintTokens/${id}`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
 
 export default {
     getAssetsRequests,
     getAssetRequestById,
-    assetApproveReject
+    assetApproveReject,
+    signedLegalNotes,
+    createDigitalAsset,
+    batchWhitelistUsers,
+    mintTokens
 }
