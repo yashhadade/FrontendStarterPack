@@ -110,7 +110,7 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
       className: "text-muted-foreground text-xs",
     },
     {
-      key: "aadharCard",
+      key: "aadharCardNumber",
       header: "Aadhar Card",
       className: "font-mono text-xs text-muted-foreground",
     },

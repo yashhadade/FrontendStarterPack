@@ -310,15 +310,15 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
             {[
               { icon: User, label: "Seller Name", value: asset.sellerName ?? asset.clientName ?? "-" },
               { icon: Building2, label: "Asset Name", value: asset.assetName ?? `Asset #${asset.id}` },
-              { icon: CreditCard, label: "Total Asset Value", value: `${asset?.totalAssetValueInInr ?? "-"} (${asset?.totalAssetUnits ?? "-"} units)` },
-              {
-                icon: Hash,
-                label: "Unit Calculation",
-                value: `₹${unitCalculation} per unit`
-              },
+              { icon: CreditCard, label: "Total Asset Value", value: `${asset?.totalAssetValueInInr ?? "-"} ` },
+              // {
+              //   icon: Hash,
+              //   label: "Unit Calculation",
+              //   value: `₹${unitCalculation} per unit`
+              // },
               // { icon: FileText, label: "Ownership Contract", value: asset.ownershipContractId ?? "REG/MH/2024/001234" },
-              { icon: Coins, label: "Total Tokens to Mint", value: asset?.totalAssetUnits ?? "-" },
-              { icon: User, label: "Investors Listed", value: `${investorsCount} investors with DLT accounts` },
+              { icon: Coins, label: "Total Tokens to Mint", value: (asset?.noOfTokens ?? "-") + " " + (asset?.tokenName ?? "-") }, 
+              // { icon: User, label: "Investors Listed", value: `${investorsCount} investors with DLT accounts` },
             ].map((item) => (
               <div key={item.label} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
                 <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />

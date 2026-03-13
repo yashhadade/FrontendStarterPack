@@ -64,6 +64,7 @@ export const MintAndTransferSection = ({
   const [isCreateLoading, setIsCreateLoading] = useState(false);
   const [isWhitelistLoading, setIsWhitelistLoading] = useState(false);
   const [isMintLoading, setIsMintLoading] = useState(false);
+  const [signingOfTheLegalNote, setSigningOfTheLegalNote] = useState(asset?.signedLegalNote||false);
   const toggleRow = (idx: number) => {
     setSelectedRows((prev: Set<number>) => {
       const next = new Set<number>(prev);
@@ -89,13 +90,12 @@ export const MintAndTransferSection = ({
     }
   }
   useEffect(() => {
-    if(asset?.signedLegalNote){
+    if(signingOfTheLegalNote){
       setIsSignLegalNote(true);
     }else{
       setIsSignLegalNote(false);
     }
-    if(asset?.contractAddress||!asset?.signedLegalNote){
-      console.log("asset?.contractAddress", asset?.contractAddress);
+    if(asset?.contractAddress||!signingOfTheLegalNote){
       setIsCreateAssetDisabled(true);
     }else{
       setIsCreateAssetDisabled(false);
@@ -111,7 +111,7 @@ export const MintAndTransferSection = ({
       setIsMintDisabled(false);
     }
     fetchBlockchainOperationsLogs();
-  },[asset])
+  },[asset, signingOfTheLegalNote])
   const fetchBlockchainOperationLogById = async (logId) => {
     try {
       const res = await blockchainOperationServices.single(logId);
@@ -200,12 +200,10 @@ export const MintAndTransferSection = ({
       setSigningLegalNote(true);
       const res = await assetsServices.signedLegalNotes(assetId);
       if (res?.data) {
-        toast.success("Legal note signed successfully");
         fetchAssetRequest();
-        setIsSignLegalNote(true);
-        setIsWhitelistDisabled(false);
-        setIsCreateAssetDisabled(true);
-        setIsMintDisabled(true);
+        setSigningOfTheLegalNote(true);
+        toast.success("Legal note signed successfully");
+       
       } else {
         toast.error(res?.error || "Failed to sign legal note");
       }
@@ -220,7 +218,7 @@ export const MintAndTransferSection = ({
       setCreatingDigitalAsset(true);
       const res = await assetsServices.createDigitalAsset(assetId);
       if (res?.data) {
-        toast.success("Digital asset created successfully");
+        toast.success("Digital asset creation is in processing");
         fetchAssetRequest();
         fetchBlockchainOperationsLogs();
       } else {
@@ -237,7 +235,7 @@ export const MintAndTransferSection = ({
       setBatchWhitelistingProcessing(true);
       const res = await assetsServices.batchWhitelistUsers(assetId);
       if (res?.data) {
-        toast.success("Accounts whitelisted successfully");
+        toast.success("Accounts whitelisted is in processing");
         fetchAssetRequest();
         fetchBlockchainOperationsLogs();
       } else {
@@ -254,7 +252,7 @@ export const MintAndTransferSection = ({
       setTokenMintingProcessing(true);
       const res = await assetsServices.mintTokens(assetId);
       if (res?.data) {
-        toast.success("Tokens minted successfully");
+        toast.success("Tokens minting is in processing");
         fetchAssetRequest();
         fetchBlockchainOperationsLogs();
       } else {
