@@ -13,14 +13,14 @@ type TransferInvestor = {
   noOfTokens: string;
   percentOwned?: string;
   dltAccount: string;
-  status: "APPROVED" | "TOKEN_TRANSFER_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
+  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
 };
 
 type MintAndTransferSectionProps = {
   assetId: string;
   asset: any;
-  transferTab: "APPROVED" | "TOKEN_TRANSFER_INITIATED" | "TOKEN_TRANSFER_COMPLETED" ;
-  setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFER_INITIATED" | "TOKEN_TRANSFER_COMPLETED") => void;
+  transferTab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" ;
+  setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED") => void;
   filteredInvestors: TransferInvestor[];
   selectedRows: Set<string>;
   setSelectedRows: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -349,7 +349,7 @@ export const MintAndTransferSection = ({
           <div className="flex gap-6">
             {([
               { key: "APPROVED", label: "Transfer Pending" },
-              { key: "TOKEN_TRANSFER_INITIATED", label: "Transfer Initiated" },
+              { key: "TOKEN_TRANSFERRED_INITIATED", label: "Transfer Initiated" },
               { key: "TOKEN_TRANSFER_COMPLETED", label: "Transfer Completed" },
             ] as const).map((tab) => (
               <button
