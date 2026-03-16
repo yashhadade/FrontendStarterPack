@@ -7,26 +7,27 @@ import { toast } from "sonner";
 import blockchainOperationServices from "@/services/blockchainOperationServices";
 
 type TransferInvestor = {
+  _id: string;
   name: string;
-  amountInvested: string;
-  tokensOwned: string;
-  percentOwned: string;
-  walletAddress: string;
-  status: "ready" | "initiated" | "completed" | "failed";
+  amountInvested?: string;
+  noOfTokens: string;
+  percentOwned?: string;
+  dltAccount: string;
+  status: "APPROVED" | "TOKEN_TRANSFER_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
 };
 
 type MintAndTransferSectionProps = {
   assetId: string;
   asset: any;
-  transferTab: "pending" | "initiated" | "completed";
-  setTransferTab: (tab: "pending" | "initiated" | "completed") => void;
+  transferTab: "APPROVED" | "TOKEN_TRANSFER_INITIATED" | "TOKEN_TRANSFER_COMPLETED" ;
+  setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFER_INITIATED" | "TOKEN_TRANSFER_COMPLETED") => void;
   filteredInvestors: TransferInvestor[];
-  selectedRows: Set<number>;
-  setSelectedRows: React.Dispatch<React.SetStateAction<Set<number>>>;
+  selectedRows: Set<string>;
+  setSelectedRows: React.Dispatch<React.SetStateAction<Set<string>>>;
   selectFirst80: () => void;
   setShowGasModal: (val: boolean) => void;
   truncateAddress: (addr: string) => string;
-  copyAddress: (addr: string, idx: number) => void;
+  copyAddress: (addr: string, idx: string) => void;
   statusBadgeClass: (status: TransferInvestor["status"]) => string;
   statusLabel: (status: TransferInvestor["status"]) => string;
   fetchAssetRequest: () => void;
@@ -54,7 +55,7 @@ export const MintAndTransferSection = ({
   const [assetDeploymentData, setAssetDeploymentData] = useState(null);
   const [batchWhitelistingData, setBatchWhitelistingData] = useState(null);
   const [tokenMintingData, setTokenMintingData] = useState(null);
-  const [blockchainLogPollingId, setBlockchainLogPollingId] = useState(null);
+  const [blockchainLogPollingId, setBlockchainLogPollingId] = useState<string | null>(null);
   const [batchWhitelistingProcessing, setBatchWhitelistingProcessing] = useState(false);
   const [tokenMintingProcessing, setTokenMintingProcessing] = useState(false);
   const [isCreateAssetDisabled, setIsCreateAssetDisabled] = useState(false);
@@ -65,11 +66,11 @@ export const MintAndTransferSection = ({
   const [isWhitelistLoading, setIsWhitelistLoading] = useState(false);
   const [isMintLoading, setIsMintLoading] = useState(false);
   const [signingOfTheLegalNote, setSigningOfTheLegalNote] = useState(asset?.signedLegalNote||false);
-  const toggleRow = (idx: number) => {
-    setSelectedRows((prev: Set<number>) => {
-      const next = new Set<number>(prev);
-      if (next.has(idx)) next.delete(idx);
-      else if (next.size < 80) next.add(idx);
+  const toggleRow = (investorId: string) => {
+    setSelectedRows((prev: Set<string>) => {
+      const next = new Set<string>(prev);
+      if (next.has(investorId)) next.delete(investorId);
+      else if (next.size < 80) next.add(investorId);
       return next;
     });
   };
@@ -112,7 +113,7 @@ export const MintAndTransferSection = ({
     }
     fetchBlockchainOperationsLogs();
   },[asset, signingOfTheLegalNote])
-  const fetchBlockchainOperationLogById = async (logId) => {
+  const fetchBlockchainOperationLogById = async (logId: string) => {
     try {
       const res = await blockchainOperationServices.single(logId);
       if (res && res.data) {
@@ -347,9 +348,9 @@ export const MintAndTransferSection = ({
         <div className="border-b border-border">
           <div className="flex gap-6">
             {([
-              { key: "pending", label: "Transfer Pending" },
-              { key: "initiated", label: "Transfer Initiated" },
-              { key: "completed", label: "Transfer Completed" },
+              { key: "APPROVED", label: "Transfer Pending" },
+              { key: "TOKEN_TRANSFER_INITIATED", label: "Transfer Initiated" },
+              { key: "TOKEN_TRANSFER_COMPLETED", label: "Transfer Completed" },
             ] as const).map((tab) => (
               <button
                 key={tab.key}
@@ -414,7 +415,7 @@ export const MintAndTransferSection = ({
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-4 w-10">
                   <Checkbox
-                    checked={filteredInvestors.length > 0 && selectedRows.size === filteredInvestors.length}
+                    checked={filteredInvestors.length > 0 && selectedRows.size === Math.min(80, filteredInvestors.length)}
                     onCheckedChange={(checked) => {
                       if (checked) selectFirst80();
                       else setSelectedRows(new Set());
@@ -425,13 +426,7 @@ export const MintAndTransferSection = ({
                   Owner Name
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Amount Invested
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Tokens Owned
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  % Owned
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Wallet Address
@@ -449,33 +444,31 @@ export const MintAndTransferSection = ({
                   </td>
                 </tr>
               ) : (
-                filteredInvestors.map((inv, i) => (
+                filteredInvestors?.map((inv) => (
                   <tr
-                    key={i}
-                    className={`border-b border-border/30 transition-colors cursor-pointer ${selectedRows.has(i) ? "bg-purple-50/50" : "hover:bg-muted/30"
+                    key={inv._id}
+                    className={`border-b border-border/30 transition-colors cursor-pointer ${selectedRows.has(inv._id) ? "bg-purple-50/50" : "hover:bg-muted/30"
                       }`}
-                    onClick={() => toggleRow(i)}
+                    onClick={() => toggleRow(inv._id)}
                   >
                     <td className="py-3 px-4">
                       <Checkbox
-                        checked={selectedRows.has(i)}
-                        onCheckedChange={() => toggleRow(i)}
+                        checked={selectedRows.has(inv._id)}
+                        onCheckedChange={() => toggleRow(inv._id)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                     <td className="py-3 px-4 text-foreground font-medium">{inv.name}</td>
-                    <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.amountInvested}</td>
-                    <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.tokensOwned}</td>
-                    <td className="py-3 px-4 text-xs text-muted-foreground">{inv.percentOwned}</td>
+                    <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.noOfTokens}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-muted-foreground">
-                          {truncateAddress(inv.walletAddress)}
+                          {truncateAddress(inv.dltAccount)}
                         </span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            copyAddress(inv.walletAddress, i);
+                            copyAddress(inv.dltAccount, inv._id);
                           }}
                           className="text-muted-foreground hover:text-foreground transition-colors"
                         >
