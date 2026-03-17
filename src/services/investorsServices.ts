@@ -33,8 +33,8 @@ const updateInvestorStatus = (data: {investorId: string, status: string, reason?
     })
 }
 
-const getInvestorsByAssetIdAndStatus = (assetId: string, status: string) =>{
-    return server.get(`investor/getInvestorsByAssetId/${assetId}?status=${status}`)
+const getInvestorsByAssetIdAndStatus = (assetId: string, status?: string) =>{
+    return server.get(`investor/getInvestorsByAssetId/${assetId}${status ? `?status=${status}` : ''}`)
     .then(res=>{
         return res.data
     })

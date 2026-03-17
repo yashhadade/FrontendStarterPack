@@ -186,7 +186,7 @@ function DataTable<T extends Record<string, any>>({
                 return (
                   <tr
                     key={id}
-                    className="border-b border-border/30 hover:bg-muted/30 transition-colors"
+                    className="border-b border-border/30 hover:bg-muted/30 transition-colors hover:cursor-pointer"
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
                     {columns.map((col) => (

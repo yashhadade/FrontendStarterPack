@@ -82,6 +82,17 @@ const proposeTransaction = (data: any) =>{
     })
 }
 
+const getAssetsForProposal = () =>{
+    return server.get(`requestAssets/getAssetsForProposal`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+
 export default {
     getAssetsRequests,
     getAssetRequestById,
@@ -90,5 +101,6 @@ export default {
     createDigitalAsset,
     batchWhitelistUsers,
     mintTokens,
-    proposeTransaction
+    proposeTransaction,
+    getAssetsForProposal,
 }

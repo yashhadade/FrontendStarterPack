@@ -14,6 +14,7 @@ const useSignTransaction = () => {
             }
 
             // Owner validation
+            
             const isOwner = tx?.owners?.some(owner => owner.toLowerCase() === publicAddress.toLowerCase())
             if (!isOwner) {
                 toast.error('You are not an authorized owner for this transaction')
@@ -30,7 +31,6 @@ const useSignTransaction = () => {
                 safeTxHash: proposal.safeTxHash,
                 safeAddress: tx.approvalAccountAddress,
             })
-            console.table(getTransactionToSignResponse)
 
             if (getTransactionToSignResponse.data && !getTransactionToSignResponse.data.success) {
                 toast.error(getTransactionToSignResponse.data.message || 'Failed to get transaction to sign')

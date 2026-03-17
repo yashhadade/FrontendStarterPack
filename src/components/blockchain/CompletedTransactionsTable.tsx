@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import blockchainTransactionServices from "@/services/blockchainTransaction";
 import { toast } from "sonner";
 import type { BlockchainTransaction } from "./PendingTransactionsTable";
+import { useNavigate } from "react-router-dom";
 
 const useCompletedTransactions = () => {
   const [rows, setRows] = useState<BlockchainTransaction[]>([]);
@@ -72,6 +73,13 @@ const columns: DataTableColumn<BlockchainTransaction>[] = [
 
 const CompletedTransactionsTable = () => {
   const { rows } = useCompletedTransactions();
+  const naviagte = useNavigate();
+  
+  const handleRowClick = (row: BlockchainTransaction & { _isFirst?: boolean }) => {
+    if (row._id) {
+      naviagte(`/blockchain-transactions/${row._id}`);
+    }
+  };
 
   return (
     <DataTable
@@ -81,6 +89,7 @@ const CompletedTransactionsTable = () => {
       searchableKeys={["safeNonce", "action", "name", "description"]}
       title="Completed Transactions"
       searchPlaceholder="Search completed transactions…"
+      onRowClick={handleRowClick}
     />
   );
 };

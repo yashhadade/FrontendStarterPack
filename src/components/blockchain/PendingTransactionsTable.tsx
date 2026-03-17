@@ -5,6 +5,13 @@ import { toast } from "sonner";
 import { useDltAddressStore } from "@/store/dltAddressStrore";
 import { useNavigate } from "react-router-dom";
 import useSignTransaction from "@/hooks/useSignTransaction";
+import { FullScreenLoader } from "@/components/FullScreenLoader";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 
 
@@ -49,9 +56,8 @@ export type BlockchainTransaction = {
 const PendingTransactionsTable = () => {
   const [rows, setRows] = useState<BlockchainTransaction[]>([]);
   const dltAddress = useDltAddressStore((state) => state.dltAddress ?? "")
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [openProgressBar, setOpenProgressBar] = useState(false)
-  const [selectedTransaction, setSelectedTransaction] = useState<BlockchainTransaction | null>(null)
+  const [loaderMessage, setLoaderMessage] = useState<string>("");
   const navigate = useNavigate()
   const { signTransaction: signTransactionHook } = useSignTransaction()
   const fetchPendingTransactions = async () => {
@@ -60,7 +66,6 @@ const PendingTransactionsTable = () => {
         status: "PENDING",
       });
       if (res.data) {
-        console.table(res.data)
         setRows(res.data);
       }
     } catch (error) {
@@ -71,25 +76,17 @@ const PendingTransactionsTable = () => {
     fetchPendingTransactions();
   }, []);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, transaction: BlockchainTransaction) => {
-    setAnchorEl(event.currentTarget)
-    setSelectedTransaction(transaction)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-    setSelectedTransaction(null)
-  }
   const handleView = (transaction: BlockchainTransaction) => {
     navigate(`/blockchain-transactions/${transaction._id}`)
   }
 
   const handleSignTransaction = async (tx: BlockchainTransaction, type: "approve" | "reject") => {
+    setLoaderMessage(type === "approve" ? "Approving transaction…" : "Rejecting transaction…");
     setOpenProgressBar(true)
-    handleMenuClose()
 
     try {
       const result = await signTransactionHook(tx, type, dltAddress)
+
 
       if (result.success) {
         if (result.data.signatures >= result.data.threshold) {
@@ -103,6 +100,7 @@ const PendingTransactionsTable = () => {
       console.error("Signing error:", error);
     } finally {
       setOpenProgressBar(false)
+      setLoaderMessage("")
     }
   }
 
@@ -157,70 +155,59 @@ const PendingTransactionsTable = () => {
   
           // 3-dot menu with View, Approve, Reject options
         return (
-          <div className="relative group">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-1 rounded-lg border border-border px-2.5 py-1 text-[15px] font-medium text-foreground hover:bg-muted/70 transition-colors"
-              tabIndex={0}
-              aria-label="More actions"
-              onClick={e => { e.stopPropagation();  handleMenuOpen(e, transaction)}}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-border px-2.5 py-1 text-[15px] font-medium text-foreground hover:bg-muted/70 transition-colors"
+                aria-label="More actions"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="font-bold text-xl leading-none">⋯</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={6}
+              className="min-w-[140px] bg-card border-border"
+              onClick={(e) => e.stopPropagation()}
             >
-              <span className="font-bold text-xl leading-none">⋯</span>
-            </button>
-            <div className="absolute right-0 z-50 mt-1 min-w-[120px] bg-card border border-border rounded-md shadow-lg hidden group-focus-within:block group-hover:block transition">
-              <ul className="py-1">
-                <li>
-                  <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-muted/70"
-                    onClick={e => {
-                      e.stopPropagation();
-                        handleView(transaction)
-                    }}
-                  >
-                    View
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-muted/70 text-green-700"
-                    disabled={isApproved}
-                    onClick={e => {
-                      e.stopPropagation();
-                     handleSignTransaction(selectedTransaction, "approve")
-                    }}
-                  >
-                    {isApproved ? "Approved" : "Approve"}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-muted/70 text-red-600"
-                    disabled={isRejected}
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleSignTransaction(selectedTransaction, "reject")
-                    }}
-                  >
-                    {isRejected ? "Rejected" : "Reject"}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
+              <DropdownMenuItem className="text-xs py-2" onSelect={() => handleView(transaction)}>
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs py-2 text-green-700 data-[disabled]:text-muted-foreground"
+                disabled={isApproved}
+                onSelect={() => handleSignTransaction(transaction, "approve")}
+              >
+                {isApproved ? "Approved" : "Approve"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs py-2 text-red-600 data-[disabled]:text-muted-foreground"
+                disabled={isRejected}
+                onSelect={() => handleSignTransaction(transaction, "reject")}
+              >
+                {isRejected ? "Rejected" : "Reject"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },
   ];
 
   return (
-    <DataTable
-      data={rows}
-      columns={columns}
-      getRowId={(row) => row._id}
-      searchableKeys={["safeNonce", "action", "name", "description"]}
-      title="Pending Transactions"
-      searchPlaceholder="Search pending transactions…"
-    />
+    <>
+      <FullScreenLoader open={openProgressBar} message={loaderMessage} />
+      <DataTable
+        data={rows}
+        columns={columns}
+        getRowId={(row) => row._id}
+        searchableKeys={["safeNonce", "action", "name", "description"]}
+        title="Pending Transactions"
+        searchPlaceholder="Search pending transactions…"
+      />
+    </>
   );
 };
 

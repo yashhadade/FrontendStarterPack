@@ -1,20 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Shield, ArrowLeft, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Shield, ArrowLeft, Clock, CheckCircle2, XCircle, Play, Loader2 } from "lucide-react";
 import { useDltAddressStore } from "@/store/dltAddressStrore";
 import useConnectWallet from "@/hooks/useConnectWallet";
 import blockchainTransactionServices from "@/services/blockchainTransaction";
 import { toast } from "sonner";
 import useSignTransaction from "@/hooks/useSignTransaction";
 import { BlockchainTransaction } from "@/components/blockchain/PendingTransactionsTable";
-
-type Signature = {
-  owner: string;
-  walletType: "HOT_WALLET" | "COLD_WALLET";
-  signedAt: string;
-};
-
-
 
 const BlockchainTransactionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +18,8 @@ const BlockchainTransactionDetails = () => {
   const [tx, setTx] = useState<BlockchainTransaction | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState<"approve" | "reject" | null>(null);
+  const pollTimeoutRef = useRef<number | null>(null);
+  const pollCountRef = useRef(0);
 
   const fetchTransaction = async () => {
     if (!id) return;
@@ -48,8 +42,99 @@ const BlockchainTransactionDetails = () => {
 
   useEffect(() => {
     fetchTransaction();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-console.log(tx);
+
+  const executedAlert = useMemo(() => {
+    if (!tx?.status) return null;
+
+    if (tx.status === "APPROVED") {
+      return (
+        <div className="mt-2 mb-2 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+          <p className="text-sm font-semibold text-emerald-800">
+            This transaction has been Approved and Executed.
+          </p>
+        </div>
+      );
+    }
+
+    if (tx.status === "REJECTED") {
+      return (
+        <div className="mt-2 mb-2 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <XCircle className="w-5 h-5 text-red-700" />
+          <p className="text-sm font-semibold text-red-800">
+            This transaction has been Rejected and Executed.
+          </p>
+        </div>
+      );
+    }
+
+    if (tx.status === "EXECUTING") {
+      return (
+        <div className="mt-2 mb-2 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <Loader2 className="w-4 h-4 animate-spin text-amber-700" />
+          <p className="text-sm font-semibold text-amber-800">
+            Executing transaction… waiting for blockchain confirmation
+          </p>
+        </div>
+      );
+    }
+
+    if (tx.status === "PROCESSING") {
+      return (
+        <div className="mt-2 mb-2 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <Play className="w-5 h-5 text-blue-700" />
+          <p className="text-sm font-semibold text-blue-800">
+            This transaction is ready to execute, but waiting for lower nonce transaction to execute first.
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  }, [tx?.status]);
+
+  const isExecuting = tx?.status === "EXECUTING";
+
+  useEffect(() => {
+    if (!id) return;
+    if (!isExecuting) {
+      pollCountRef.current = 0;
+      if (pollTimeoutRef.current) {
+        window.clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    pollCountRef.current = 0;
+
+    const tick = async () => {
+      pollCountRef.current += 1;
+      await fetchTransaction();
+
+      const stillExecuting =
+        tx?.status === "EXECUTING";
+
+      if (!stillExecuting || pollCountRef.current >= 5) {
+        pollTimeoutRef.current = null;
+        return;
+      }
+
+      pollTimeoutRef.current = window.setTimeout(tick, 3000);
+    };
+
+    pollTimeoutRef.current = window.setTimeout(tick, 3000);
+
+    return () => {
+      if (pollTimeoutRef.current) {
+        window.clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isExecuting]);
 
   if (!id) return null;
 
@@ -107,7 +192,7 @@ console.log(tx);
             </div>
             <div className="flex flex-col">
               <h2 className="font-semibold text-foreground leading-4">Multi-Sig Transaction Review</h2>
-              <span className="text-md text-muted-f oreground">
+              <span className="text-md text-muted-foreground">
                 Review transaction details | Sign with your wallet
               </span>
             </div>
@@ -171,6 +256,7 @@ console.log(tx);
       <div className="glass-card p-6 space-y-5">
         <div className="space-y-1">
           <h2 className="text-base font-semibold text-foreground">Detailed View</h2>
+          {executedAlert}
           <p className="text-sm text-muted-foreground">Approval progress and signer breakdown.</p>
         </div>
 

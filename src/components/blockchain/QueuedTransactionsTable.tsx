@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import blockchainTransactionServices from "@/services/blockchainTransaction";
 import { toast } from "sonner";
 import type { BlockchainTransaction } from "./PendingTransactionsTable";
+import { useNavigate } from "react-router-dom";
 
 const useQueuedTransactions = () => {
   const [rows, setRows] = useState<BlockchainTransaction[]>([]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,8 +18,10 @@ const useQueuedTransactions = () => {
         if (res.data) {
           setRows(res.data);
         }
-      } catch (error: any) {
-        toast.error(error?.message || "Failed to fetch queued transactions");
+      } catch (error: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const typedError = error as any;
+        toast.error(typedError?.message || "Failed to fetch queued transactions");
       }
     };
 
@@ -102,8 +106,17 @@ const columns: DataTableColumn<BlockchainTransaction & { _isFirst?: boolean }>[]
     },
   }
 ];
+
 const QueuedTransactionsTable = () => {
   const { rows } = useQueuedTransactions();
+  
+  const naviagte = useNavigate();
+  const handleRowClick = (row: BlockchainTransaction & { _isFirst?: boolean }) => {
+    if (row._id) {
+      naviagte(`/blockchain-transactions/${row._id}`);
+    }
+  };
+
   return (
     <DataTable
       data={rows.map((row, index) => ({ ...row, _isFirst: index === 0 }))}
@@ -112,9 +125,9 @@ const QueuedTransactionsTable = () => {
       searchableKeys={["safeNonce", "action", "name", "description"]}
       title="Queued Transactions"
       searchPlaceholder="Search queued transactions…"
+      onRowClick={handleRowClick}
     />
   );
 };
 
 export default QueuedTransactionsTable;
-

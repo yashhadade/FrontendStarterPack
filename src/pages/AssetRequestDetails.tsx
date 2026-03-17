@@ -23,6 +23,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import InvestorKycSection from "@/components/InvestorKycSection";
 import { MintAndTransferSection } from "@/components/MintAndTransferSection";
+import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
 import { toast } from "sonner";
 import investorsServices from "@/services/investorsServices";
@@ -95,7 +96,7 @@ const AssetRequestDetails = () => {
   const [showExistingIpfsPassword, setShowExistingIpfsPassword] = useState(false);
   const [investorsCount, setInvestorsCount] = useState(0);
   const [transferInvestors,setTransferInvestors] = useState<TransferInvestor[]>([]);
-  
+  const [openProposeTransactionModal, setOpenProposeTransactionModal] = useState(false);
 
 
   const fetchInvestor = async () =>{
@@ -146,6 +147,7 @@ const AssetRequestDetails = () => {
   }, [id, transferTab]);
 
   const handleInitiateBatchTransfer = async () => {
+    setOpenProposeTransactionModal(true);
     const dltWalletAddresses = transferInvestors
       .filter((inv) => selectedRows.has(inv._id))
       .map((inv) => inv.dltAccount as string);
@@ -167,6 +169,8 @@ const AssetRequestDetails = () => {
       }
     } catch (error) {
       toast.error(error?.message || "Failed to initiate batch transfer");
+    }finally{
+      setOpenProposeTransactionModal(false);
     }
   };
 
@@ -282,6 +286,7 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
 
   return (
     <div className="p-8 space-y-6 animate-fade-in">
+      <FullScreenLoader open={openProposeTransactionModal} message="Batch transfer initiating…" />
       {/* Back + Title */}
       <div className="flex items-center gap-3">
         <button
