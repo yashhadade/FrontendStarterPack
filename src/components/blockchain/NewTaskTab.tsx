@@ -1,9 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import assetsServices from "@/services/assetsServices";
 import investorsServices from "@/services/investorsServices";
-import { useDltAddressStore } from "@/store/dltAddressStrore";
 import { Form, FormikProvider, useFormik } from "formik";
-import { ChevronDown, Lock } from "lucide-react";
+import { ChevronDown, Info, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import * as Yup from "yup";
@@ -12,8 +11,6 @@ import * as Yup from "yup";
 const NewTaskTab = () => {
   type AssetOption = { _id: string; assetName: string };
   const [assets, setAssets] = useState<AssetOption[]>([]);
-  const [investorAddresses, setInvestorAddresses] = useState<string[]>([]);
-  const dltAddress = useDltAddressStore((state) => state.dltAddress ?? "");
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [polygonUsers, setPolygonUsers] = useState<{value: string, label: string}[]>([]);
 
@@ -21,23 +18,18 @@ const NewTaskTab = () => {
     selectedAsset: Yup.string().required('Asset selection is required'),
     selectedAction: Yup.string().required('Action selection is required'),
     reason: Yup.string().when('selectedAction', {
-      is: 'FORCE_TRASFER',
+      is: 'FORCE_TRANSFER',
       then: (schema) => schema.required('Reason is required'),
       otherwise: (schema) => schema.optional(),
     }),
     amount: Yup.number().when('selectedAction', {
-      is: 'FORCE_TRASFER',
+      is: 'FORCE_TRANSFER',
       then: (schema) => schema.required('Amount is required').positive('Amount must be positive'),
       otherwise: (schema) => schema.optional(),
     }),
     fromAddress: Yup.string().when('selectedAction', {
-      is: 'FORCE_TRASFER',
+      is: 'FORCE_TRANSFER',
       then: (schema) => schema.required('From Address is required'),
-      otherwise: (schema) => schema.optional(),
-    }),
-    toAddress: Yup.string().when('selectedAction', {
-      is: 'FORCE_TRASFER',
-      then: (schema) => schema.required('To Address is required'),
       otherwise: (schema) => schema.optional(),
     }),
   })
@@ -49,7 +41,6 @@ const NewTaskTab = () => {
       reason: '',
       amount: '',
       fromAddress: '',
-      toAddress: '',
     },
     validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting }) => {
@@ -57,11 +48,10 @@ const NewTaskTab = () => {
         const payload = {
           assetId: values.selectedAsset,
           action: values.selectedAction,
-          transationData: values.selectedAction === 'FORCE_TRASFER' ? {
+          transationData: values.selectedAction === 'FORCE_TRANSFER' ? {
             reason: values.reason,
             amount: values.amount,
             fromAddress: values.fromAddress,
-            toAddress: values.toAddress,
           } :{}
         }
         const response = await assetsServices.proposeTransaction(payload)
@@ -99,7 +89,7 @@ const NewTaskTab = () => {
       label: "Lock Legal Document"
     },
     {
-      value: "FORCE_TRASFER",
+      value: "FORCE_TRANSFER",
       label: "Force Transfer"
     }
   ];
@@ -120,7 +110,7 @@ const NewTaskTab = () => {
 
   useEffect(() => {
     const fetchPolygonUsers = async () => {
-      if (!values.selectedAsset && values.selectedAction !== "FORCE_TRASFER") return
+      if (!values.selectedAsset && values.selectedAction !== "FORCE_TRANSFER") return
 
       setLoadingUsers(true)
       try {
@@ -152,12 +142,15 @@ const NewTaskTab = () => {
 
   const getActionFields = (action) => {
     switch (action) {
-      case 'FORCE_TRASFER':
+      case 'FORCE_TRANSFER':
         return [
           { name: 'reason', label: 'Reason for Transfer', type: 'text', required: true },
           { name: 'amount', label: 'Token', type: 'number', required: true },
           { name: 'fromAddress', label: 'From Address (Owner)', type: 'dropdown', options: polygonUsers, required: true },
-          { name: 'toAddress', label: 'To Address (Recipient)', type: 'dropdown', options: polygonUsers, required: true },
+          {
+            type: 'info', 
+            message: 'All tokens entered here will be transferred to the designated custodian address. check the custodian address for accuracy.'
+          },
         ];
       default:
         return [];
@@ -233,7 +226,7 @@ const NewTaskTab = () => {
                     <Lock className="w-4 h-4 text-primary" />
                     <span className="text-xs text-muted-foreground">Required:</span>
                     <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
-                      {["DEPLOY_ASSET", "PAUSE_ASSET", "UNPAUSE_ASSET", "LOCK_DOCUMENT", "FORCE_TRASFER"].includes(
+                      {["DEPLOY_ASSET", "PAUSE_ASSET", "UNPAUSE_ASSET", "LOCK_DOCUMENT", "FORCE_TRANSFER"].includes(
 values.selectedAction || "",
                       )
                         ? "Multi-Sig (Hot + Cold)"
@@ -250,6 +243,15 @@ values.selectedAction || "",
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {getActionFields(values.selectedAction).map((field, index) => (
+                      field.type === 'info' ? (
+                        <div key={index} className="col-span-1 md:col-span-2">
+                          <div className="flex items-center gap-2 bg-primary/5 border-l-4 border-primary/40 rounded-md p-3 my-2 animate-fade-in">
+                            <Info className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-primary font-medium">{"Note:"}</span>
+                            <span className="text-xs text-muted-foreground">{field.message}</span>
+                          </div>
+                        </div>
+                      ) : (
                       <div
                         key={index}
                         className={field.type === 'dropdown' ? 'col-span-1 md:col-span-2' : ''}
@@ -301,6 +303,7 @@ values.selectedAction || "",
                           </div>
                         )}
                       </div>
+                      )
                     ))}
                   </div>
                 </div>
