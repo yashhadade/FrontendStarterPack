@@ -238,7 +238,7 @@ console.log("id", id);
       </div>
     );
   }
-const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
+
   const currentStep = viewStep ?? activeStep;
   if (!asset) {
     return (
@@ -410,7 +410,7 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
                         className="rounded-lg overflow-hidden border border-border/40 bg-muted/40"
                       >
                         <img
-                          src={`${asset.url ?? ""}${img.docUrl}`}
+                          src={asset?.url+img?.docUrl}
                           alt={img.docName}
                           className="w-full h-32 object-cover"
                         />

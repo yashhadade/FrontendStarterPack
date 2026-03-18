@@ -213,7 +213,7 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
                   )}
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Aadhaar</p>
-                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCard}</p>
+                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCardNumber}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">PAN</p>
