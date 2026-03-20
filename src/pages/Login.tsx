@@ -24,10 +24,10 @@ const Login = () => {
         usernameOrEmail:email,
         password:password,
       });
-      if (res?.data?.token) {
-        setStorageItem("access", res.data.token);
-        if (res.data.refresh) {
-          setStorageItem("refresh", res.data.refresh);
+      if (res?.data) {
+        setStorageItem("access", res.data.accessToken);
+        if (res.data) {
+          setStorageItem("refresh", res.data.refreshToken);
         }
         if (res.data?.custodian?._id) {
           setStorageItem("userId", String(res.data?.custodian?._id));

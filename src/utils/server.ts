@@ -1,18 +1,57 @@
 import { authHeader } from '@/helpers/authHeader';
-import axios from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
+import { removeStorageItem } from '@/utils/storageUtils';
+import { refreshAccessToken } from '@/utils/refreshToken';
+
+const baseURL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5003/';
+
 export const server = axios.create({
-
-  baseURL:import.meta.env.VITE_SERVER_URL || 'http://localhost:5003/', 
-
+  baseURL,
   responseType: 'json',
-  headers: {
-    // "Access-Control-Allow-Origin": "*",
-    // "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS",
-    // Authorization: authHeader(),
-  },
+  headers: {},
 });
-server.interceptors.request.use( (config)=> {
-    const token = authHeader();
-    config.headers.Authorization =  token;
-    return config;
-  }, null, { synchronous: true });
+
+server.interceptors.request.use((config) => {
+  const token = authHeader();
+  config.headers = (config.headers ?? {}) as any;
+  config.headers.Authorization = token;
+  return config;
+}, null, { synchronous: true });
+
+type RetryConfig = AxiosRequestConfig & { _retry?: boolean };
+
+let refreshPromise: Promise<string> | null = null;
+
+server.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const originalRequest = error.config as RetryConfig | undefined;
+
+    if (!originalRequest) return Promise.reject(error);
+
+    // Only attempt refresh once per request.
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        refreshPromise ??= refreshAccessToken().finally(() => {
+          refreshPromise = null;
+        });
+        const newAccessToken = await refreshPromise;
+
+        // Retry original request; request interceptor will attach the new token.
+        originalRequest.headers = (originalRequest.headers ?? {}) as any;
+        originalRequest.headers.Authorization = newAccessToken;
+        return server(originalRequest);
+      } catch (refreshErr) {
+        console.error(refreshErr);
+        removeStorageItem();
+        window.location.href = '/login';
+        return Promise.reject(refreshErr);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
