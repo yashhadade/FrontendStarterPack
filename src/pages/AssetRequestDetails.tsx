@@ -476,6 +476,7 @@ console.log("id", id);
       {currentStep === 1 && (
         <InvestorKycSection
           assetId={id}
+          assetTotalNoTokens={asset?.noOfTokens}
           setInvestorsCount={setInvestorsCount}
           onProceedToMint={() => {
            handleProceedToMint();

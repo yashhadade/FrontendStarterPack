@@ -8,6 +8,7 @@ type InvestorKycSectionProps = {
   assetId: string;
   setInvestorsCount: (count: number) => void;
   onProceedToMint: () => void;
+  assetTotalNoTokens: number;
 };
 
 type KycInvestor = {
@@ -29,7 +30,7 @@ type KycInvestor = {
   [key: string]: any;
 };
 
-const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
+const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
   const [kycInvestors, setKycInvestors] = useState<KycInvestor[]>([]);
   const [selectedInvestor, setSelectedInvestor] = useState<KycInvestor | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
@@ -97,6 +98,7 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
     kycInvestors.every(
       (inv) => inv.status === "APPROVED",
     );
+const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens || 0), 0);
 
   const columns: DataTableColumn<KycInvestor>[] = [
     {
@@ -373,9 +375,9 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
         )}
         <button
           onClick={onProceedToMint}
-          disabled={!allApproved}
+          disabled={!allApproved || totalNoTokens !==assetTotalNoTokens}
           className={`glow-button rounded-lg text-sm ${
-            !allApproved ? "opacity-60 cursor-not-allowed" : ""
+            !allApproved || totalNoTokens !==assetTotalNoTokens ? "opacity-60 cursor-not-allowed" : ""
           }`}
         >
           Proceed to Mint & Transfer →
