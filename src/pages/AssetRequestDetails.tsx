@@ -310,7 +310,7 @@ console.log("id", id);
             {[
               { icon: User, label: "Seller Name", value: asset.sellerName ?? asset.clientName ?? "-" },
               { icon: Building2, label: "Asset Name", value: asset.assetName ?? `Asset #${asset.id}` },
-              { icon: CreditCard, label: "Total Asset Value", value: `${asset?.totalAssetValueInInr ?? "-"} ` },
+              { icon: CreditCard, label: "Total Asset Value", value: asset?.totalAssetValueInInr != null ? `₹${Number(asset.totalAssetValueInInr).toLocaleString("en-IN")}` : "-" },
               // {
               //   icon: Hash,
               //   label: "Unit Calculation",
