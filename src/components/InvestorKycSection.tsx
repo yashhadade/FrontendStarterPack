@@ -158,7 +158,7 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
         data={kycInvestors}
         columns={columns}
         getRowId={(row) => row._id || row.email || row.name}
-        searchableKeys={["name", "emailId", "aadharCard", "panNumber"]}
+        searchableKeys={["name", "emailId", "aadharCardNumber", "panNumber"]}
         searchPlaceholder="Search investors..."
         title="Investor KYC Verification"
         selectedRowId={selectedInvestorId}
