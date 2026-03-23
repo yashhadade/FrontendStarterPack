@@ -161,8 +161,8 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
         searchableKeys={["name", "emailId", "aadharCard", "panNumber"]}
         searchPlaceholder="Search investors..."
         title="Investor KYC Verification"
+        selectedRowId={selectedInvestorId}
         onRowClick={(row) => {
-          // setSelectedInvestor(row);
           handelInvestorSelection(row._id);
           setSelectedInvestorId(row._id);
         }}
@@ -368,6 +368,22 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
       )}
 
       <div className="flex justify-end items-center gap-3">
+        <div className="flex items-center gap-4 mr-auto text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Total Tokens:</span>
+            <span className="font-semibold text-foreground">{assetTotalNoTokens}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Distributed:</span>
+            <span className="font-semibold text-foreground">{totalNoTokens}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Remaining:</span>
+            <span className={`font-semibold ${assetTotalNoTokens - totalNoTokens === 0 ? "text-green-500" : "text-amber-500"}`}>
+              {assetTotalNoTokens - totalNoTokens}
+            </span>
+          </div>
+        </div>
         {!allApproved && (
           <p className="text-[11px] text-muted-foreground">
             All investors must be approved before proceeding.
@@ -375,9 +391,9 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
         )}
         <button
           onClick={onProceedToMint}
-          disabled={!allApproved || totalNoTokens !==assetTotalNoTokens}
+          disabled={!allApproved || totalNoTokens !== assetTotalNoTokens}
           className={`glow-button rounded-lg text-sm ${
-            !allApproved || totalNoTokens !==assetTotalNoTokens ? "opacity-60 cursor-not-allowed" : ""
+            !allApproved || totalNoTokens !== assetTotalNoTokens ? "opacity-60 cursor-not-allowed" : ""
           }`}
         >
           Proceed to Mint & Transfer →
