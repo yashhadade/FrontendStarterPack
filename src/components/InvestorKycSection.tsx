@@ -122,6 +122,11 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
       className: "font-mono text-xs text-muted-foreground",
     },
     {
+      key: "noOfTokens",
+      header: "Tokens",
+      className: "font-mono text-xs text-muted-foreground",
+    },
+    {
       key: "status",
       header: "Status",
       sortable: false,
