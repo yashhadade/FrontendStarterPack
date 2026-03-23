@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import custodianServices from "@/services/custodianServices";
 import { setStorageItem } from "@/utils/storageUtils";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -38,12 +39,10 @@ const Login = () => {
 
         navigate("/dashboard");
       } else {
-        setError(
-          (res && (res?.error)) || "Login failed. Please try again."
-        );
+        toast.error(res?.error || "Login failed. Please try again.",{position:"top-right"});
       }
     } catch {
-      setError("Login failed. Please try again.");
+      toast.error("Login failed. Please try again.",{position:"top-right"});
     } finally {
       setLoading(false);
     }
