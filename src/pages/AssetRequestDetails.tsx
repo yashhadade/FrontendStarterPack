@@ -48,7 +48,7 @@ const stepIndex = (status: string) => {
 
   if (normalized === "REJECTED" || normalized === "PENDING") return 0;
   if (normalized === "APPROVED") return 1;
-  if (normalized === "ASSET_CREATION_PROCESSING" || normalized === "COMPLETED") return 2;
+  if (normalized === "ASSET_CREATION_PROCESSING" || normalized === "COMPLETED"||normalized === "ASSET_CREATED") return 2;
 
   const idx = steps.findIndex((s) => s.key === normalized);
   return idx >= 0 ? idx : 0;
@@ -268,7 +268,7 @@ const AssetRequestDetails = () => {
       </div>
     );
   }
-const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
+
   const currentStep = viewStep ?? activeStep;
   if (!asset) {
     return (
@@ -341,7 +341,7 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
             {[
               { icon: User, label: "Seller Name", value: asset.sellerName ?? asset.clientName ?? "-" },
               { icon: Building2, label: "Asset Name", value: asset.assetName ?? `Asset #${asset.id}` },
-              { icon: CreditCard, label: "Total Asset Value", value: `${asset?.totalAssetValueInInr ?? "-"} ` },
+              { icon: CreditCard, label: "Total Asset Value", value: asset?.totalAssetValueInInr != null ? `₹${Number(asset.totalAssetValueInInr).toLocaleString("en-IN")}` : "-" },
               // {
               //   icon: Hash,
               //   label: "Unit Calculation",
@@ -441,7 +441,7 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
                         className="rounded-lg overflow-hidden border border-border/40 bg-muted/40"
                       >
                         <img
-                          src={`${asset.url ?? ""}${img.docUrl}`}
+                          src={asset?.url+img?.docUrl}
                           alt={img.docName}
                           className="w-full h-32 object-cover"
                         />
@@ -507,6 +507,7 @@ const unitCalculation = asset?.totalAssetValueInInr / asset?.totalAssetUnits;
       {currentStep === 1 && (
         <InvestorKycSection
           assetId={id}
+          assetTotalNoTokens={asset?.noOfTokens}
           setInvestorsCount={setInvestorsCount}
           onProceedToMint={() => {
            handleProceedToMint();

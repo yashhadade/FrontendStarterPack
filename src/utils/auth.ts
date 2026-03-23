@@ -6,16 +6,21 @@ interface DecodedToken {
 }
 
 export const isAuthenticated = () => {
-  const token = getStorageItem("access");
+  const accessToken = getStorageItem("access");
+  const refreshToken = getStorageItem("refresh");
 
-  if (!token) return false;
+  // If access token is missing/expired but we still have a refresh token,
+  // allow navigation; axios will refresh transparently on `401`.
+  if (!accessToken) return !!refreshToken;
 
   try {
-    const decoded = jwtDecode<DecodedToken>(token);
+    const decoded = jwtDecode<DecodedToken>(accessToken);
     const currentTime = Date.now() / 1000;
 
-    return decoded.exp > currentTime; // token still valid
+    if (decoded.exp > currentTime) return true; // access token still valid
+    return !!refreshToken; // access token expired; rely on refresh
   } catch {
-    return false;
+    // If access token can't be decoded, fall back to refresh token presence.
+    return !!refreshToken;
   }
 };

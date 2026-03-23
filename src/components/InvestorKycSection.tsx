@@ -8,6 +8,7 @@ type InvestorKycSectionProps = {
   assetId: string;
   setInvestorsCount: (count: number) => void;
   onProceedToMint: () => void;
+  assetTotalNoTokens: number;
 };
 
 type KycInvestor = {
@@ -29,7 +30,7 @@ type KycInvestor = {
   [key: string]: any;
 };
 
-const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
+const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
   const [kycInvestors, setKycInvestors] = useState<KycInvestor[]>([]);
   const [selectedInvestor, setSelectedInvestor] = useState<KycInvestor | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
@@ -97,6 +98,7 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
     kycInvestors.every(
       (inv) => inv.status === "APPROVED",
     );
+const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens || 0), 0);
 
   const columns: DataTableColumn<KycInvestor>[] = [
     {
@@ -159,8 +161,8 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
         searchableKeys={["name", "emailId", "aadharCard", "panNumber"]}
         searchPlaceholder="Search investors..."
         title="Investor KYC Verification"
+        selectedRowId={selectedInvestorId}
         onRowClick={(row) => {
-          // setSelectedInvestor(row);
           handelInvestorSelection(row._id);
           setSelectedInvestorId(row._id);
         }}
@@ -213,7 +215,7 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
                   )}
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Aadhaar</p>
-                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCard}</p>
+                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCardNumber}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">PAN</p>
@@ -366,6 +368,22 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
       )}
 
       <div className="flex justify-end items-center gap-3">
+        <div className="flex items-center gap-4 mr-auto text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Total Tokens:</span>
+            <span className="font-semibold text-foreground">{assetTotalNoTokens}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Distributed:</span>
+            <span className="font-semibold text-foreground">{totalNoTokens}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Remaining:</span>
+            <span className={`font-semibold ${assetTotalNoTokens - totalNoTokens === 0 ? "text-green-500" : "text-amber-500"}`}>
+              {assetTotalNoTokens - totalNoTokens}
+            </span>
+          </div>
+        </div>
         {!allApproved && (
           <p className="text-[11px] text-muted-foreground">
             All investors must be approved before proceeding.
@@ -373,9 +391,9 @@ const InvestorKycSection = ({ assetId, setInvestorsCount, onProceedToMint }: Inv
         )}
         <button
           onClick={onProceedToMint}
-          disabled={!allApproved}
+          disabled={!allApproved || totalNoTokens !== assetTotalNoTokens}
           className={`glow-button rounded-lg text-sm ${
-            !allApproved ? "opacity-60 cursor-not-allowed" : ""
+            !allApproved || totalNoTokens !== assetTotalNoTokens ? "opacity-60 cursor-not-allowed" : ""
           }`}
         >
           Proceed to Mint & Transfer →

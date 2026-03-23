@@ -41,6 +41,10 @@ type DataTableProps<T> = {
    * Optional title displayed above the table.
    */
   title?: string;
+  /**
+   * ID of the currently selected row (highlighted).
+   */
+  selectedRowId?: string | number | null;
 };
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50];
@@ -53,6 +57,7 @@ function DataTable<T extends Record<string, any>>({
   onRowClick,
   searchPlaceholder = "Search…",
   title = "Assets Requests",
+  selectedRowId,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -183,10 +188,15 @@ function DataTable<T extends Record<string, any>>({
             ) : (
               paginatedData.map((row) => {
                 const id = getRowId(row);
+                const isSelected = selectedRowId != null && id === selectedRowId;
                 return (
                   <tr
                     key={id}
-                    className="border-b border-border/30 hover:bg-muted/30 transition-colors hover:cursor-pointer"
+                    className={`border-b border-border/30 transition-colors ${
+                      isSelected
+                        ? "bg-primary/10 border-l-2 border-l-primary"
+                        : "hover:bg-muted/30"
+                    } ${onRowClick ? "cursor-pointer" : ""}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
                     {columns.map((col) => (
