@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Info, Check, Copy, Loader2 } from "lucide-react";
+import { Info, Check, Copy, Loader2, Link } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
@@ -32,6 +32,7 @@ type MintAndTransferSectionProps = {
   statusLabel: (status: TransferInvestor["status"]) => string;
   fetchAssetRequest: () => void;
 };
+const MAX_POLL_REQUESTS = 10;
 
 export const MintAndTransferSection = ({
   assetId,
@@ -188,14 +189,41 @@ export const MintAndTransferSection = ({
   }, [blockchainOperationsLogs])
 
   useEffect(() => {
-    if (blockchainLogPollingId) {
+    if (!blockchainLogPollingId) return undefined;
 
-      const interval = setInterval(() => {
-        fetchBlockchainOperationLogById(blockchainLogPollingId);
+    let pollRequestCount = 0;
+    let intervalId;
+
+    const pollWithLimit = async () => {
+      if (pollRequestCount >= MAX_POLL_REQUESTS) {
+        setBlockchainLogPollingId(null);
+        toast.warning(
+          "Network exponential timeout reached. Please refresh the page to continue tracking blockchain status.",
+        );
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
+      pollRequestCount += 1;
+      await fetchBlockchainOperationLogById(blockchainLogPollingId);
+    };
+
+    const timeoutId = setTimeout(() => {
+      // Predicted delay polling:
+      // wait 30s before first request, then poll every 5s.
+      pollWithLimit();
+      intervalId = setInterval(() => {
+        pollWithLimit();
       }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [blockchainLogPollingId])
+    }, 50000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [blockchainLogPollingId]);
+
+
   const handleSignLegalNote = async () => {
     try {
       setSigningLegalNote(true);
@@ -342,6 +370,42 @@ export const MintAndTransferSection = ({
               <span>{isMintLoading ? "Minting..." : "Mint Tokens"}</span>
               {/* Mint Tokens */}
             </button>
+          </div>
+        </div>
+        <div className="p-4 rounded-xl bg-card border border-border shadow flex flex-col gap-2 max-w-xl mb-2">
+          {asset.contractAddress && (
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-muted-foreground">
+                Contract Address:
+              </span>
+              <span className="font-mono text-sm text-purple-700 flex items-center">
+                {truncateAddress(asset.contractAddress)}
+                <button
+                  className="ml-2 text-purple-600 hover:text-purple-800"
+                  onClick={() => copyAddress(asset.contractAddress, "contractAddress")}
+                  title="Copy Address"
+                >
+                  <Copy className="inline w-4 h-4" />
+                </button>
+                <a
+                  href={`${import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL}/token/${asset.contractAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 px-2 py-1 text-xs rounded bg-purple-100 text-purple-700 font-medium hover:bg-purple-200 transition flex items-center gap-1"
+                  title="Open in Polygonscan"
+                >
+                  <Link />
+                </a>
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm text-muted-foreground">
+              Total Tokens:
+            </span>
+            <span className="text-sm text-foreground font-medium">
+              {asset.noOfTokens} {asset.tokenName}
+            </span>
           </div>
         </div>
 
