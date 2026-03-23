@@ -39,13 +39,23 @@ const TokenTransfers = () => {
       sortable: false,
       render: (prop) => (
         <span
-          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+          className={`text-[10px] px-2 py-0.5 rounded-full font-medium 
+            ${
             prop.status === "COMPLETED"
-              ? "status-approved"
+              ? "progress-step-done"
               : prop.status === "PENDING"
               ? "status-pending"
-              : "bg-secondary/10 text-secondary border border-secondary/20"
-          }`}
+              : prop.status === "REJECTED"
+              ? "status-rejected"
+              : prop.status === "ASSET_CREATION_PROCESSING"
+              ? "progress-step-active"
+              : prop.status === "ASSET_CREATED"
+              ? "progress-step-done"            
+              : prop.status === "APPROVED"
+              ? "status-approved"
+              :"bg-secondary/10 text-secondary border border-secondary/20"
+          }`
+        }
         >
           {prop.status}
         </span>
