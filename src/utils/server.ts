@@ -1,6 +1,6 @@
 import { authHeader } from '@/helpers/authHeader';
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
-import { removeStorageItem } from '@/utils/storageUtils';
+import { getStorageItem, removeStorageItem } from '@/utils/storageUtils';
 import { refreshAccessToken } from '@/utils/refreshToken';
 
 const baseURL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5003/';
@@ -22,6 +22,12 @@ type RetryConfig = AxiosRequestConfig & { _retry?: boolean };
 
 let refreshPromise: Promise<string> | null = null;
 
+const shouldSkipRefresh = (request?: RetryConfig) => {
+  const url = request?.url ?? '';
+  // Never run refresh flow for auth endpoints (login/refresh/logout/etc).
+  return url.includes('/auth/') || url.startsWith('auth/');
+};
+
 server.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -30,8 +36,14 @@ server.interceptors.response.use(
 
     if (!originalRequest) return Promise.reject(error);
 
-    // Only attempt refresh once per request.
-    if (status === 401 && !originalRequest._retry) {
+    // Only attempt refresh once per request, for non-auth routes,
+    // and only when we actually have a refresh token.
+    if (
+      status === 401 &&
+      !originalRequest._retry &&
+      !shouldSkipRefresh(originalRequest) &&
+      !!getStorageItem('refresh')
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -45,7 +57,6 @@ server.interceptors.response.use(
         originalRequest.headers.Authorization = newAccessToken;
         return server(originalRequest);
       } catch (refreshErr) {
-        console.error(refreshErr);
         removeStorageItem();
         window.location.href = '/login';
         return Promise.reject(refreshErr);
