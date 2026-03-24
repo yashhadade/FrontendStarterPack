@@ -71,6 +71,28 @@ const mintTokens = (id: string) =>{
     })
 }
 
+const proposeTransaction = (data: any) =>{
+    return server.post(`blockchainTransaction/proposeTransaction`, data)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+
+const getAssetsForProposal = () =>{
+    return server.get(`requestAssets/getAssetsForProposal`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+
 export default {
     getAssetsRequests,
     getAssetRequestById,
@@ -78,5 +100,7 @@ export default {
     signedLegalNotes,
     createDigitalAsset,
     batchWhitelistUsers,
-    mintTokens
+    mintTokens,
+    proposeTransaction,
+    getAssetsForProposal,
 }

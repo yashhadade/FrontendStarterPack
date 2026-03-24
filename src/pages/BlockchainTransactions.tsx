@@ -2,14 +2,12 @@ import { useState } from "react";
 import { Wallet, CheckCircle2, XCircle, Clock, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDltAddressStore } from "@/store/dltAddressStrore";
-import useConnectWallet from "@/utils/useConnectWallet";
+import useConnectWallet from "@/hooks/useConnectWallet";
 import TransactionQueueTab from "@/components/blockchain/TransactionQueueTab";
 import GovernanceControlsTab from "@/components/blockchain/GovernanceControlsTab";
 import NewTaskTab from "@/components/blockchain/NewTaskTab";
 
 const BlockchainTransactions = () => {
-  const [selectedAction, setSelectedAction] = useState("");
-  const [selectedAsset, setSelectedAsset] = useState("");
   const dltAddress = useDltAddressStore((state) => state.dltAddress)
   const { connectWallet, disconnectWallet, isConnected } = useConnectWallet()
 
@@ -80,10 +78,7 @@ const BlockchainTransactions = () => {
         {/* New Task */}
         <TabsContent value="new" className="space-y-4">
           <NewTaskTab
-            selectedAsset={selectedAsset}
-            setSelectedAsset={setSelectedAsset}
-            selectedAction={selectedAction}
-            setSelectedAction={setSelectedAction}
+           
           />
         </TabsContent>
       </Tabs>

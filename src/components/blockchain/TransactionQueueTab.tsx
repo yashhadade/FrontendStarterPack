@@ -1,7 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import PendingTransactionsTable from "./PendingTransactionsTable";
+import QueuedTransactionsTable from "./QueuedTransactionsTable";
+import CompletedTransactionsTable from "./CompletedTransactionsTable";
+
+type StatusTab = "PENDING" | "QUEUED" | "COMPLETED";
 
 const TransactionQueueTab = () => {
+  const [tab, setTab] = useState<StatusTab>("PENDING");
+
   return (
     <div className="glass-card p-5 space-y-4">
       <div className="flex items-center justify-between mb-2">
@@ -13,42 +21,49 @@ const TransactionQueueTab = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="pending" className="space-y-4">
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as StatusTab)}
+        className="space-y-4"
+      >
         <TabsList className="bg-muted/50 border border-border/50 p-1">
-          <TabsTrigger value="pending" className="text-xs sm:text-sm">
+          <TabsTrigger value="PENDING" className="text-xs sm:text-sm">
             Pending Approvals
           </TabsTrigger>
-          <TabsTrigger value="queued" className="text-xs sm:text-sm">
+          <TabsTrigger value="QUEUED" className="text-xs sm:text-sm">
             Queued
           </TabsTrigger>
-          <TabsTrigger value="completed" className="text-xs sm:text-sm">
+          <TabsTrigger value="COMPLETED" className="text-xs sm:text-sm">
             Completed
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="space-y-2">
+        <TabsContent value="PENDING" className="space-y-3">
           <div className="glass-card p-4">
             <p className="text-xs text-muted-foreground">
               These transactions are awaiting required multi-signature approvals before they can be
               queued on-chain.
             </p>
           </div>
+          <PendingTransactionsTable />
         </TabsContent>
 
-        <TabsContent value="queued" className="space-y-2">
+        <TabsContent value="QUEUED" className="space-y-3">
           <div className="glass-card p-4">
             <p className="text-xs text-muted-foreground">
               These transactions have received sufficient approvals and are queued for execution.
             </p>
           </div>
+          <QueuedTransactionsTable />
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-2">
+        <TabsContent value="COMPLETED" className="space-y-3">
           <div className="glass-card p-4">
             <p className="text-xs text-muted-foreground">
               These transactions have been fully executed on-chain and recorded in the audit log.
             </p>
           </div>
+          <CompletedTransactionsTable />
         </TabsContent>
       </Tabs>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Info, Check, Copy, Loader2 } from "lucide-react";
+import { Info, Check, Copy, Loader2, Link } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
@@ -7,30 +7,32 @@ import { toast } from "sonner";
 import blockchainOperationServices from "@/services/blockchainOperationServices";
 
 type TransferInvestor = {
+  _id: string;
   name: string;
-  amountInvested: string;
-  tokensOwned: string;
-  percentOwned: string;
-  walletAddress: string;
-  status: "ready" | "initiated" | "completed" | "failed";
+  amountInvested?: string;
+  noOfTokens: string;
+  percentOwned?: string;
+  dltAccount: string;
+  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
 };
 
 type MintAndTransferSectionProps = {
   assetId: string;
   asset: any;
-  transferTab: "pending" | "initiated" | "completed";
-  setTransferTab: (tab: "pending" | "initiated" | "completed") => void;
+  transferTab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" ;
+  setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED") => void;
   filteredInvestors: TransferInvestor[];
-  selectedRows: Set<number>;
-  setSelectedRows: React.Dispatch<React.SetStateAction<Set<number>>>;
+  selectedRows: Set<string>;
+  setSelectedRows: React.Dispatch<React.SetStateAction<Set<string>>>;
   selectFirst80: () => void;
   setShowGasModal: (val: boolean) => void;
   truncateAddress: (addr: string) => string;
-  copyAddress: (addr: string, idx: number) => void;
+  copyAddress: (addr: string, idx: string) => void;
   statusBadgeClass: (status: TransferInvestor["status"]) => string;
   statusLabel: (status: TransferInvestor["status"]) => string;
   fetchAssetRequest: () => void;
 };
+const MAX_POLL_REQUESTS = 10;
 
 export const MintAndTransferSection = ({
   assetId,
@@ -54,7 +56,7 @@ export const MintAndTransferSection = ({
   const [assetDeploymentData, setAssetDeploymentData] = useState(null);
   const [batchWhitelistingData, setBatchWhitelistingData] = useState(null);
   const [tokenMintingData, setTokenMintingData] = useState(null);
-  const [blockchainLogPollingId, setBlockchainLogPollingId] = useState(null);
+  const [blockchainLogPollingId, setBlockchainLogPollingId] = useState<string | null>(null);
   const [batchWhitelistingProcessing, setBatchWhitelistingProcessing] = useState(false);
   const [tokenMintingProcessing, setTokenMintingProcessing] = useState(false);
   const [isCreateAssetDisabled, setIsCreateAssetDisabled] = useState(false);
@@ -65,11 +67,11 @@ export const MintAndTransferSection = ({
   const [isWhitelistLoading, setIsWhitelistLoading] = useState(false);
   const [isMintLoading, setIsMintLoading] = useState(false);
   const [signingOfTheLegalNote, setSigningOfTheLegalNote] = useState(asset?.signedLegalNote||false);
-  const toggleRow = (idx: number) => {
-    setSelectedRows((prev: Set<number>) => {
-      const next = new Set<number>(prev);
-      if (next.has(idx)) next.delete(idx);
-      else if (next.size < 80) next.add(idx);
+  const toggleRow = (investorId: string) => {
+    setSelectedRows((prev: Set<string>) => {
+      const next = new Set<string>(prev);
+      if (next.has(investorId)) next.delete(investorId);
+      else if (next.size < 80) next.add(investorId);
       return next;
     });
   };
@@ -112,7 +114,7 @@ export const MintAndTransferSection = ({
     }
     fetchBlockchainOperationsLogs();
   },[asset, signingOfTheLegalNote])
-  const fetchBlockchainOperationLogById = async (logId) => {
+  const fetchBlockchainOperationLogById = async (logId: string) => {
     try {
       const res = await blockchainOperationServices.single(logId);
       if (res && res.data) {
@@ -187,14 +189,41 @@ export const MintAndTransferSection = ({
   }, [blockchainOperationsLogs])
 
   useEffect(() => {
-    if (blockchainLogPollingId) {
+    if (!blockchainLogPollingId) return undefined;
 
-      const interval = setInterval(() => {
-        fetchBlockchainOperationLogById(blockchainLogPollingId);
+    let pollRequestCount = 0;
+    let intervalId;
+
+    const pollWithLimit = async () => {
+      if (pollRequestCount >= MAX_POLL_REQUESTS) {
+        setBlockchainLogPollingId(null);
+        toast.warning(
+          "Network exponential timeout reached. Please refresh the page to continue tracking blockchain status.",
+        );
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
+      pollRequestCount += 1;
+      await fetchBlockchainOperationLogById(blockchainLogPollingId);
+    };
+
+    const timeoutId = setTimeout(() => {
+      // Predicted delay polling:
+      // wait 30s before first request, then poll every 5s.
+      pollWithLimit();
+      intervalId = setInterval(() => {
+        pollWithLimit();
       }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [blockchainLogPollingId])
+    }, 50000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [blockchainLogPollingId]);
+
+
   const handleSignLegalNote = async () => {
     try {
       setSigningLegalNote(true);
@@ -343,13 +372,49 @@ export const MintAndTransferSection = ({
             </button>
           </div>
         </div>
+        <div className="p-4 rounded-xl bg-card border border-border shadow flex flex-col gap-2 max-w-xl mb-2">
+          {asset.contractAddress && (
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-muted-foreground">
+                Contract Address:
+              </span>
+              <span className="font-mono text-sm text-purple-700 flex items-center">
+                {truncateAddress(asset.contractAddress)}
+                <button
+                  className="ml-2 text-purple-600 hover:text-purple-800"
+                  onClick={() => copyAddress(asset.contractAddress, "contractAddress")}
+                  title="Copy Address"
+                >
+                  <Copy className="inline w-4 h-4" />
+                </button>
+                <a
+                  href={`${import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL}/token/${asset.contractAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 px-2 py-1 text-xs rounded bg-purple-100 text-purple-700 font-medium hover:bg-purple-200 transition flex items-center gap-1"
+                  title="Open in Polygonscan"
+                >
+                  <Link />
+                </a>
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm text-muted-foreground">
+              Total Tokens:
+            </span>
+            <span className="text-sm text-foreground font-medium">
+              {asset.noOfTokens} {asset.tokenName}
+            </span>
+          </div>
+        </div>
 
         <div className="border-b border-border">
           <div className="flex gap-6">
             {([
-              { key: "pending", label: "Transfer Pending" },
-              { key: "initiated", label: "Transfer Initiated" },
-              { key: "completed", label: "Transfer Completed" },
+              { key: "APPROVED", label: "Transfer Pending" },
+              { key: "TOKEN_TRANSFERRED_INITIATED", label: "Transfer Initiated" },
+              { key: "TOKEN_TRANSFER_COMPLETED", label: "Transfer Completed" },
             ] as const).map((tab) => (
               <button
                 key={tab.key}
@@ -414,7 +479,7 @@ export const MintAndTransferSection = ({
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-4 w-10">
                   <Checkbox
-                    checked={filteredInvestors.length > 0 && selectedRows.size === filteredInvestors.length}
+                    checked={filteredInvestors.length > 0 && selectedRows.size === Math.min(80, filteredInvestors.length)}
                     onCheckedChange={(checked) => {
                       if (checked) selectFirst80();
                       else setSelectedRows(new Set());
@@ -425,13 +490,7 @@ export const MintAndTransferSection = ({
                   Owner Name
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Amount Invested
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Tokens Owned
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  % Owned
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Wallet Address
@@ -449,33 +508,31 @@ export const MintAndTransferSection = ({
                   </td>
                 </tr>
               ) : (
-                filteredInvestors.map((inv, i) => (
+                filteredInvestors?.map((inv) => (
                   <tr
-                    key={i}
-                    className={`border-b border-border/30 transition-colors cursor-pointer ${selectedRows.has(i) ? "bg-purple-50/50" : "hover:bg-muted/30"
+                    key={inv._id}
+                    className={`border-b border-border/30 transition-colors cursor-pointer ${selectedRows.has(inv._id) ? "bg-purple-50/50" : "hover:bg-muted/30"
                       }`}
-                    onClick={() => toggleRow(i)}
+                    onClick={() => toggleRow(inv._id)}
                   >
                     <td className="py-3 px-4">
                       <Checkbox
-                        checked={selectedRows.has(i)}
-                        onCheckedChange={() => toggleRow(i)}
+                        checked={selectedRows.has(inv._id)}
+                        onCheckedChange={() => toggleRow(inv._id)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                     <td className="py-3 px-4 text-foreground font-medium">{inv.name}</td>
-                    <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.amountInvested}</td>
-                    <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.tokensOwned}</td>
-                    <td className="py-3 px-4 text-xs text-muted-foreground">{inv.percentOwned}</td>
+                    <td className="py-3 px-4 font-mono text-xs text-foreground">{inv.noOfTokens}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-muted-foreground">
-                          {truncateAddress(inv.walletAddress)}
+                          {truncateAddress(inv.dltAccount)}
                         </span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            copyAddress(inv.walletAddress, i);
+                            copyAddress(inv.dltAccount, inv._id);
                           }}
                           className="text-muted-foreground hover:text-foreground transition-colors"
                         >

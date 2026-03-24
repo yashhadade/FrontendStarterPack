@@ -33,8 +33,32 @@ const updateInvestorStatus = (data: {investorId: string, status: string, reason?
     })
 }
 
+const getInvestorsByAssetIdAndStatus = (assetId: string, status?: string) =>{
+    return server.get(`investor/getInvestorsByAssetId/${assetId}${status ? `?status=${status}` : ''}`)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+
+const initiateBatchTransfer = (data: {assetId: string, dltWalletAddresses: string[]}) =>{
+    return server.post(`investor/initiateBatchTransfer`, data)
+    .then(res=>{
+        return res.data
+    })
+    .catch(err=>{
+        console.log(err);        
+        return err.response.data;
+    })
+}
+
 export default {
     getInvestorsByAssetId,
     getInvestorById,
-    updateInvestorStatus
+    updateInvestorStatus,
+    getInvestorsByAssetIdAndStatus,
+    initiateBatchTransfer
 }

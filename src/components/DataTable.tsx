@@ -151,7 +151,7 @@ function DataTable<T extends Record<string, any>>({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-visible">
         <table className="w-full text-sm">
           <thead className="bg-muted/80 backdrop-blur-sm">
             <tr className="border-b border-border/50">

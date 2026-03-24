@@ -12,6 +12,7 @@ import AssetRequestDetails from "./pages/AssetRequestDetails";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BlockchainTransactionDetails from "./pages/BlockchainTransactionDetails";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/blockchain" element={<BlockchainTransactions />} />
+              <Route path="/blockchain-transactions/:id" element={<BlockchainTransactionDetails />} />
               <Route path="/assets-requests" element={<TokenTransfers />} />
               <Route path="/assets-requests/:id" element={<AssetRequestDetails />} />
             </Route>

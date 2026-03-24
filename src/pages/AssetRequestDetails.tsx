@@ -23,25 +23,19 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import InvestorKycSection from "@/components/InvestorKycSection";
 import { MintAndTransferSection } from "@/components/MintAndTransferSection";
+import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
 import { toast } from "sonner";
+import investorsServices from "@/services/investorsServices";
 
 type TransferInvestor = {
+  _id: string;
   name: string;
-  amountInvested: string;
-  tokensOwned: string;
-  percentOwned: string;
-  walletAddress: string;
-  status: "ready" | "initiated" | "completed" | "failed";
+  noOfTokens: string;
+  dltAccount: string;
+  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
 };
 
-
-const transferInvestors: TransferInvestor[] = [
-  { name: "Pratik Raut", amountInvested: "₹3,90,010", tokensOwned: "58991 FRAX", percentOwned: "6.83%", walletAddress: "0x7F21a8Bc93E4dD12Dc5b", status: "ready" },
-  { name: "Raj Mehta", amountInvested: "₹12,50,000", tokensOwned: "189000 FRAX", percentOwned: "21.88%", walletAddress: "0x3A4b5C6d7E8f9012Ab3c", status: "ready" },
-  { name: "Priya Sharma", amountInvested: "₹8,20,000", tokensOwned: "124000 FRAX", percentOwned: "14.35%", walletAddress: "0x9D8e7F6a5B4c3D2e1F0a", status: "initiated" },
-  { name: "Vikram Singh", amountInvested: "₹5,60,000", tokensOwned: "84700 FRAX", percentOwned: "9.80%", walletAddress: "0x1B2c3D4e5F6a7B8c9D0e", status: "completed" },
-];
 
 const steps = [
   { label: "Asset Review", key: "PENDING" },
@@ -60,23 +54,22 @@ const stepIndex = (status: string) => {
   return idx >= 0 ? idx : 0;
 };
 
-const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+const truncateAddress = (addr: string) => `${addr?.slice(0, 6)}...${addr?.slice(-4)}`;
 
 const statusBadgeClass = (status: TransferInvestor["status"]) => {
   switch (status) {
-    case "ready": return "bg-purple-100 text-purple-700 border border-purple-200";
-    case "initiated": return "bg-yellow-100 text-yellow-700 border border-yellow-200";
-    case "completed": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
-    case "failed": return "bg-red-100 text-red-700 border border-red-200";
+    case "APPROVED": return "bg-purple-100 text-purple-700 border border-purple-200";
+    case "TOKEN_TRANSFERRED_INITIATED": return "bg-yellow-100 text-yellow-700 border border-yellow-200";
+    case "TOKEN_TRANSFER_COMPLETED": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
+    case "REJECTED": return "bg-red-100 text-red-700 border border-red-200";
   }
 };
 
 const statusLabel = (status: TransferInvestor["status"]) => {
   switch (status) {
-    case "ready": return "Ready for Transfer";
-    case "initiated": return "Transfer Initiated";
-    case "completed": return "Transfer Completed";
-    case "failed": return "Failed";
+    case "APPROVED": return "Ready for Transfer";
+    case "TOKEN_TRANSFERRED_INITIATED": return "Transfer Initiated";
+    case "TOKEN_TRANSFER_COMPLETED": return "Transfer Completed";
   }
 };
 
@@ -89,10 +82,10 @@ const AssetRequestDetails = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [viewStep, setViewStep] = useState<number | null>(null);
   const [selectedInvestor, setSelectedInvestor] = useState<number | null>(null);
-  const [transferTab, setTransferTab] = useState<"pending" | "initiated" | "completed">("pending");
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [transferTab, setTransferTab] = useState<"APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED">("APPROVED");
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showGasModal, setShowGasModal] = useState(false);
-  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [copiedIdx, setCopiedIdx] = useState<string | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
@@ -102,7 +95,20 @@ const AssetRequestDetails = () => {
   const [showIpfsPassword, setShowIpfsPassword] = useState(false);
   const [showExistingIpfsPassword, setShowExistingIpfsPassword] = useState(false);
   const [investorsCount, setInvestorsCount] = useState(0);
-console.log("id", id);
+  const [transferInvestors,setTransferInvestors] = useState<TransferInvestor[]>([]);
+  const [openProposeTransactionModal, setOpenProposeTransactionModal] = useState(false);
+
+
+  const fetchInvestor = async () =>{
+    try {
+      const res = await investorsServices.getInvestorsByAssetIdAndStatus(id, transferTab);
+      setTransferInvestors(res?.data || []);
+    } catch (error) {
+      toast.error(error?.message || "Failed to fetch investors");
+    }
+  }
+
+
   const handleProceedToMint = async () => {
     try {
       const res = await assetsServices.assetApproveReject({
@@ -133,18 +139,43 @@ console.log("id", id);
     }
   };
   useEffect(() => {
-    
-
     fetchAssetRequest();
   }, [id]);
 
-  const filteredInvestors = transferInvestors.filter((inv) => {
-    if (transferTab === "pending") return inv.status === "ready";
-    if (transferTab === "initiated") return inv.status === "initiated";
-    return inv.status === "completed";
-  });
+  useEffect(() => {
+    fetchInvestor();
+  }, [id, transferTab]);
 
-  const toggleRow = (idx: number) => {
+  const handleInitiateBatchTransfer = async () => {
+    setOpenProposeTransactionModal(true);
+    const dltWalletAddresses = transferInvestors
+      .filter((inv) => selectedRows.has(inv._id))
+      .map((inv) => inv.dltAccount as string);
+    try {
+      const res = await assetsServices.proposeTransaction({
+        assetId: id,
+        transationData:{
+          dltWalletAddresses,
+        },
+        action:"BATCH_TRANSFER"
+      });
+      if (res?.data) {
+        toast.success("Batch transfer initiated successfully");
+        setShowGasModal(false);
+        setSelectedRows(new Set());
+        fetchInvestor();
+      } else {
+        toast.error(res?.error || "Failed to initiate batch transfer");
+      }
+    } catch (error) {
+      toast.error(error?.message || "Failed to initiate batch transfer");
+    }finally{
+      setOpenProposeTransactionModal(false);
+    }
+  };
+
+
+  const toggleRow = (idx: string) => {
     setSelectedRows((prev) => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx);
@@ -154,12 +185,11 @@ console.log("id", id);
   };
 
   const selectFirst80 = () => {
-    const indices = new Set<number>();
-    filteredInvestors.forEach((_, i) => { if (indices.size < 80) indices.add(i); });
-    setSelectedRows(indices);
+    const ids = new Set(transferInvestors.slice(0, 80).map((inv) => inv._id));
+    setSelectedRows(ids);
   };
 
-  const copyAddress = (addr: string, idx: number) => {
+  const copyAddress = (addr: string, idx: string) => {
     navigator.clipboard.writeText(addr);
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 1500);
@@ -256,6 +286,7 @@ console.log("id", id);
 
   return (
     <div className="p-8 space-y-6 animate-fade-in">
+      <FullScreenLoader open={openProposeTransactionModal} message="Batch transfer initiating…" />
       {/* Back + Title */}
       <div className="flex items-center gap-3">
         <button
@@ -491,7 +522,7 @@ console.log("id", id);
           asset={asset}
           transferTab={transferTab}
           setTransferTab={setTransferTab}
-          filteredInvestors={filteredInvestors}
+          filteredInvestors={transferInvestors}
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
           selectFirst80={selectFirst80}
@@ -601,7 +632,7 @@ console.log("id", id);
                 Cancel
               </button>
               <button
-                onClick={() => setShowGasModal(false)}
+                onClick={() => handleInitiateBatchTransfer()}
                 className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
               >
                 Confirm Transfer
