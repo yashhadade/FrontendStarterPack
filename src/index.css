@@ -125,7 +125,7 @@
   }
 
   .status-approved {
-    @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+    @apply bg-green-500/20 text-green-400 border border-green-500/30;
   }
 
   .status-rejected {
@@ -133,7 +133,7 @@
   }
 
   .progress-step-active {
-    @apply bg-primary/20 border-primary text-primary;
+    @apply bg-blue-500/20 border-blue-500 text-blue-600;
   }
 
   .progress-step-done {
