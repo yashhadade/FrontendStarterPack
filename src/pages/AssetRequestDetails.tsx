@@ -1,32 +1,26 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Coins,
-  ArrowRight,
-  ChevronRight,
-  Shield,
-  User,
-  Building2,
-  MapPin,
-  Hash,
-  CreditCard,
-  Image,
-  Copy,
-  Info,
-  Check,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import InvestorKycSection from "@/components/InvestorKycSection";
 import { MintAndTransferSection } from "@/components/MintAndTransferSection";
-import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
-import { toast } from "sonner";
 import investorsServices from "@/services/investorsServices";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  ChevronRight,
+  Coins,
+  CreditCard,
+  Eye,
+  EyeOff,
+  FileText,
+  Image,
+  Loader2,
+  Shield,
+  User,
+  XCircle
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 type TransferInvestor = {
   _id: string;
@@ -101,7 +95,7 @@ const AssetRequestDetails = () => {
 
   const fetchInvestor = async () =>{
     try {
-      const res = await investorsServices.getInvestorsByAssetIdAndStatus(id, transferTab);
+      const res = await investorsServices.getInvestorByAssetIdAndGroupByDltAccount(id, transferTab);
       setTransferInvestors(res?.data || []);
     } catch (error) {
       toast.error(error?.message || "Failed to fetch investors");
@@ -632,7 +626,12 @@ const AssetRequestDetails = () => {
                 onClick={() => handleInitiateBatchTransfer()}
                 className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Confirm Transfer
+               {proposeTransactionLoading ? (
+                 <span className="flex items-center justify-center gap-2">
+                   <Loader2 className="w-4 h-4 animate-spin" />
+                   Initiating
+                 </span>
+               ) : "Confirm Transfer"}
               </button>
             </div>
           </div>

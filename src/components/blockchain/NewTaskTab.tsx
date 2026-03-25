@@ -114,7 +114,7 @@ const NewTaskTab = () => {
 
       setLoadingUsers(true)
       try {
-        const res = await investorsServices.getInvestorsByAssetIdAndStatus(
+        const res = await investorsServices.getInvestorByAssetIdAndGroupByDltAccount(
           values.selectedAsset,
         )
 
