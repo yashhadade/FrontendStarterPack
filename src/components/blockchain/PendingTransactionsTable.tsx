@@ -206,6 +206,8 @@ const PendingTransactionsTable = () => {
         searchableKeys={["safeNonce", "action", "name", "description"]}
         title="Pending Transactions"
         searchPlaceholder="Search pending transactions…"
+        initialSortKey="safeNonce"
+        initialSortDirection="asc"
       />
     </>
   );
