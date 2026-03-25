@@ -215,7 +215,7 @@ export const MintAndTransferSection = ({
       intervalId = setInterval(() => {
         pollWithLimit();
       }, 5000);
-    }, 50000);
+    }, 30000);
 
     return () => {
       clearTimeout(timeoutId);
@@ -295,38 +295,49 @@ export const MintAndTransferSection = ({
   }
 
   useEffect(() => {
-   if(assetDeploymentData?.status === "PROCESSING"){
-    console.log("assetDeploymentData?.status", assetDeploymentData?.status);
-    setIsCreateLoading(true);
-   }else{
-    setIsCreateLoading(false);
-   }
-  }, [assetDeploymentData])
+    const status = assetDeploymentData?.status;
+    if (status === "PROCESSING" || status === "QUEUED") {
+      setIsCreateLoading(true);
+      return;
+    }
+
+    // Avoid UI flicker when status is briefly undefined between log refreshes.
+    if (status === "COMPLETED" || status === "FAILED") {
+      setIsCreateLoading(false);
+    }
+  }, [assetDeploymentData]);
 
   useEffect(() => {
-    if(batchWhitelistingData?.status === "PROCESSING"){
-      console.log("batchWhitelistingData?.status", batchWhitelistingData?.status);
+    const status = batchWhitelistingData?.status;
+    if (status === "PROCESSING" || status === "QUEUED") {
+
       setIsWhitelistLoading(true);
-    }else{
+      return;
+    }
+
+    // Avoid UI flicker when status is briefly undefined between log refreshes.
+    if (status === "COMPLETED" || status === "FAILED") {
       setIsWhitelistLoading(false);
     }
-  }, [batchWhitelistingData])
+  }, [batchWhitelistingData]);
   useEffect(() => {
-    if(tokenMintingData?.status === "PROCESSING"){
-      console.log("tokenMintingData?.status", tokenMintingData?.status);
-    setIsMintLoading(true);
-    }else{
+    const status = tokenMintingData?.status;
+    if (status === "PROCESSING" || status === "QUEUED") {
+
+      setIsMintLoading(true);
+      return;
+    }
+
+    // Avoid UI flicker when status is briefly undefined between log refreshes.
+    if (status === "COMPLETED" || status === "FAILED") {
       setIsMintLoading(false);
     }
-  }, [tokenMintingData])
+  }, [tokenMintingData]);
 
 
   return (
     <>
       <FullScreenLoader open={signingLegalNote} message="Signing legal note…" />
-      <FullScreenLoader open={creatingDigitalAsset} message="Creating digital asset…" />
-      <FullScreenLoader open={batchWhitelistingProcessing} message="Whitelisting accounts…" />
-      <FullScreenLoader open={tokenMintingProcessing} message="Minting tokens…" />
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div>
@@ -346,28 +357,97 @@ export const MintAndTransferSection = ({
             <button
               className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
               onClick={handleCreateDigitalAsset}
-              disabled={!!isCreateAssetDisabled||isCreateLoading}
+              disabled={
+                !!isCreateAssetDisabled ||
+                isCreateLoading ||
+                creatingDigitalAsset ||
+                assetDeploymentData?.status === "COMPLETED"
+              }
             >
-              {isCreateLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{isCreateLoading ? "Creating..." : "Create Digital Asset"}</span>
+              {(isCreateLoading ||
+                creatingDigitalAsset ||
+                assetDeploymentData?.status === "PROCESSING" ||
+                assetDeploymentData?.status === "QUEUED") && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              <span>
+                {assetDeploymentData?.status === "COMPLETED"
+                  ? "Digital Asset Created"
+                  : assetDeploymentData?.status === "FAILED"
+                    ? "Retry Create Digital Asset"
+                    : isCreateLoading ||
+                        creatingDigitalAsset ||
+                        assetDeploymentData?.status === "PROCESSING" ||
+                        assetDeploymentData?.status === "QUEUED"
+                      ? "Creating..."
+                      : "Create Digital Asset"}
+              </span>
               {/* Create Digital Asset */}
             </button>
             <button
               className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
-              disabled={!!isWhitelistDisabled||isWhitelistLoading||isCreateLoading}
+              disabled={
+                !!isWhitelistDisabled ||
+                isWhitelistLoading ||
+                batchWhitelistingProcessing ||
+                isCreateLoading ||
+                creatingDigitalAsset ||
+                batchWhitelistingData?.status === "COMPLETED"
+              }
               onClick={handleBatchWhitelisting}
             >
-              {isWhitelistLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{isWhitelistLoading ? "Whitelisting..." : "Whitelist DLT Accounts"}</span>
+              {(isWhitelistLoading ||
+                batchWhitelistingProcessing ||
+                batchWhitelistingData?.status === "PROCESSING" ||
+                batchWhitelistingData?.status === "QUEUED") && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              <span>
+                {batchWhitelistingData?.status === "COMPLETED"
+                  ? "Accounts Whitelisted"
+                  : batchWhitelistingData?.status === "FAILED"
+                    ? "Retry Whitelist DLT Accounts"
+                    : isWhitelistLoading ||
+                        batchWhitelistingProcessing ||
+                        batchWhitelistingData?.status === "PROCESSING" ||
+                        batchWhitelistingData?.status === "QUEUED"
+                      ? "Whitelisting..."
+                      : "Whitelist DLT Accounts"}
+              </span>
               {/* Whitelist DLT Accounts */}
             </button>
             <button
               className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
-              disabled={!!isMintDisabled||isMintLoading||isWhitelistLoading||isCreateLoading}
+              disabled={
+                !!isMintDisabled ||
+                isMintLoading ||
+                tokenMintingProcessing ||
+                isWhitelistLoading ||
+                batchWhitelistingProcessing ||
+                isCreateLoading ||
+                creatingDigitalAsset ||
+                tokenMintingData?.status === "COMPLETED"
+              }
               onClick={handleTokenMinting}
             >
-              {isMintLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{isMintLoading ? "Minting..." : "Mint Tokens"}</span>
+              {(isMintLoading ||
+                tokenMintingProcessing ||
+                tokenMintingData?.status === "PROCESSING" ||
+                tokenMintingData?.status === "QUEUED") && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              <span>
+                {tokenMintingData?.status === "COMPLETED"
+                  ? "Tokens Minted"
+                  : tokenMintingData?.status === "FAILED"
+                    ? "Retry Mint Tokens"
+                    : isMintLoading ||
+                        tokenMintingProcessing ||
+                        tokenMintingData?.status === "PROCESSING" ||
+                        tokenMintingData?.status === "QUEUED"
+                      ? "Minting..."
+                      : "Mint Tokens"}
+              </span>
               {/* Mint Tokens */}
             </button>
           </div>

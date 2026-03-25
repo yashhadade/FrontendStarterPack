@@ -7,6 +7,7 @@ import blockchainTransactionServices from "@/services/blockchainTransaction";
 import { toast } from "sonner";
 import useSignTransaction from "@/hooks/useSignTransaction";
 import { BlockchainTransaction } from "@/components/blockchain/PendingTransactionsTable";
+import { FullScreenLoader } from "@/components/FullScreenLoader";
 
 const BlockchainTransactionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,7 @@ const BlockchainTransactionDetails = () => {
   const [tx, setTx] = useState<BlockchainTransaction | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState<"approve" | "reject" | null>(null);
+  const [executeLoading, setExecuteLoading] = useState(false);
   const pollTimeoutRef = useRef<number | null>(null);
   const pollCountRef = useRef(0);
 
@@ -170,6 +172,26 @@ const BlockchainTransactionDetails = () => {
     }
   };
 
+  const handleRetryTransaction = async (transactionId: string) => {
+    try {
+      setExecuteLoading(true)
+      const res= await blockchainTransactionServices.retryTransaction(transactionId);
+      if(res && res.success) {
+        toast.success(res.message);
+        fetchTransaction();
+        setExecuteLoading(false)
+      } else {
+        toast.error(res.message || "Something went wrong");
+      }
+    } catch (error) {
+      toast.error( "Something went wrong");
+    } 
+    finally {
+      setExecuteLoading(false)
+    } 
+  }
+
+
   return (
     <div className="p-8 space-y-6 animate-fade-in">
       <button
@@ -231,6 +253,20 @@ const BlockchainTransactionDetails = () => {
         </div>
         {/* Right section */}
         <div className="flex flex-col items-end gap-2">
+        {["PROCESSING","EXECUTING","FAILED"].includes(tx?.status) && (
+            <button
+              disabled={tx?.status === "EXECUTING"}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRetryTransaction(tx?._id);
+              }}
+            >
+              { (executeLoading || tx?.status === "EXECUTING") && <FullScreenLoader open={executeLoading}  />}
+              {tx?.status === "PROCESSING" && "Execute Transaction"}
+              {tx?.status === "EXECUTING" && "Executing.."} 
+              {tx?.status === "FAILED" && "Retry Transaction"}
+            </button>
+          )}
           <button
             className={`border-2 border-green-100 rounded-xl text-sm px-3 py-1 flex items-center gap-2 bg-green-50 text-green-700 font-semibold transition hover:border-green-200`}
             onClick={() => {
@@ -354,7 +390,7 @@ const BlockchainTransactionDetails = () => {
         )}
       </div>
 
-      <div className="flex justify-end gap-3">
+      {tx?.status==="PENDING" && <div className="flex justify-end gap-3">
         <button
           type="button"
           disabled={!dltAddress || hasRejected || signing === "approve"}
@@ -373,7 +409,7 @@ const BlockchainTransactionDetails = () => {
           <CheckCircle2 className="w-4 h-4" />
           {hasApproved ? "Approved" : signing === "approve" ? "Approving..." : "Approve"}
         </button>
-      </div>
+      </div>}
       </>
       }
     </div>
