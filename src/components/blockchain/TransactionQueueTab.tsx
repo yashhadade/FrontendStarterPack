@@ -27,13 +27,13 @@ const TransactionQueueTab = () => {
         className="space-y-4"
       >
         <TabsList className="bg-muted/50 border border-border/50 p-1">
-          <TabsTrigger value="PENDING" className="text-xs sm:text-sm">
+          <TabsTrigger value="PENDING" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm">
             Pending Approvals
           </TabsTrigger>
-          <TabsTrigger value="QUEUED" className="text-xs sm:text-sm">
+          <TabsTrigger value="QUEUED" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm">
             Queued
           </TabsTrigger>
-          <TabsTrigger value="COMPLETED" className="text-xs sm:text-sm">
+          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm">
             Completed
           </TabsTrigger>
         </TabsList>
