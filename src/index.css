@@ -134,7 +134,7 @@
   }
 
   .progress-step-active {
-    @apply bg-blue-500/20 border-blue-500 text-blue-600;
+    @apply bg-primary/10 border-primary text-primary ring-1 ring-primary/30;
   }
 
   .progress-step-done {

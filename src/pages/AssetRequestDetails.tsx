@@ -38,9 +38,9 @@ type TransferInvestor = {
 
 
 const steps = [
-  { label: "Asset Review", key: "PENDING" },
-  { label: "KYC Review", key: "APPROVED" },
-  { label: "Mint & Transfer", key: "MINTED" },
+  { label: "Review Asset Request", key: "PENDING" },
+  { label: "Review Investors", key: "APPROVED" },
+  { label: "Mint & Transfer Tokens", key: "MINTED" },
 ];
 
 const stepIndex = (status: string) => {
@@ -301,29 +301,43 @@ const AssetRequestDetails = () => {
 
       {/* Progress Indicator */}
       <div className="glass-card p-4">
-        <div className="flex items-center gap-2">
+        <div className="grid w-full grid-cols-[auto_1fr_auto_1fr_auto] items-center justify-items-center">
           {steps.map((step, i) => {
             const isClickable = i <= activeStep;
+            const connectorIdx = i - 1; // connector before this step
             return (
-              <div key={step.key} className="flex items-center gap-2 flex-1">
+              <div key={step.key} className="contents">
+                {i > 0 && (
+                  <div
+                    className={`h-px w-full rounded transition-colors duration-300 ${
+                      connectorIdx < activeStep ? "bg-primary/60" : "bg-border"
+                    }`}
+                    aria-hidden="true"
+                  />
+                )}
                 <button
                   type="button"
                   disabled={!isClickable}
                   onClick={() => isClickable && setViewStep(i)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 ease-out ${
                     i < activeStep
                       ? "progress-step-done"
                       : i === activeStep
                       ? "progress-step-active border"
                       : "progress-step-pending border"
-                  } ${isClickable ? "cursor-pointer hover:bg-muted/40" : "cursor-default opacity-70"}`}
+                  } ${isClickable ? "cursor-pointer hover:bg-muted/40" : "cursor-default opacity-70"} ${
+                    i === activeStep ? "shadow-sm" : ""
+                  }`}
                 >
-                  <span className="w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[10px]">
-                    {i + 1}
+                  <span
+                    className={`w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-xs transition-transform duration-300 ${
+                      i <= activeStep ? "scale-[1.1]" : ""
+                    }`}
+                  >
+                    {i + 1}.
                   </span>
                   {step.label}
                 </button>
-                {i < steps.length - 1 && <ArrowRight className="w-3 h-3 text-border flex-shrink-0" />}
               </div>
             );
           })}
