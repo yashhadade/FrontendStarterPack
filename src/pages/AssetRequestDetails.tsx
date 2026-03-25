@@ -202,7 +202,7 @@ const AssetRequestDetails = () => {
 
   const handleApprove = async () => {
     if (!ipfsPassword.trim()) {
-      toast.error("Please enter IPFS password");
+      toast.error("Please set IPFS password");
       return;
     }
 
@@ -544,7 +544,7 @@ const AssetRequestDetails = () => {
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Enter IPFS Password</h3>
+                <h3 className="text-sm font-semibold text-foreground">Set IPFS Password</h3>
                 <p className="text-xs text-muted-foreground">
                   This password will be securely sent to the backend as part of the approval process.
                 </p>
