@@ -333,12 +333,12 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
               </div>
 
               {selectedInvestor.status === "PENDING" &&<> <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">Reviewer notes</label>
+                <label className="text-xs text-muted-foreground">Enter review note</label>
                 <textarea
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-sm text-foreground mt-1 h-24 resize-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
-                  placeholder="Add review notes for this investor..."
+                  placeholder="Enter review note for this investor..."
                 />
               </div>
 
