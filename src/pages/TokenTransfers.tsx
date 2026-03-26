@@ -32,6 +32,7 @@ const TokenTransfers = () => {
       key: "totalAssetValueInInr",
       header: "Value",
       className: "font-mono text-xs text-foreground",
+      render: (prop) => `₹${prop.totalAssetValueInInr}`,
     },
     {
       key: "status",
