@@ -31,7 +31,7 @@ const assetApproveReject = (data: any) =>{
     })
 }
 const signedLegalNotes = (id: string) =>{
-    return server.get(`requestAssets/signedLegalNotes/${id}`)
+    return server.post(`requestAssets/signedLegalNotes/${id}`)
     .then(res=>{
         return res.data
     })
