@@ -372,7 +372,19 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
         </div>
       )}
 
-      <div className="flex justify-end items-center gap-3">
+        <div className="space-y-3">
+          {/* <h4 className="text-lg font-semibold">3.3 Token Distribution &amp; Blockchain Asset Creation</h4> */}
+          <div className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
+            <h5 className="text-sm font-semibold text-foreground mb-1">Prerequisite for Blockchain Asset Creation</h5>
+            <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+              <li>The <code>noOfTokens</code> defined in the request asset must be <strong>fully distributed</strong> across all linked investors before the asset can be created on the blockchain.</li>
+              <li>If even a <strong>single token</strong> remains undistributed, the asset will <strong>not</strong> be submitted to the blockchain.</li>
+              <li>The sum of all investors&rsquo; <code>noOfTokens</code> must exactly equal the request asset&rsquo;s <code>noOfTokens</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+      <div className="flex justify-end items-center gap-3"> 
         <div className="flex items-center gap-4 mr-auto text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-muted-foreground">Total Tokens:</span>
@@ -403,7 +415,7 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
         >
           Proceed to Mint & Transfer →
         </button>
-      </div>
+        </div>
 
       {previewDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm">
