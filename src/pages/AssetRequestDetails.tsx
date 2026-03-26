@@ -610,8 +610,8 @@ const AssetRequestDetails = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm">
           <div className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-md space-y-5 animate-fade-in">
             <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto">
-                <Shield className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto">
+                <Shield className="w-6 h-6 text-success" />
               </div>
               <h3 className="text-lg font-semibold text-foreground">Confirm Batch Transfer</h3>
               <p className="text-xs text-muted-foreground">Review the details before processing.</p>
@@ -624,7 +624,9 @@ const AssetRequestDetails = () => {
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
                 <span className="text-xs text-muted-foreground">Network</span>
-                <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">Polygon</span>
+                <span className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold">
+                  Polygon Chain
+                </span>
               </div>
             </div>
 
@@ -636,16 +638,16 @@ const AssetRequestDetails = () => {
                 Cancel
               </button>
               <button
-              disabled={proposeTransactionLoading}
+                disabled={proposeTransactionLoading}
                 onClick={() => handleInitiateBatchTransfer()}
-                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
               >
-               {proposeTransactionLoading ? (
-                 <span className="flex items-center justify-center gap-2">
-                   <Loader2 className="w-4 h-4 animate-spin" />
-                   Initiating
-                 </span>
-               ) : "Confirm Transfer"}
+                {proposeTransactionLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Initiating
+                  </span>
+                ) : "Confirm Transfer"}
               </button>
             </div>
           </div>
