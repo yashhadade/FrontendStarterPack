@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Info, Check, Copy, Loader2, Link } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
@@ -67,6 +67,21 @@ export const MintAndTransferSection = ({
   const [isWhitelistLoading, setIsWhitelistLoading] = useState(false);
   const [isMintLoading, setIsMintLoading] = useState(false);
   const [signingOfTheLegalNote, setSigningOfTheLegalNote] = useState(asset?.signedLegalNote||false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copiedTimeoutRef = useRef<number | null>(null);
+
+  const handleCopyWithFeedback = (addr: string, key: string) => {
+    copyAddress(addr, key);
+    setCopiedKey(key);
+    if (copiedTimeoutRef.current) window.clearTimeout(copiedTimeoutRef.current);
+    copiedTimeoutRef.current = window.setTimeout(() => setCopiedKey(null), 1200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) window.clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
   const toggleRow = (investorId: string) => {
     setSelectedRows((prev: Set<string>) => {
       const next = new Set<string>(prev);
@@ -339,23 +354,23 @@ export const MintAndTransferSection = ({
     <>
       <FullScreenLoader open={signingLegalNote} message="Signing legal note…" />
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Mint & Transfer Tokens</h2>
             <p className="text-xs text-muted-foreground">
               Whitelist accounts, mint tokens, and process batch transfers.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 justify-end flex-1">
             <button
-              className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              className="h-7 px-4 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
               onClick={handleSignLegalNote}
               disabled={!!isSignLegalNote}
             >
               Sign Legal Note
             </button>
             <button
-              className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              className="h-7 px-4 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
               onClick={handleCreateDigitalAsset}
               disabled={
                 !!isCreateAssetDisabled ||
@@ -385,7 +400,7 @@ export const MintAndTransferSection = ({
               {/* Create Digital Asset */}
             </button>
             <button
-              className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              className="h-7 px-4 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
               disabled={
                 !!isWhitelistDisabled ||
                 isWhitelistLoading ||
@@ -417,7 +432,7 @@ export const MintAndTransferSection = ({
               {/* Whitelist DLT Accounts */}
             </button>
             <button
-              className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              className="h-7 px-4 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
               disabled={
                 !!isMintDisabled ||
                 isMintLoading ||
@@ -458,30 +473,37 @@ export const MintAndTransferSection = ({
               <span className="font-semibold text-sm text-muted-foreground">
                 Contract Address:
               </span>
-              <span className="font-mono text-sm text-purple-700 flex items-center">
+              <span className="font-mono text-sm text-primary flex items-center">
                 {truncateAddress(asset.contractAddress)}
                 <button
-                  className="ml-2 text-purple-600 hover:text-purple-800"
-                  onClick={() => copyAddress(asset.contractAddress, "contractAddress")}
+                  className="ml-2 text-muted-foreground hover:text-primary"
+                  onClick={() => handleCopyWithFeedback(asset.contractAddress, "contractAddress")}
                   title="Copy Address"
                 >
-                  <Copy className="inline w-4 h-4" />
+                  {copiedKey === "contractAddress" ? (
+                    <Check className="inline w-4 h-4" />
+                  ) : (
+                    <Copy className="inline w-4 h-4" />
+                  )}
                 </button>
+                {copiedKey === "contractAddress" && (
+                  <span className="ml-2 text-[11px] text-muted-foreground">Copied</span>
+                )}
                 <a
                   href={`${import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL}/token/${asset.contractAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-2 px-2 py-1 text-xs rounded bg-purple-100 text-purple-700 font-medium hover:bg-purple-200 transition flex items-center gap-1"
-                  title="Open in Polygonscan"
+                  className="ml-2 px-1 py-1 text-xs rounded font-medium hover:bg-primary/20 transition flex items-center gap-1"
+                  title="Open Blockchain Explorer"
                 >
-                  <Link />
+                  <Link className="w-4 h-4" />
                 </a>
               </span>
             </div>
           )}
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm text-muted-foreground">
-              Total Tokens:
+              Total Tokens Minted:
             </span>
             <span className="text-sm text-foreground font-medium">
               {asset.noOfTokens} {asset.tokenName}
@@ -503,7 +525,7 @@ export const MintAndTransferSection = ({
                   setSelectedRows(new Set());
                 }}
                 className={`pb-3 text-sm transition-all border-b-2 ${transferTab === tab.key
-                    ? "border-purple-600 text-purple-700 font-semibold"
+                    ? "border-primary text-primary font-semibold"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
               >
@@ -513,42 +535,45 @@ export const MintAndTransferSection = ({
           </div>
         </div>
 
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-purple-50 border border-purple-200">
-          <Info className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/40 border border-border">
+          <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-purple-800">Polygon Batching Protocol</p>
-            <p className="text-xs text-purple-600 mt-1 leading-relaxed">
-              To optimize gas fees and ensure transaction success, transfers are processed in batches. You can select a
-              maximum of 80 investors per single transaction. If more than 80 investors are pending, process them in
-              multiple rounds.
+            <p className="text-sm font-semibold text-foreground">Polygon Batching Protocol</p>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Transfers are processed in batches to reduce gas and improve reliability. Select up to 80 investors per
+              transaction; if more are pending, run multiple batches.
             </p>
           </div>
         </div>
 
         <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
           <div className="flex items-center gap-4">
-            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
+            <span className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold">
               Polygon Chain
             </span>
             <span className="text-sm text-foreground font-medium">{filteredInvestors.length} Investors</span>
-            <span className="text-xs text-muted-foreground">Selected: {selectedRows.size} / 80</span>
+            <span className="text-xs text-muted-foreground">
+              Selected: {selectedRows.size} / {Math.min(80, filteredInvestors.length)}
+            </span>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={selectFirst80}
-              className="px-4 py-2 rounded-lg text-xs font-medium border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors"
-            >
-              Select First 80 Pending
-            </button>
+            {filteredInvestors.length > 80 && (
+              <button
+                onClick={selectFirst80}
+                className="px-4 py-2 rounded-lg text-xs font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                Select First 80 Pending
+              </button>
+            )}
             <button
               onClick={() => selectedRows.size > 0 && setShowGasModal(true)}
               disabled={selectedRows.size === 0}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${selectedRows.size > 0
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : "bg-purple-300 cursor-not-allowed"
+              className={`px-5 h-8 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${selectedRows.size > 0
+                  ? "bg-primary hover:bg-primary/90 disabled:opacity-60"
+                  : "bg-primary/60 text-muted-foreground cursor-not-allowed"
                 }`}
             >
-              Process Batch Transfer ({selectedRows.size})
+              Process Batch Transfer ({selectedRows.size || 0})
             </button>
           </div>
         </div>
@@ -591,7 +616,7 @@ export const MintAndTransferSection = ({
                 filteredInvestors?.map((inv) => (
                   <tr
                     key={inv._id}
-                    className={`border-b border-border/30 transition-colors cursor-pointer ${selectedRows.has(inv._id) ? "bg-purple-50/50" : "hover:bg-muted/30"
+                    className={`border-b border-border/30 transition-colors cursor-pointer ${selectedRows.has(inv._id) ? "bg-accent/40" : "hover:bg-muted/30"
                       }`}
                     onClick={() => toggleRow(inv._id)}
                   >
@@ -612,12 +637,20 @@ export const MintAndTransferSection = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            copyAddress(inv.dltAccount, inv._id);
+                            handleCopyWithFeedback(inv.dltAccount, inv._id);
                           }}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          className="relative text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          <Check className="hidden" />
-                          <Copy className="w-3.5 h-3.5" />
+                          {copiedKey === inv._id && (
+                            <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground px-1.5 py-0.5 text-[10px] text-background shadow-sm">
+                              Copied
+                            </span>
+                          )}
+                          {copiedKey === inv._id ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
                         </button>
                       </div>
                     </td>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable, { DataTableColumn } from "@/components/DataTable";
 import assetsServices from "@/services/assetsServices";
+import { formatIndianNumber } from "@/utils/numberFormat";
 
 const TokenTransfers = () => {
   const [assetsRequests, setAssetsRequests] = useState<any[]>([]);
@@ -32,6 +33,19 @@ const TokenTransfers = () => {
       key: "totalAssetValueInInr",
       header: "Value",
       className: "font-mono text-xs text-foreground",
+      render: (prop) => `₹${prop.totalAssetValueInInr}`,
+    },
+    {
+      key: "noOfTokens",
+      header: "No. of Tokens",
+      className: "font-mono text-xs text-center text-foreground",
+      render: (row) => formatIndianNumber(row?.noOfTokens),
+    },
+    {
+      key: "noOfTokensForDistribution",
+      header: "Distributed Tokens",
+      className: "font-mono text-xs text-center text-foreground",
+      render: (row) => formatIndianNumber(row?.noOfTokensForDistribution),
     },
     {
       key: "status",
@@ -91,7 +105,7 @@ const TokenTransfers = () => {
         data={assetsRequests}
         columns={columns}
         getRowId={(row) => row._id}
-        searchableKeys={["assetName", "sellerName"]}
+        searchableKeys={["assetName", "sellerName", "totalAssetValueInInr", "status"]}
         searchPlaceholder="Search by ID, asset, or client..."
         onRowClick={(row) => navigate(`/assets-requests/${row._id}`)}
       />

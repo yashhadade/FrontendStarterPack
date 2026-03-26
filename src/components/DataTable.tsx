@@ -45,6 +45,14 @@ type DataTableProps<T> = {
    * ID of the currently selected row (highlighted).
    */
   selectedRowId?: string | number | null;
+  /**
+   * Optional default sort key (e.g. "safeNonce").
+   */
+  initialSortKey?: string | null;
+  /**
+   * Optional default sort direction for `initialSortKey`.
+   */
+  initialSortDirection?: SortDirection;
 };
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50];
@@ -58,10 +66,12 @@ function DataTable<T extends Record<string, any>>({
   searchPlaceholder = "Search…",
   title = "Assets Requests",
   selectedRowId,
+  initialSortKey = null,
+  initialSortDirection = "asc",
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortKey, setSortKey] = useState<string | null>(initialSortKey);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortDirection);
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState<number>(0);
 
