@@ -126,6 +126,8 @@ const QueuedTransactionsTable = () => {
       title="Queued Transactions"
       searchPlaceholder="Search queued transactions…"
       onRowClick={handleRowClick}
+      initialSortKey="safeNonce"
+      initialSortDirection="asc"
     />
   );
 };

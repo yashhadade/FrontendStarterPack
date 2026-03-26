@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable, { DataTableColumn } from "@/components/DataTable";
 import assetsServices from "@/services/assetsServices";
+import { formatIndianNumber } from "@/utils/numberFormat";
 
 const TokenTransfers = () => {
   const [assetsRequests, setAssetsRequests] = useState<any[]>([]);
@@ -33,6 +34,18 @@ const TokenTransfers = () => {
       header: "Value",
       className: "font-mono text-xs text-foreground",
       render: (prop) => `₹${prop.totalAssetValueInInr}`,
+    },
+    {
+      key: "noOfTokens",
+      header: "No. of Tokens",
+      className: "font-mono text-xs text-center text-foreground",
+      render: (row) => formatIndianNumber(row?.noOfTokens),
+    },
+    {
+      key: "noOfTokensForDistribution",
+      header: "Distributed Tokens",
+      className: "font-mono text-xs text-center text-foreground",
+      render: (row) => formatIndianNumber(row?.noOfTokensForDistribution),
     },
     {
       key: "status",

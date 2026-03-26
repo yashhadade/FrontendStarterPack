@@ -90,6 +90,8 @@ const CompletedTransactionsTable = () => {
       title="Completed Transactions"
       searchPlaceholder="Search completed transactions…"
       onRowClick={handleRowClick}
+      initialSortKey="safeNonce"
+      initialSortDirection="desc"
     />
   );
 };
