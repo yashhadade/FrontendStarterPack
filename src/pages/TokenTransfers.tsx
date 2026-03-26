@@ -92,7 +92,7 @@ const TokenTransfers = () => {
         data={assetsRequests}
         columns={columns}
         getRowId={(row) => row._id}
-        searchableKeys={["assetName", "sellerName"]}
+        searchableKeys={["assetName", "sellerName", "totalAssetValueInInr", "status"]}
         searchPlaceholder="Search by ID, asset, or client..."
         onRowClick={(row) => navigate(`/assets-requests/${row._id}`)}
       />
