@@ -565,7 +565,7 @@ export const MintAndTransferSection = ({
                 Select First 80 Pending
               </button>
             )}
-            <button
+            {transferTab === "APPROVED" && <button
               onClick={() => selectedRows.size > 0 && setShowGasModal(true)}
               disabled={selectedRows.size === 0}
               className={`px-5 h-8 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${selectedRows.size > 0
@@ -574,7 +574,7 @@ export const MintAndTransferSection = ({
                 }`}
             >
               Process Batch Transfer ({selectedRows.size || 0})
-            </button>
+            </button>}
           </div>
         </div>
 
