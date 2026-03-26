@@ -1,32 +1,26 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Coins,
-  ArrowRight,
-  ChevronRight,
-  Shield,
-  User,
-  Building2,
-  MapPin,
-  Hash,
-  CreditCard,
-  Image,
-  Copy,
-  Info,
-  Check,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import InvestorKycSection from "@/components/InvestorKycSection";
 import { MintAndTransferSection } from "@/components/MintAndTransferSection";
-import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
-import { toast } from "sonner";
 import investorsServices from "@/services/investorsServices";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  ChevronRight,
+  Coins,
+  CreditCard,
+  Eye,
+  EyeOff,
+  FileText,
+  Image,
+  Loader2,
+  Shield,
+  User,
+  XCircle
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 type TransferInvestor = {
   _id: string;
@@ -96,12 +90,12 @@ const AssetRequestDetails = () => {
   const [showExistingIpfsPassword, setShowExistingIpfsPassword] = useState(false);
   const [investorsCount, setInvestorsCount] = useState(0);
   const [transferInvestors,setTransferInvestors] = useState<TransferInvestor[]>([]);
-  const [openProposeTransactionModal, setOpenProposeTransactionModal] = useState(false);
+  const [proposeTransactionLoading, setProposeTransactionLoading] = useState(false);
 
 
   const fetchInvestor = async () =>{
     try {
-      const res = await investorsServices.getInvestorsByAssetIdAndStatus(id, transferTab);
+      const res = await investorsServices.getInvestorByAssetIdAndGroupByDltAccount(id, transferTab);
       setTransferInvestors(res?.data || []);
     } catch (error) {
       toast.error(error?.message || "Failed to fetch investors");
@@ -147,7 +141,7 @@ const AssetRequestDetails = () => {
   }, [id, transferTab]);
 
   const handleInitiateBatchTransfer = async () => {
-    setOpenProposeTransactionModal(true);
+    setProposeTransactionLoading(true);
     const dltWalletAddresses = transferInvestors
       .filter((inv) => selectedRows.has(inv._id))
       .map((inv) => inv.dltAccount as string);
@@ -170,7 +164,7 @@ const AssetRequestDetails = () => {
     } catch (error) {
       toast.error(error?.message || "Failed to initiate batch transfer");
     }finally{
-      setOpenProposeTransactionModal(false);
+      setProposeTransactionLoading(false);
     }
   };
 
@@ -285,8 +279,8 @@ const AssetRequestDetails = () => {
   }
 
   return (
+    <>
     <div className="p-8 space-y-6 animate-fade-in">
-      <FullScreenLoader open={openProposeTransactionModal} message="Batch transfer initiating…" />
       {/* Back + Title */}
       <div className="flex items-center gap-3">
         <button
@@ -629,10 +623,6 @@ const AssetRequestDetails = () => {
                 <span className="text-sm font-semibold text-foreground">{selectedRows.size}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
-                <span className="text-xs text-muted-foreground">Estimated Gas Fee</span>
-                <span className="text-sm font-semibold font-mono text-foreground">~0.045 MATIC</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30">
                 <span className="text-xs text-muted-foreground">Network</span>
                 <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">Polygon</span>
               </div>
@@ -646,10 +636,16 @@ const AssetRequestDetails = () => {
                 Cancel
               </button>
               <button
+              disabled={proposeTransactionLoading}
                 onClick={() => handleInitiateBatchTransfer()}
-                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Confirm Transfer
+               {proposeTransactionLoading ? (
+                 <span className="flex items-center justify-center gap-2">
+                   <Loader2 className="w-4 h-4 animate-spin" />
+                   Initiating
+                 </span>
+               ) : "Confirm Transfer"}
               </button>
             </div>
           </div>
@@ -713,6 +709,7 @@ const AssetRequestDetails = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

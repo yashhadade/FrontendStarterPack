@@ -41,7 +41,7 @@ const signedLegalNotes = (id: string) =>{
     })
 }
 const createDigitalAsset = (id: string) =>{
-    return server.get(`requestAssets/createDigitalAsset/${id}`)
+    return server.post(`requestAssets/createDigitalAsset/${id}`)
     .then(res=>{
         return res.data
     })
@@ -51,7 +51,7 @@ const createDigitalAsset = (id: string) =>{
     })
 }
 const batchWhitelistUsers = (id: string) =>{
-    return server.get(`requestAssets/batchWhitelistUsers/${id}`)
+    return server.post(`requestAssets/batchWhitelistUsers/${id}`)
     .then(res=>{
         return res.data
     })
@@ -61,7 +61,7 @@ const batchWhitelistUsers = (id: string) =>{
     })
 }
 const mintTokens = (id: string) =>{
-    return server.get(`requestAssets/mintTokens/${id}`)
+    return server.post(`requestAssets/mintTokens/${id}`)
     .then(res=>{
         return res.data
     })
