@@ -33,7 +33,7 @@ const TokenTransfers = () => {
       key: "totalAssetValueInInr",
       header: "Value",
       className: "font-mono text-xs text-foreground",
-      render: (prop) => `₹${prop.totalAssetValueInInr}`,
+      render: (row) => `₹${formatIndianNumber(row?.totalAssetValueInInr)}`,
     },
     {
       key: "noOfTokens",
