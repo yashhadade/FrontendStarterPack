@@ -567,7 +567,7 @@ export const MintAndTransferSection = ({
             )}
             {transferTab === "APPROVED" && <button
               onClick={() => selectedRows.size > 0 && setShowGasModal(true)}
-              disabled={selectedRows.size === 0}
+              disabled={selectedRows.size === 0 || !asset?.isTokenMinted}
               className={`px-5 h-8 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${selectedRows.size > 0
                   ? "bg-primary hover:bg-primary/90 disabled:opacity-60"
                   : "bg-primary/60 text-muted-foreground cursor-not-allowed"
