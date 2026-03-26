@@ -95,7 +95,7 @@ const AssetRequestDetails = () => {
 
   const fetchInvestor = async () =>{
     try {
-      const res = await investorsServices.getInvestorByAssetIdAndGroupByDltAccount(id, transferTab);
+      const res = await investorsServices.getInvestorsByAssetIdAndStatus(id, transferTab);
       setTransferInvestors(res?.data || []);
     } catch (error) {
       toast.error(error?.message || "Failed to fetch investors");

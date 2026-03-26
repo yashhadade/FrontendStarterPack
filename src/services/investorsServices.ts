@@ -55,21 +55,11 @@ const initiateBatchTransfer = (data: {assetId: string, dltWalletAddresses: strin
     })
 }
 
-const getInvestorByAssetIdAndGroupByDltAccount = (AssetId:string,status?:string) =>{
-    return server.get(`investor/getByAssetIdGroupedByDltAccount/${AssetId}${status ? `?status=${status}` : ''}`)
-    .then(res=>{
-        return res.data
-    })
-    .catch(err=>{
-        console.log(err);        
-        return err.response.data;
-    })
-}
+
 export default {
     getInvestorsByAssetId,
     getInvestorById,
     updateInvestorStatus,
     getInvestorsByAssetIdAndStatus,
     initiateBatchTransfer,
-    getInvestorByAssetIdAndGroupByDltAccount
 }

@@ -367,7 +367,7 @@ export const MintAndTransferSection = ({
               onClick={handleSignLegalNote}
               disabled={!!isSignLegalNote}
             >
-              Sign Legal Note
+             {isSignLegalNote?"Legal note Signed":"Sign Legal Note"}
             </button>
             <button
               className="h-7 px-4 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
