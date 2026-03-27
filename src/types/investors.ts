@@ -3,5 +3,5 @@ export type TransferInvestor = {
     name: string;
     noOfTokens: string;
     dltAccount: string;
-    status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED" | "TOKEN_TRANSFERRED_FAILED";
+    status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED" | "REJECTED" | "TOKEN_TRANSFERRED_FAILED";
   };
