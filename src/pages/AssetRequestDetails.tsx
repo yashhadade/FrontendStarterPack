@@ -542,6 +542,7 @@ const AssetRequestDetails = () => {
           fetchAssetRequest={() => fetchAssetRequest()}
         />
       )}
+    </div>
 
       {/* IPFS Password Modal */}
       {showIpfsModal && (
@@ -708,7 +709,6 @@ const AssetRequestDetails = () => {
           </div>
         </div>
       )}
-    </div>
     </>
   );
 };
