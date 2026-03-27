@@ -46,9 +46,6 @@ const BlockchainTransactions = () => {
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
             <span className="text-xs text-muted-foreground">Hot Wallet</span>
           </div>
-          <div className="glass-card px-3 py-2">
-            <span className="text-xs font-mono text-primary">6 Pending</span>
-          </div>
         </div>
       </div>
 

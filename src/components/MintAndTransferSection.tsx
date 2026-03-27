@@ -339,26 +339,6 @@ export const MintAndTransferSection = ({
       setIsMintLoading(false);
     }
   }, [tokenMintingData]);
-console.log("isMintDisabled", isMintDisabled);
-console.log("isMintLoading", isMintLoading);
-console.log("tokenMintingProcessing", tokenMintingProcessing);
-console.log("tokenMintingData", tokenMintingData);
-console.log("asset?.isTokenMinted", asset?.isTokenMinted);
-console.log( !!isMintDisabled ||
-  isMintLoading ||
-  tokenMintingProcessing ||
-  isWhitelistLoading ||
-  batchWhitelistingProcessing ||
-  isCreateLoading ||
-  creatingDigitalAsset ||
-  tokenMintingData?.status === "COMPLETED");
-console.log(
-  isWhitelistLoading,
-  batchWhitelistingProcessing,
-  isCreateLoading,
-  creatingDigitalAsset,
-  tokenMintingData?.status
-);
 
 
   return (
