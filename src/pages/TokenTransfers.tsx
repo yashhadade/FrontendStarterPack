@@ -50,7 +50,6 @@ const TokenTransfers = () => {
     {
       key: "status",
       header: "Status",
-      sortable: false,
       render: (prop) => (
         <span
           className={`text-[10px] px-2 py-0.5 rounded-full font-medium 
