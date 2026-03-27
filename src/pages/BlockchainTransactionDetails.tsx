@@ -222,7 +222,7 @@ const BlockchainTransactionDetails = () => {
           <div className="flex items-center gap-2 flex-wrap mt-1">
             {tx && (
               <span className="px-2 py-0.5 rounded-full bg-muted font-mono text-xs text-muted-foreground">
-                Nonce #{tx.safeNonce}
+                ID #{tx.safeNonce}
               </span>
             )}
             {tx && (
