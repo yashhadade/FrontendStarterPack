@@ -27,7 +27,7 @@ type TransferInvestor = {
   name: string;
   noOfTokens: string;
   dltAccount: string;
-  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
+  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED" | "TOKEN_TRANSFERRED_FAILED";
 };
 
 
@@ -56,6 +56,7 @@ const statusBadgeClass = (status: TransferInvestor["status"]) => {
     case "TOKEN_TRANSFERRED_INITIATED": return "bg-yellow-100 text-yellow-700 border border-yellow-200";
     case "TOKEN_TRANSFER_COMPLETED": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
     case "REJECTED": return "bg-red-100 text-red-700 border border-red-200";
+    case "TOKEN_TRANSFERRED_FAILED": return "bg-red-100 text-red-700 border border-red-200";
   }
 };
 
@@ -64,6 +65,7 @@ const statusLabel = (status: TransferInvestor["status"]) => {
     case "APPROVED": return "Ready for Transfer";
     case "TOKEN_TRANSFERRED_INITIATED": return "Transfer Initiated";
     case "TOKEN_TRANSFER_COMPLETED": return "Transfer Completed";
+    case "TOKEN_TRANSFERRED_FAILED": return "Transfer Cancelled. You can initiate again";
   }
 };
 
