@@ -2,6 +2,7 @@ import InvestorKycSection from "@/components/InvestorKycSection";
 import { MintAndTransferSection } from "@/components/MintAndTransferSection";
 import assetsServices from "@/services/assetsServices";
 import investorsServices from "@/services/investorsServices";
+import { TransferInvestor } from "@/types/investors";
 import {
   ArrowRight,
   Building2,
@@ -22,13 +23,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-type TransferInvestor = {
-  _id: string;
-  name: string;
-  noOfTokens: string;
-  dltAccount: string;
-  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED" | "TOKEN_TRANSFERRED_FAILED";
-};
 
 
 const steps = [

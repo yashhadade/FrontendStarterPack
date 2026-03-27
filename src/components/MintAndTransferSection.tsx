@@ -5,16 +5,9 @@ import { FullScreenLoader } from "@/components/FullScreenLoader";
 import assetsServices from "@/services/assetsServices";
 import { toast } from "sonner";
 import blockchainOperationServices from "@/services/blockchainOperationServices";
+import { TransferInvestor } from "@/types/investors";
 
-type TransferInvestor = {
-  _id: string;
-  name: string;
-  amountInvested?: string;
-  noOfTokens: string;
-  percentOwned?: string;
-  dltAccount: string;
-  status: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" | "REJECTED";
-};
+
 
 type MintAndTransferSectionProps = {
   assetId: string;
