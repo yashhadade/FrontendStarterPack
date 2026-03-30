@@ -1,8 +1,8 @@
-import investorsServices from "@/services/investorsServices";
-import DataTable, { DataTableColumn } from "@/components/DataTable";
-import { Eye, Image, CheckCircle2, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import investorsServices from '@/services/investorsServices';
+import DataTable, { DataTableColumn } from '@/components/DataTable';
+import { Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 type InvestorKycSectionProps = {
   assetId: string;
@@ -27,14 +27,19 @@ type KycInvestor = {
   noOfTokens?: number;
   status: string;
   documents?: { docUrl: string; docName: string }[];
-  [key: string]: any;
+  [key: string]: string | number | undefined | { docUrl: string; docName: string }[];
 };
 
-const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
+const InvestorKycSection = ({
+  assetId,
+  assetTotalNoTokens,
+  setInvestorsCount,
+  onProceedToMint,
+}: InvestorKycSectionProps) => {
   const [kycInvestors, setKycInvestors] = useState<KycInvestor[]>([]);
   const [selectedInvestor, setSelectedInvestor] = useState<KycInvestor | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
-  const [reviewNotes, setReviewNotes] = useState<string>("");
+  const [reviewNotes, setReviewNotes] = useState<string>('');
   const [selectedInvestorId, setSelectedInvestorId] = useState<string | null>(null);
 
   const fetchInvestors = async () => {
@@ -58,11 +63,11 @@ const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, on
   };
   const handelInvestorSelection = (investorId: string) => {
     fetchInvestorById(investorId);
-  }
+  };
 
   const updateInvestorStatus = async (status: string, reason?: string) => {
     if (!selectedInvestor?._id) {
-      toast.error("No investor selected");
+      toast.error('No investor selected');
       return;
     }
 
@@ -74,17 +79,17 @@ const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, on
     try {
       const res = await investorsServices.updateInvestorStatus(payload);
 
-      if ((res as any)?.success === false) {
-        toast.error((res as any)?.message || "Failed to update investor status");
+      if ((res as { success: boolean; message: string })?.success === false) {
+        toast.error((res as { message: string })?.message || 'Failed to update investor status');
         return;
       }
 
-      toast.success("Investor status updated successfully");
-      setReviewNotes("");
+      toast.success('Investor status updated successfully');
+      setReviewNotes('');
       await fetchInvestors();
       await fetchInvestorById(selectedInvestorId);
     } catch (error) {
-      const message = (error as any)?.message ?? "Failed to update investor status";
+      const message = (error as { message: string })?.message ?? 'Failed to update investor status';
       toast.error(message);
     }
   };
@@ -94,50 +99,47 @@ const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, on
   }, [assetId]);
 
   const allApproved =
-    kycInvestors.length > 0 &&
-    kycInvestors.every(
-      (inv) => inv.status === "APPROVED",
-    );
-const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens || 0), 0);
+    kycInvestors.length > 0 && kycInvestors.every((inv) => inv.status === 'APPROVED');
+  const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens || 0), 0);
 
   const columns: DataTableColumn<KycInvestor>[] = [
     {
-      key: "name",
-      header: "Investor",
-      className: "text-foreground font-medium",
+      key: 'name',
+      header: 'Investor',
+      className: 'text-foreground font-medium',
     },
     {
-      key: "emailId",
-      header: "Email",
-      className: "text-muted-foreground text-xs",
+      key: 'emailId',
+      header: 'Email',
+      className: 'text-muted-foreground text-xs',
     },
     {
-      key: "aadharCardNumber",
-      header: "Aadhar Card",
-      className: "font-mono text-xs text-muted-foreground",
+      key: 'aadharCardNumber',
+      header: 'Aadhar Card',
+      className: 'font-mono text-xs text-muted-foreground',
     },
     {
-      key: "panNumber",
-      header: "PAN",
-      className: "font-mono text-xs text-muted-foreground",
+      key: 'panNumber',
+      header: 'PAN',
+      className: 'font-mono text-xs text-muted-foreground',
     },
     {
-      key: "noOfTokens",
-      header: "Tokens",
-      className: "font-mono text-xs text-muted-foreground",
+      key: 'noOfTokens',
+      header: 'Tokens',
+      className: 'font-mono text-xs text-muted-foreground',
     },
     {
-      key: "status",
-      header: "Status",
+      key: 'status',
+      header: 'Status',
       sortable: false,
       render: (inv) => (
         <span
           className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-            inv.status === "APPROVED"
-              ? "status-approved"
-              : inv.status === "REJECTED"
-              ? "status-rejected"
-              : "status-pending"
+            inv.status === 'APPROVED'
+              ? 'status-approved'
+              : inv.status === 'REJECTED'
+                ? 'status-rejected'
+                : 'status-pending'
           }`}
         >
           {inv.status}
@@ -145,9 +147,9 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
       ),
     },
     {
-      key: "action",
-      header: "Actions",
-      align: "right",
+      key: 'action',
+      header: 'Actions',
+      align: 'right',
       sortable: false,
       render: () => (
         <button className="text-xs text-secondary hover:text-foreground transition-colors">
@@ -162,8 +164,8 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
       <DataTable
         data={kycInvestors}
         columns={columns}
-        getRowId={(row) => row._id || row.email || row.name}
-        searchableKeys={["name", "emailId", "aadharCardNumber", "panNumber"]}
+        getRowId={(row) => row._id || row.emailId || row.name}
+        searchableKeys={['name', 'emailId', 'aadharCardNumber', 'panNumber']}
         searchPlaceholder="Search investors..."
         title="Investor KYC Verification"
         selectedRowId={selectedInvestorId}
@@ -182,7 +184,7 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
               onClick={() => {
                 setSelectedInvestor(null);
                 setSelectedInvestorId(null);
-                setReviewNotes("");
+                setReviewNotes('');
                 setPreviewDoc(null);
               }}
               title="Close"
@@ -198,47 +200,70 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                 <div className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Name</p>
                   <p className="text-sm text-foreground font-medium">{selectedInvestor.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Status: <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-            selectedInvestor.status === "APPROVED"
-              ? "status-approved"
-              : selectedInvestor.status === "REJECTED"
-              ? "status-rejected"
-              : "status-pending"
-          }`}>{selectedInvestor.status}</span></p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Status:{' '}
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        selectedInvestor.status === 'APPROVED'
+                          ? 'status-approved'
+                          : selectedInvestor.status === 'REJECTED'
+                            ? 'status-rejected'
+                            : 'status-pending'
+                      }`}
+                    >
+                      {selectedInvestor.status}
+                    </span>
+                  </p>
                 </div>
 
                 <div className="p-3 rounded-lg bg-muted/30 border border-border/30 grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Email</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Email
+                    </p>
                     <p className="text-xs text-foreground break-all">{selectedInvestor.emailId}</p>
                   </div>
                   {selectedInvestor.mobileNumber && (
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Mobile</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        Mobile
+                      </p>
                       <p className="text-xs text-foreground">{selectedInvestor.mobileNumber}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Aadhaar</p>
-                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCardNumber}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Aadhaar
+                    </p>
+                    <p className="text-xs font-mono text-foreground break-all">
+                      {selectedInvestor.aadharCard}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">PAN</p>
-                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.panNumber}</p>
+                    <p className="text-xs font-mono text-foreground break-all">
+                      {selectedInvestor.panNumber}
+                    </p>
                   </div>
                 </div>
 
                 {selectedInvestor.address && (
                   <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Address</p>
-                    <p className="text-xs text-foreground whitespace-pre-wrap">{selectedInvestor.address}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Address
+                    </p>
+                    <p className="text-xs text-foreground whitespace-pre-wrap">
+                      {selectedInvestor.address}
+                    </p>
                   </div>
                 )}
 
                 <div className="p-3 rounded-lg bg-muted/30 border border-border/30 grid grid-cols-2 gap-3">
                   {selectedInvestor.dltAccount && (
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">DLT Account</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        DLT Account
+                      </p>
                       <p className="text-xs font-mono text-foreground break-all">
                         {selectedInvestor.dltAccount}
                       </p>
@@ -246,13 +271,17 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                   )}
                   {selectedInvestor.network && (
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Network</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        Network
+                      </p>
                       <p className="text-xs text-foreground">{selectedInvestor.network}</p>
                     </div>
                   )}
                   {selectedInvestor.noOfTokens != null && (
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tokens</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        Tokens
+                      </p>
                       <p className="text-xs text-foreground">{selectedInvestor.noOfTokens}</p>
                     </div>
                   )}
@@ -264,7 +293,9 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                   <div className="p-3 rounded-lg bg-muted/30 border border-border/30 grid grid-cols-2 gap-3">
                     {selectedInvestor.bankName && (
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Bank</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Bank
+                        </p>
                         <p className="text-xs text-foreground">{selectedInvestor.bankName}</p>
                       </div>
                     )}
@@ -280,7 +311,9 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                     )}
                     {selectedInvestor.bankIfscCode && (
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">IFSC</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          IFSC
+                        </p>
                         <p className="text-xs font-mono text-foreground break-all">
                           {selectedInvestor.bankIfscCode}
                         </p>
@@ -294,12 +327,14 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
               <h3 className="text-sm font-semibold text-foreground">KYC Documents & Review</h3>
 
               <div className="space-y-2">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Documents</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                  Documents
+                </p>
                 {selectedInvestor.documents && selectedInvestor.documents.length > 0 ? (
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {selectedInvestor.documents.map((doc, idx) => (
+                    {selectedInvestor.documents.map((doc, idx) =>
                       (() => {
-                        const fullUrl = `${selectedInvestor.url ?? ""}${doc.docUrl}`;
+                        const fullUrl = `${selectedInvestor.url ?? ''}${doc.docUrl}`;
                         return (
                           <button
                             key={`${doc.docUrl}-${idx}`}
@@ -323,7 +358,7 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                           </button>
                         );
                       })()
-                    ))}
+                    )}
                   </div>
                 ) : (
                   <p className="text-[11px] text-muted-foreground italic">
@@ -332,59 +367,74 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                 )}
               </div>
 
-              {selectedInvestor.status === "PENDING" &&<> <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">Enter review note</label>
-                <textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-sm text-foreground mt-1 h-24 resize-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
-                  placeholder="Enter review note for this investor..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => updateInvestorStatus("APPROVED")}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Approve
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!reviewNotes.trim()) {
-                      toast.error("Please enter a reason before rejecting this investor.");
-                      return;
-                    }
-                    updateInvestorStatus("REJECTED", reviewNotes.trim());
-                  }}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center justify-center gap-2"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Reject
-                </button>
-              </div>
-              </>}
+              {selectedInvestor.status === 'PENDING' && (
+                <>
+                  {' '}
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground">Enter review note</label>
+                    <textarea
+                      value={reviewNotes}
+                      onChange={(e) => setReviewNotes(e.target.value)}
+                      className="w-full bg-muted/50 border border-border/50 rounded-lg px-3 py-2 text-sm text-foreground mt-1 h-24 resize-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+                      placeholder="Enter review note for this investor..."
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => updateInvestorStatus('APPROVED')}
+                      className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!reviewNotes.trim()) {
+                          toast.error('Please enter a reason before rejecting this investor.');
+                          return;
+                        }
+                        updateInvestorStatus('REJECTED', reviewNotes.trim());
+                      }}
+                      className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Reject
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
-        <div className="space-y-3">
-          {/* <h4 className="text-lg font-semibold">3.3 Token Distribution &amp; Blockchain Asset Creation</h4> */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
-            <h5 className="text-sm font-semibold text-foreground mb-1">Prerequisite for Blockchain Asset Creation</h5>
-            <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
-              <li>The <code>noOfTokens</code> defined in the request asset must be <strong>fully distributed</strong> across all linked investors before the asset can be created on the blockchain.</li>
-              <li>If even a <strong>single token</strong> remains undistributed, the asset will <strong>not</strong> be submitted to the blockchain.</li>
-              <li>The sum of all investors&rsquo; <code>noOfTokens</code> must exactly equal the request asset&rsquo;s <code>noOfTokens</code>.</li>
-            </ul>
-          </div>
+      <div className="space-y-3">
+        {/* <h4 className="text-lg font-semibold">3.3 Token Distribution &amp; Blockchain Asset Creation</h4> */}
+        <div className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
+          <h5 className="text-sm font-semibold text-foreground mb-1">
+            Prerequisite for Blockchain Asset Creation
+          </h5>
+          <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+            <li>
+              The <code>noOfTokens</code> defined in the request asset must be{' '}
+              <strong>fully distributed</strong> across all linked investors before the asset can be
+              created on the blockchain.
+            </li>
+            <li>
+              If even a <strong>single token</strong> remains undistributed, the asset will{' '}
+              <strong>not</strong> be submitted to the blockchain.
+            </li>
+            <li>
+              The sum of all investors&rsquo; <code>noOfTokens</code> must exactly equal the request
+              asset&rsquo;s <code>noOfTokens</code>.
+            </li>
+          </ul>
         </div>
+      </div>
 
-      <div className="flex justify-end items-center gap-3"> 
+      <div className="flex justify-end items-center gap-3">
         <div className="flex items-center gap-4 mr-auto text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-muted-foreground">Total Tokens:</span>
@@ -396,7 +446,9 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-muted-foreground">Remaining:</span>
-            <span className={`font-semibold ${assetTotalNoTokens - totalNoTokens === 0 ? "text-green-500" : "text-amber-500"}`}>
+            <span
+              className={`font-semibold ${assetTotalNoTokens - totalNoTokens === 0 ? 'text-green-500' : 'text-amber-500'}`}
+            >
               {assetTotalNoTokens - totalNoTokens}
             </span>
           </div>
@@ -410,21 +462,21 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
           onClick={onProceedToMint}
           disabled={!allApproved || totalNoTokens !== assetTotalNoTokens}
           className={`glow-button rounded-lg text-sm ${
-            !allApproved || totalNoTokens !== assetTotalNoTokens ? "opacity-60 cursor-not-allowed" : ""
+            !allApproved || totalNoTokens !== assetTotalNoTokens
+              ? 'opacity-60 cursor-not-allowed'
+              : ''
           }`}
         >
           Proceed to Mint & Transfer →
         </button>
-        </div>
+      </div>
 
       {previewDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm">
           <div className="bg-card border border-border rounded-2xl shadow-xl p-4 w-full max-w-3xl max-h-[90vh] flex flex-col gap-3 animate-fade-in">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {previewDoc.name}
-                </p>
+                <p className="text-sm font-semibold text-foreground truncate">{previewDoc.name}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Click outside or close to dismiss
                 </p>
@@ -452,4 +504,3 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
 };
 
 export default InvestorKycSection;
-

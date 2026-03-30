@@ -1,6 +1,5 @@
-import { removeStorageItem } from "./storageUtils";
+import { removeStorageItem } from './storageUtils';
 
 export const logout = () => {
-    removeStorageItem();
-  };
-  
+  removeStorageItem();
+};

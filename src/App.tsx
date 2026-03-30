@@ -1,18 +1,18 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import BlockchainTransactions from "./pages/BlockchainTransactions";
-import TokenTransfers from "./pages/TokenTransfers";
-import AssetRequestDetails from "./pages/AssetRequestDetails";
-import AppLayout from "./components/AppLayout";
-import NotFound from "./pages/NotFound";
-import ProtectedRoute from "./components/ProtectedRoute";
-import BlockchainTransactionDetails from "./pages/BlockchainTransactionDetails";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import BlockchainTransactions from './pages/BlockchainTransactions';
+import TokenTransfers from './pages/TokenTransfers';
+import AssetRequestDetails from './pages/AssetRequestDetails';
+import AppLayout from './components/AppLayout';
+import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
+import BlockchainTransactionDetails from './pages/BlockchainTransactionDetails';
 
 const queryClient = new QueryClient();
 
@@ -29,7 +29,10 @@ const App = () => (
             <Route element={<AppLayout />}>
               {/* <Route path="/dashboard" element={<Dashboard />} /> */}
               <Route path="/blockchain" element={<BlockchainTransactions />} />
-              <Route path="/blockchain-transactions/:id" element={<BlockchainTransactionDetails />} />
+              <Route
+                path="/blockchain-transactions/:id"
+                element={<BlockchainTransactionDetails />}
+              />
               <Route path="/assets-requests" element={<TokenTransfers />} />
               <Route path="/assets-requests/:id" element={<AssetRequestDetails />} />
             </Route>

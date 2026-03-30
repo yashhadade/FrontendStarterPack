@@ -1,7 +1,7 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Link2, ArrowLeftRight, LogOut, Shield, Wifi, WifiOff } from "lucide-react";
-import { logout } from "@/utils/logout";
-import { getStorageItem } from "@/utils/storageUtils";
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Link2, ArrowLeftRight, LogOut, Shield } from 'lucide-react';
+import { logout } from '@/utils/logout';
+import { getStorageItem } from '@/utils/storageUtils';
 
 const navItems = [
   // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -15,7 +15,7 @@ const AppSidebar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate('/login');
   };
 
   return (
@@ -28,7 +28,9 @@ const AppSidebar = () => {
           </div>
           <div>
             <h2 className="text-sm font-bold text-foreground tracking-tight">WhiteBox</h2>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Custodian Panel</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+              Custodian Panel
+            </p>
           </div>
         </div>
       </div>
@@ -43,8 +45,8 @@ const AppSidebar = () => {
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                 isActive
-                  ? "sidebar-active text-primary font-medium"
-                  : "text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent"
+                  ? 'sidebar-active text-primary font-medium'
+                  : 'text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent'
               }`}
             >
               <item.icon className="w-4 h-4" />
@@ -59,7 +61,9 @@ const AppSidebar = () => {
         <div className="glass-card p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Custodian</span>
-            <span className="text-xs font-medium text-foreground">{JSON.parse(getStorageItem("user"))?.username}</span>
+            <span className="text-xs font-medium text-foreground">
+              {JSON.parse(getStorageItem('user'))?.username}
+            </span>
           </div>
         </div>
         <button

@@ -4,7 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
     --background: 210 20% 98%;
@@ -76,7 +75,8 @@
     font-family: 'Inter', sans-serif;
   }
 
-  code, .font-mono {
+  code,
+  .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
 }
@@ -152,7 +152,8 @@
   }
 
   @keyframes pulseGlow {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 10px hsl(157 100% 50% / 0.2);
     }
     50% {
