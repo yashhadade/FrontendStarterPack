@@ -30,13 +30,17 @@ const steps = [
   { label: "Review Investors", key: "APPROVED" },
   { label: "Mint & Transfer Tokens", key: "MINTED" },
 ];
-
+const ASSET_STATUSES = [
+  "PENDING",
+  "REJECTED",
+  "APPROVED",
+] as string[];
 const stepIndex = (status: string) => {
   const normalized = status.toUpperCase();
 
   if (normalized === "REJECTED" || normalized === "PENDING") return 0;
   if (normalized === "APPROVED") return 1;
-  if (normalized === "ASSET_CREATION_PROCESSING" || normalized === "COMPLETED"||normalized === "ASSET_CREATED") return 2;
+  if (!ASSET_STATUSES.includes(normalized as string)) return 2;
 
   const idx = steps.findIndex((s) => s.key === normalized);
   return idx >= 0 ? idx : 0;
