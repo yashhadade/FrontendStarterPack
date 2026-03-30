@@ -8,7 +8,6 @@ import blockchainOperationServices from "@/services/blockchainOperationServices"
 import { TransferInvestor } from "@/types/investors";
 
 
-
 type MintAndTransferSectionProps = {
   assetId: string;
   asset: any;
@@ -460,48 +459,65 @@ export const MintAndTransferSection = ({
             </button>
           </div>
         </div>
-        <div className="p-4 rounded-xl bg-card border border-border shadow flex flex-col gap-2 max-w-xl mb-2">
-          {asset.contractAddress && (
+        <div className="p-4 rounded-xl bg-card border border-border shadow flex items-start justify-between gap-4 mb-2">
+          <div className="flex flex-col gap-2">
+            {asset.contractAddress && (
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm text-muted-foreground">
+                  Contract Address:
+                </span>
+                <span className="font-mono text-sm text-primary flex items-center">
+                  {truncateAddress(asset.contractAddress)}
+                  <button
+                    className="ml-2 text-muted-foreground hover:text-primary"
+                    onClick={() => handleCopyWithFeedback(asset.contractAddress, "contractAddress")}
+                    title="Copy Address"
+                  >
+                    {copiedKey === "contractAddress" ? (
+                      <Check className="inline w-4 h-4" />
+                    ) : (
+                      <Copy className="inline w-4 h-4" />
+                    )}
+                  </button>
+                  {copiedKey === "contractAddress" && (
+                    <span className="ml-2 text-[11px] text-muted-foreground">Copied</span>
+                  )}
+                  <a
+                    href={`${import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL}/token/${asset.contractAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 px-1 py-1 text-xs rounded font-medium hover:bg-primary/20 transition flex items-center gap-1"
+                    title="Open Blockchain Explorer"
+                  >
+                    <Link className="w-4 h-4" />
+                  </a>
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-muted-foreground">
-                Contract Address:
+                Total Tokens Minted:
               </span>
-              <span className="font-mono text-sm text-primary flex items-center">
-                {truncateAddress(asset.contractAddress)}
-                <button
-                  className="ml-2 text-muted-foreground hover:text-primary"
-                  onClick={() => handleCopyWithFeedback(asset.contractAddress, "contractAddress")}
-                  title="Copy Address"
-                >
-                  {copiedKey === "contractAddress" ? (
-                    <Check className="inline w-4 h-4" />
-                  ) : (
-                    <Copy className="inline w-4 h-4" />
-                  )}
-                </button>
-                {copiedKey === "contractAddress" && (
-                  <span className="ml-2 text-[11px] text-muted-foreground">Copied</span>
-                )}
-                <a
-                  href={`${import.meta.env.VITE_BLOCKCHAIN_EXPLORER_URL}/token/${asset.contractAddress}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-2 px-1 py-1 text-xs rounded font-medium hover:bg-primary/20 transition flex items-center gap-1"
-                  title="Open Blockchain Explorer"
-                >
-                  <Link className="w-4 h-4" />
-                </a>
+              <span className="text-sm text-foreground font-medium">
+                {asset.noOfTokens} {asset.tokenName}
               </span>
             </div>
-          )}
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-muted-foreground">
-              Total Tokens Minted:
-            </span>
-            <span className="text-sm text-foreground font-medium">
-              {asset.noOfTokens} {asset.tokenName}
-            </span>
           </div>
+          {asset?.assetStatus?.paused && (
+            <div className="relative group">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-500 border border-amber-500/30 whitespace-nowrap cursor-default">
+                Asset is paused
+              </span>
+              {asset.assetStatus.message && (
+                <div className="absolute right-0 top-full mt-2 z-50 hidden group-hover:block">
+                  <div className="relative px-3 py-2 rounded-lg bg-popover border border-border shadow-lg text-xs text-popover-foreground max-w-xs">
+                    <div className="absolute -top-1.5 right-4 w-3 h-3 rotate-45 bg-popover border-l border-t border-border" />
+                    {asset.assetStatus.message}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="border-b border-border">
