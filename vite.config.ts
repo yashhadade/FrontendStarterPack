@@ -1,13 +1,13 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+import { componentTagger } from 'lovable-tagger';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: '::',
     port: 8080,
     hmr: {
       overlay: false,
@@ -16,17 +16,17 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     nodePolyfills({
-      include: ["buffer"],
+      include: ['buffer'],
       globals: {
         Buffer: true,
         global: true,
       },
     }),
-    mode === "development" && componentTagger(),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 }));

@@ -11,12 +11,16 @@ export const server = axios.create({
   headers: {},
 });
 
-server.interceptors.request.use((config) => {
-  const token = authHeader();
-  config.headers = (config.headers ?? {}) as AxiosRequestHeaders;
-  config.headers.Authorization = token;
-  return config;
-}, null, { synchronous: true });
+server.interceptors.request.use(
+  (config) => {
+    const token = authHeader();
+    config.headers = (config.headers ?? {}) as AxiosRequestHeaders;
+    config.headers.Authorization = token;
+    return config;
+  },
+  null,
+  { synchronous: true }
+);
 
 type RetryConfig = AxiosRequestConfig & { _retry?: boolean };
 

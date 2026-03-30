@@ -1,16 +1,51 @@
-import { Badge } from "@/components/ui/badge";
-import { Lock, Zap } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
+import { Lock, Zap } from 'lucide-react';
 
 const governanceFunctions = [
-  { category: "Gas", fn: "topUpUserGas", sigType: "Single Sig", role: "Hot Wallet" },
-  { category: "Asset Setup", fn: "deployAsset", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Asset Setup", fn: "setAssetConfig", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Asset Control", fn: "pauseAsset", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Asset Control", fn: "updateLegalDocument", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Token Control", fn: "adminForceTransfer", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Token Control", fn: "adminBurn", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Compliance", fn: "blacklistUser", sigType: "Multi-Sig", role: "Hot + Cold Governance" },
-  { category: "Compliance", fn: "whitelistUser", sigType: "Single Sig", role: "Hot Wallet" },
+  { category: 'Gas', fn: 'topUpUserGas', sigType: 'Single Sig', role: 'Hot Wallet' },
+  {
+    category: 'Asset Setup',
+    fn: 'deployAsset',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  {
+    category: 'Asset Setup',
+    fn: 'setAssetConfig',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  {
+    category: 'Asset Control',
+    fn: 'pauseAsset',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  {
+    category: 'Asset Control',
+    fn: 'updateLegalDocument',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  {
+    category: 'Token Control',
+    fn: 'adminForceTransfer',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  {
+    category: 'Token Control',
+    fn: 'adminBurn',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  {
+    category: 'Compliance',
+    fn: 'blacklistUser',
+    sigType: 'Multi-Sig',
+    role: 'Hot + Cold Governance',
+  },
+  { category: 'Compliance', fn: 'whitelistUser', sigType: 'Single Sig', role: 'Hot Wallet' },
 ];
 
 const GovernanceControlsTab = () => {
@@ -45,14 +80,14 @@ const GovernanceControlsTab = () => {
               <td className="py-3 px-4 font-mono text-xs text-foreground">{fn.fn}</td>
               <td className="py-3 px-4">
                 <Badge
-                  variant={fn.sigType === "Multi-Sig" ? "default" : "secondary"}
+                  variant={fn.sigType === 'Multi-Sig' ? 'default' : 'secondary'}
                   className={
-                    fn.sigType === "Multi-Sig"
-                      ? "bg-primary/10 text-primary border-primary/20 text-[10px]"
-                      : "bg-secondary/10 text-secondary border-secondary/20 text-[10px]"
+                    fn.sigType === 'Multi-Sig'
+                      ? 'bg-primary/10 text-primary border-primary/20 text-[10px]'
+                      : 'bg-secondary/10 text-secondary border-secondary/20 text-[10px]'
                   }
                 >
-                  {fn.sigType === "Multi-Sig" ? (
+                  {fn.sigType === 'Multi-Sig' ? (
                     <Lock className="w-3 h-3 mr-1" />
                   ) : (
                     <Zap className="w-3 h-3 mr-1" />
@@ -70,4 +105,3 @@ const GovernanceControlsTab = () => {
 };
 
 export default GovernanceControlsTab;
-

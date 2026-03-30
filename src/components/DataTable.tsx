@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 
-type SortDirection = "asc" | "desc";
+type SortDirection = 'asc' | 'desc';
 
 export type DataTableColumn<T> = {
   key: keyof T | string;
   header: string;
-  align?: "left" | "right";
+  align?: 'left' | 'right';
   className?: string;
   /**
    * Custom cell renderer. If not provided, the value at `key` will be rendered.
@@ -63,13 +63,13 @@ function DataTable<T extends Record<string, unknown>>({
   searchableKeys,
   getRowId,
   onRowClick,
-  searchPlaceholder = "Search…",
-  title = "Assets Requests",
+  searchPlaceholder = 'Search…',
+  title = 'Assets Requests',
   selectedRowId,
   initialSortKey = null,
-  initialSortDirection = "asc",
+  initialSortDirection = 'asc',
 }: DataTableProps<T>) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(initialSortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortDirection);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -89,7 +89,7 @@ function DataTable<T extends Record<string, unknown>>({
         const value = row[key];
         if (value == null) return false;
         return String(value).toLowerCase().includes(query);
-      }),
+      })
     );
   }, [data, effectiveSearchKeys, search]);
 
@@ -103,11 +103,11 @@ function DataTable<T extends Record<string, unknown>>({
       const bVal = (b as Record<string, unknown>)[sortKey];
 
       if (aVal == null && bVal == null) return 0;
-      if (aVal == null) return sortDirection === "asc" ? -1 : 1;
-      if (bVal == null) return sortDirection === "asc" ? 1 : -1;
+      if (aVal == null) return sortDirection === 'asc' ? -1 : 1;
+      if (bVal == null) return sortDirection === 'asc' ? 1 : -1;
 
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   }, [filteredData, sortKey, sortDirection, columns]);
@@ -125,10 +125,10 @@ function DataTable<T extends Record<string, unknown>>({
     if (col.sortable === false) return;
     const key = String(col.key);
     if (sortKey === key) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
-      setSortDirection("asc");
+      setSortDirection('asc');
     }
   };
 
@@ -172,14 +172,14 @@ function DataTable<T extends Record<string, unknown>>({
                     key={String(col.key)}
                     onClick={() => handleHeaderClick(col)}
                     className={`py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground ${
-                      col.align === "right" ? "text-right" : "text-left"
-                    } ${col.sortable === false ? "" : "cursor-pointer select-none"} ${col.className ?? ""}`}
+                      col.align === 'right' ? 'text-right' : 'text-left'
+                    } ${col.sortable === false ? '' : 'cursor-pointer select-none'} ${col.className ?? ''}`}
                   >
                     <span className="inline-flex items-center gap-1">
                       {col.header}
                       {col.sortable === false ? null : (
                         <span className="text-[10px] text-muted-foreground/70">
-                          {isSorted ? (sortDirection === "asc" ? "▲" : "▼") : "▾"}
+                          {isSorted ? (sortDirection === 'asc' ? '▲' : '▼') : '▾'}
                         </span>
                       )}
                     </span>
@@ -191,7 +191,10 @@ function DataTable<T extends Record<string, unknown>>({
           <tbody>
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-12 text-center text-muted-foreground text-sm">
+                <td
+                  colSpan={columns.length}
+                  className="py-12 text-center text-muted-foreground text-sm"
+                >
                   No records found.
                 </td>
               </tr>
@@ -203,20 +206,20 @@ function DataTable<T extends Record<string, unknown>>({
                   <tr
                     key={id}
                     className={`border-b border-border/30 transition-colors ${
-                      isSelected
-                        ? "bg-primary/10 border-l-2 border-l-primary"
-                        : "hover:bg-muted/30"
-                    } ${onRowClick ? "cursor-pointer" : ""}`}
+                      isSelected ? 'bg-primary/10 border-l-2 border-l-primary' : 'hover:bg-muted/30'
+                    } ${onRowClick ? 'cursor-pointer' : ''}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
                     {columns.map((col) => (
                       <td
                         key={String(col.key)}
                         className={`py-3 px-4 ${
-                          col.align === "right" ? "text-right" : "text-left"
-                        } ${col.className ?? ""}`}
+                          col.align === 'right' ? 'text-right' : 'text-left'
+                        } ${col.className ?? ''}`}
                       >
-                        {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key as string])}
+                        {col.render
+                          ? col.render(row)
+                          : String((row as Record<string, unknown>)[col.key as string])}
                       </td>
                     ))}
                   </tr>
@@ -269,4 +272,3 @@ function DataTable<T extends Record<string, unknown>>({
 }
 
 export default DataTable;
-
