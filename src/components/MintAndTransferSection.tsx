@@ -11,8 +11,8 @@ import { TransferInvestor } from "@/types/investors";
 type MintAndTransferSectionProps = {
   assetId: string;
   asset: any;
-  transferTab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED" ;
-  setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED") => void;
+  transferTab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED" ;
+  setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED") => void;
   filteredInvestors: TransferInvestor[];
   selectedRows: Set<string>;
   setSelectedRows: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -132,13 +132,11 @@ export const MintAndTransferSection = ({
             if (res.data?.status === "COMPLETED") {
               setIsCreateAssetDisabled(true);
               setIsWhitelistDisabled(false);
-              setIsMintDisabled(true);
               allFalseLoading();
               toast.success("Digital asset created successfully");
             } else {
               setIsCreateAssetDisabled(false);
               setIsWhitelistDisabled(true);
-              setIsMintDisabled(true);
               allFalseLoading();
               toast.error("Digital asset creation failed you can retry it");
             }
@@ -525,7 +523,7 @@ export const MintAndTransferSection = ({
             {([
               { key: "APPROVED", label: "Transfer Pending" },
               { key: "TOKEN_TRANSFERRED_INITIATED", label: "Transfer Initiated" },
-              { key: "TOKEN_TRANSFER_COMPLETED", label: "Transfer Completed" },
+              { key: "TOKEN_TRANSFERRED", label: "Transfer Completed" },
             ] as const).map((tab) => (
               <button
                 key={tab.key}

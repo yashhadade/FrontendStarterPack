@@ -48,7 +48,7 @@ const statusBadgeClass = (status: TransferInvestor["status"]) => {
   switch (status) {
     case "APPROVED": return "bg-purple-100 text-purple-700 border border-purple-200";
     case "TOKEN_TRANSFERRED_INITIATED": return "bg-yellow-100 text-yellow-700 border border-yellow-200";
-    case "TOKEN_TRANSFER_COMPLETED": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
+    case "TOKEN_TRANSFERRED": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
     case "REJECTED": return "bg-red-100 text-red-700 border border-red-200";
     case "TOKEN_TRANSFERRED_FAILED": return "bg-red-100 text-red-700 border border-red-200";
   }
@@ -58,7 +58,7 @@ const statusLabel = (status: TransferInvestor["status"]) => {
   switch (status) {
     case "APPROVED": return "Ready for Transfer";
     case "TOKEN_TRANSFERRED_INITIATED": return "Transfer Initiated";
-    case "TOKEN_TRANSFER_COMPLETED": return "Transfer Completed";
+    case "TOKEN_TRANSFERRED": return "Transfer Completed";
     case "TOKEN_TRANSFERRED_FAILED": return "Transfer Cancelled. You can initiate again";
   }
 };
@@ -72,7 +72,7 @@ const AssetRequestDetails = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [viewStep, setViewStep] = useState<number | null>(null);
   const [selectedInvestor, setSelectedInvestor] = useState<number | null>(null);
-  const [transferTab, setTransferTab] = useState<"APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFER_COMPLETED">("APPROVED");
+  const [transferTab, setTransferTab] = useState<"APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED">("APPROVED");
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showGasModal, setShowGasModal] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<string | null>(null);
