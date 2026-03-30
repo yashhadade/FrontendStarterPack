@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import DataTable, { DataTableColumn } from "@/components/DataTable";
-import assetsServices from "@/services/assetsServices";
-import { formatIndianNumber } from "@/utils/numberFormat";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DataTable, { DataTableColumn } from '@/components/DataTable';
+import assetsServices from '@/services/assetsServices';
+import { formatIndianNumber } from '@/utils/numberFormat';
+import { IGetAllAssetResponseInterface } from '@/types/assets';
 
 const TokenTransfers = () => {
-  const [assetsRequests, setAssetsRequests] = useState<any[]>([]);
+  const [assetsRequests, setAssetsRequests] = useState<IGetAllAssetResponseInterface[]>([]);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchAssetsRequests = async () => {
@@ -18,66 +19,65 @@ const TokenTransfers = () => {
     fetchAssetsRequests();
   }, []);
 
-  const columns: DataTableColumn<any>[] = [
+  const columns: DataTableColumn<IGetAllAssetResponseInterface>[] = [
     {
-      key: "assetName",
-      header: "Asset",
-      className: "text-foreground font-medium",
+      key: 'assetName',
+      header: 'Asset',
+      className: 'text-foreground font-medium',
     },
     {
-      key: "sellerName",
-      header: "Client Name",
-      className: "text-muted-foreground text-xs",
+      key: 'sellerName',
+      header: 'Client Name',
+      className: 'text-muted-foreground text-xs',
     },
     {
-      key: "totalAssetValueInInr",
-      header: "Value",
-      className: "font-mono text-xs text-foreground",
+      key: 'totalAssetValueInInr',
+      header: 'Value',
+      className: 'font-mono text-xs text-foreground',
       render: (row) => `₹${formatIndianNumber(row?.totalAssetValueInInr)}`,
     },
     {
-      key: "noOfTokens",
-      header: "No. of Tokens",
-      className: "font-mono text-xs text-center text-foreground",
+      key: 'noOfTokens',
+      header: 'No. of Tokens',
+      className: 'font-mono text-xs text-center text-foreground',
       render: (row) => formatIndianNumber(row?.noOfTokens),
     },
     {
-      key: "noOfTokensForDistribution",
-      header: "Distributed Tokens",
-      className: "font-mono text-xs text-center text-foreground",
+      key: 'noOfTokensForDistribution',
+      header: 'Distributed Tokens',
+      className: 'font-mono text-xs text-center text-foreground',
       render: (row) => formatIndianNumber(row?.noOfTokensForDistribution),
     },
     {
-      key: "status",
-      header: "Status",
+      key: 'status',
+      header: 'Status',
       render: (prop) => (
         <span
           className={`text-[10px] px-2 py-0.5 rounded-full font-medium 
             ${
-            prop.status === "COMPLETED"
-              ? "progress-step-done"
-              : prop.status === "PENDING"
-              ? "status-pending"
-              : prop.status === "REJECTED"
-              ? "status-rejected"
-              : prop.status === "ASSET_CREATION_PROCESSING"
-              ? "progress-step-active"
-              : prop.status === "ASSET_CREATED"
-              ? "progress-step-done"            
-              : prop.status === "APPROVED"
-              ? "status-approved"
-              :"bg-secondary/10 text-secondary border border-secondary/20"
-          }`
-        }
+              prop.status === 'COMPLETED'
+                ? 'progress-step-done'
+                : prop.status === 'PENDING'
+                  ? 'status-pending'
+                  : prop.status === 'REJECTED'
+                    ? 'status-rejected'
+                    : prop.status === 'ASSET_CREATION_PROCESSING'
+                      ? 'progress-step-active'
+                      : prop.status === 'ASSET_CREATED'
+                        ? 'progress-step-done'
+                        : prop.status === 'APPROVED'
+                          ? 'status-approved'
+                          : 'bg-secondary/10 text-secondary border border-secondary/20'
+            }`}
         >
           {prop.status}
         </span>
       ),
     },
     {
-      key: "action",
-      header: "Action",
-      align: "right",
+      key: 'action',
+      header: 'Action',
+      align: 'right',
       sortable: false,
       render: (prop) => (
         <button
@@ -104,7 +104,7 @@ const TokenTransfers = () => {
         data={assetsRequests}
         columns={columns}
         getRowId={(row) => row._id}
-        searchableKeys={["assetName", "sellerName", "totalAssetValueInInr", "status"]}
+        searchableKeys={['assetName', 'sellerName', 'totalAssetValueInInr', 'status']}
         searchPlaceholder="Search by ID, asset, or client..."
         onRowClick={(row) => navigate(`/assets-requests/${row._id}`)}
       />

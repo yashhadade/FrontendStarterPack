@@ -6,8 +6,7 @@ export async function refreshAccessToken(): Promise<string> {
   if (!refreshToken) throw new Error('Missing refresh token');
 
   const baseURL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5003/';
-  const refreshEndpoint =
-    import.meta.env.VITE_REFRESH_ENDPOINT || 'auth/refresh';
+  const refreshEndpoint = import.meta.env.VITE_REFRESH_ENDPOINT || 'auth/refresh';
 
   // Use a bare axios client so we don't trigger the same interceptors again.
   const refreshClient = axios.create({
@@ -31,4 +30,3 @@ export async function refreshAccessToken(): Promise<string> {
 
   return newAccessToken;
 }
-

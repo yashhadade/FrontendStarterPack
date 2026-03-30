@@ -1,13 +1,13 @@
-import { getStorageItem } from "@/utils/storageUtils";
-import { jwtDecode } from "jwt-decode";
+import { getStorageItem } from '@/utils/storageUtils';
+import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
   exp: number;
 }
 
 export const isAuthenticated = () => {
-  const accessToken = getStorageItem("access");
-  const refreshToken = getStorageItem("refresh");
+  const accessToken = getStorageItem('access');
+  const refreshToken = getStorageItem('refresh');
 
   // If access token is missing/expired but we still have a refresh token,
   // allow navigation; axios will refresh transparently on `401`.

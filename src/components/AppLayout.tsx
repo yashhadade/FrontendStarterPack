@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import AppSidebar from "@/components/AppSidebar";
+import { Outlet } from 'react-router-dom';
+import AppSidebar from '@/components/AppSidebar';
 
 const AppLayout = () => {
   return (

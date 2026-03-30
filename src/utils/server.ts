@@ -1,5 +1,5 @@
 import { authHeader } from '@/helpers/authHeader';
-import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig, type AxiosRequestHeaders } from 'axios';
 import { getStorageItem, removeStorageItem } from '@/utils/storageUtils';
 import { refreshAccessToken } from '@/utils/refreshToken';
 
@@ -11,12 +11,16 @@ export const server = axios.create({
   headers: {},
 });
 
-server.interceptors.request.use((config) => {
-  const token = authHeader();
-  config.headers = (config.headers ?? {}) as any;
-  config.headers.Authorization = token;
-  return config;
-}, null, { synchronous: true });
+server.interceptors.request.use(
+  (config) => {
+    const token = authHeader();
+    config.headers = (config.headers ?? {}) as AxiosRequestHeaders;
+    config.headers.Authorization = token;
+    return config;
+  },
+  null,
+  { synchronous: true }
+);
 
 type RetryConfig = AxiosRequestConfig & { _retry?: boolean };
 
@@ -53,7 +57,7 @@ server.interceptors.response.use(
         const newAccessToken = await refreshPromise;
 
         // Retry original request; request interceptor will attach the new token.
-        originalRequest.headers = (originalRequest.headers ?? {}) as any;
+        originalRequest.headers = (originalRequest.headers ?? {}) as AxiosRequestHeaders;
         originalRequest.headers.Authorization = newAccessToken;
         return server(originalRequest);
       } catch (refreshErr) {
