@@ -27,7 +27,7 @@ const App = () => (
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Index />} />
             <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
               <Route path="/blockchain" element={<BlockchainTransactions />} />
               <Route path="/blockchain-transactions/:id" element={<BlockchainTransactionDetails />} />
               <Route path="/assets-requests" element={<TokenTransfers />} />
