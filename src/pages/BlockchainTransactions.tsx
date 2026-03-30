@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Wallet, CheckCircle2, XCircle, Clock, Shield } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDltAddressStore } from "@/store/dltAddressStrore";
 import useConnectWallet from "@/hooks/useConnectWallet";

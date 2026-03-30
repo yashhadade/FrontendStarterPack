@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import DataTable, { DataTableColumn } from "@/components/DataTable";
 import assetsServices from "@/services/assetsServices";
 import { formatIndianNumber } from "@/utils/numberFormat";
+import { IGetAllAssetResponseInterface } from "@/types/assets";
 
 const TokenTransfers = () => {
-  const [assetsRequests, setAssetsRequests] = useState<any[]>([]);
+  const [assetsRequests, setAssetsRequests] = useState<IGetAllAssetResponseInterface[]>([]);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchAssetsRequests = async () => {
@@ -18,7 +19,7 @@ const TokenTransfers = () => {
     fetchAssetsRequests();
   }, []);
 
-  const columns: DataTableColumn<any>[] = [
+  const columns: DataTableColumn<IGetAllAssetResponseInterface>[] = [
     {
       key: "assetName",
       header: "Asset",

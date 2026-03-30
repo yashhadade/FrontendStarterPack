@@ -12,7 +12,7 @@ interface User{
     isListingOnBording:boolean;
     platformDomain:string;
     platformColorCode:string;
-    platformLogo:any
+    platformLogo:string;
     mobileNumber:string;
     panNumber:string;
     city:string;
@@ -27,10 +27,10 @@ interface User{
     din:string;
     officialEmail:string;
     url:string;
-    documents:any[];
+    documents:{ docUrl: string; docName: string }[];
     companybankAccount:string;
     ifscCode:string;
-    images:any[];
+    images:{ docUrl: string; docName: string }[];
     registeredOfficeAddress:string;
     communicationAddress:string;
     yearOfIncorporation:string;

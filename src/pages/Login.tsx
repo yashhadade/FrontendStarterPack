@@ -21,7 +21,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res: any = await custodianServices.custodianLogin({
+      const res = await custodianServices.custodianLogin({
         usernameOrEmail:email,
         password:password,
       });

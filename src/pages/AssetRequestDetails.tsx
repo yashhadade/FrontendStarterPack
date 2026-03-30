@@ -2,9 +2,9 @@ import InvestorKycSection from "@/components/InvestorKycSection";
 import { MintAndTransferSection } from "@/components/MintAndTransferSection";
 import assetsServices from "@/services/assetsServices";
 import investorsServices from "@/services/investorsServices";
+import { IGetAllAssetResponseInterface } from "@/types/assets";
 import { TransferInvestor } from "@/types/investors";
 import {
-  ArrowRight,
   Building2,
   CheckCircle2,
   ChevronRight,
@@ -32,7 +32,7 @@ const steps = [
 ];
 
 const stepIndex = (status: string) => {
-  const normalized = status.toUpperCase();
+  const normalized = status?.toUpperCase();
 
   if (normalized === "REJECTED" || normalized === "PENDING") return 0;
   if (normalized === "APPROVED") return 1;
@@ -67,15 +67,14 @@ const AssetRequestDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [asset, setAsset] = useState<any | null>(null);
+  const [asset, setAsset] = useState<IGetAllAssetResponseInterface | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
   const [viewStep, setViewStep] = useState<number | null>(null);
-  const [selectedInvestor, setSelectedInvestor] = useState<number | null>(null);
   const [transferTab, setTransferTab] = useState<"APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED">("APPROVED");
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showGasModal, setShowGasModal] = useState(false);
-  const [copiedIdx, setCopiedIdx] = useState<string | null>(null);
+  const [_copiedIdx, setCopiedIdx] = useState<string | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
@@ -84,7 +83,7 @@ const AssetRequestDetails = () => {
   const [approveLoading, setApproveLoading] = useState(false);
   const [showIpfsPassword, setShowIpfsPassword] = useState(false);
   const [showExistingIpfsPassword, setShowExistingIpfsPassword] = useState(false);
-  const [investorsCount, setInvestorsCount] = useState(0);
+  const [_investorsCount, setInvestorsCount] = useState(0);
   const [transferInvestors,setTransferInvestors] = useState<TransferInvestor[]>([]);
   const [proposeTransactionLoading, setProposeTransactionLoading] = useState(false);
 
@@ -131,7 +130,6 @@ const AssetRequestDetails = () => {
   useEffect(() => {
     fetchAssetRequest();
   }, [id]);
-
   useEffect(() => {
     fetchInvestor();
   }, [id, transferTab]);
@@ -165,14 +163,14 @@ const AssetRequestDetails = () => {
   };
 
 
-  const toggleRow = (idx: string) => {
-    setSelectedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else if (next.size < 80) next.add(idx);
-      return next;
-    });
-  };
+  // const toggleRow = (idx: string) => {
+  //   setSelectedRows((prev) => {
+  //     const next = new Set(prev);
+  //     if (next.has(idx)) next.delete(idx);
+  //     else if (next.size < 80) next.add(idx);
+  //     return next;
+  //   });
+  // };
 
   const selectFirst80 = () => {
     const ids = new Set(transferInvestors.slice(0, 80).map((inv) => inv._id));
@@ -204,7 +202,7 @@ const AssetRequestDetails = () => {
 
     try {
       setApproveLoading(true);
-      const res: any = await assetsServices.assetApproveReject(data);
+      const res = await assetsServices.assetApproveReject(data);
 
       if (res?.data) {
         toast.success("Asset approved successfully");
@@ -216,6 +214,7 @@ const AssetRequestDetails = () => {
         toast.error(res?.error || "Failed to approve asset");
       }
     } catch (error) {
+      console.log(error);
       toast.error("Failed to approve asset");
     } finally {
       setApproveLoading(false);
@@ -233,10 +232,10 @@ const AssetRequestDetails = () => {
       reason: rejectReason,
     };
 
-    const res: any = await assetsServices.assetApproveReject(data);
+    const res = await assetsServices.assetApproveReject(data);
 
     if (res && res.success === false) {
-      toast.error(res.message || "Failed to reject asset");
+      toast.error(res.error || "Failed to reject asset");
       return;
     }
 
@@ -342,9 +341,9 @@ const AssetRequestDetails = () => {
             <p className="text-xs text-muted-foreground">Client Submitted — Awaiting Custodian Review</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { icon: User, label: "Seller Name", value: asset.sellerName ?? asset.clientName ?? "-" },
-              { icon: Building2, label: "Asset Name", value: asset.assetName ?? `Asset #${asset.id}` },
+              {[
+                { icon: User, label: "Seller Name", value: asset?.sellerName ?? "-" },
+              { icon: Building2, label: "Asset Name", value: asset.assetName ?? `Asset #${asset._id}` },
               { icon: CreditCard, label: "Total Asset Value", value: asset?.totalAssetValueInInr != null ? `₹${Number(asset.totalAssetValueInInr).toLocaleString("en-IN")}` : "-" },
               // {
               //   icon: Hash,
@@ -391,7 +390,7 @@ const AssetRequestDetails = () => {
             <div className="mt-4 space-y-3">
               <h3 className="text-sm font-semibold text-foreground">Rejection / Revision History</h3>
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {asset.rejectionReason.map((item: any) => {
+                {asset.rejectionReason.map((item: { _id: string; reason: string; createdAt: Date; reasonFrom: string }) => {
                   const fromClient = item.reasonFrom === "CLIENT";
                   const timestamp = item.createdAt
                     ? new Date(item.createdAt).toLocaleString()
@@ -439,7 +438,7 @@ const AssetRequestDetails = () => {
                     Asset Images
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {asset.assetImages.map((img: any) => (
+                    {asset.assetImages.map((img: { docUrl: string; docName: string }) => (
                       <div
                         key={img.docUrl}
                         className="rounded-lg overflow-hidden border border-border/40 bg-muted/40"
@@ -465,7 +464,7 @@ const AssetRequestDetails = () => {
                     Legal Documents
                   </h3>
                   <div className="space-y-2">
-                    {asset.legalNotes.map((doc: any) => (
+                    {asset.legalNotes.map((doc: { docUrl: string; docName: string }) => (
                       <a
                         key={doc.docUrl}
                         href={`${asset.url ?? ""}${doc.docUrl}`}

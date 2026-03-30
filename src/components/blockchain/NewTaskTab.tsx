@@ -134,7 +134,7 @@ const NewTaskTab = () => {
     }
 
     fetchPolygonUsers()
-  }, [values.selectedAsset])
+  }, [values.selectedAsset, values.selectedAction])
   useEffect(() => {
     fetchAssets();
   }, []);
@@ -267,11 +267,11 @@ values.selectedAction || "",
                               value={formik.values[field.name] || ""}
                               onChange={e => formik.setFieldValue(field.name, e.target.value)}
                               onBlur={() => formik.setFieldTouched(field.name, true)}
-                              disabled={isSubmitting}
+                              disabled={isSubmitting || loadingUsers}
                               className="w-full bg-white border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground appearance-none focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
                             >
                               <option value="" disabled>
-                                {isSubmitting
+                                {loadingUsers
                                   ? "Loading addresses..."
                                   : `Select ${field.label}`}
                               </option>

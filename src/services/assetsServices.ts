@@ -20,7 +20,7 @@ const getAssetRequestById = (id: string) =>{
         return err.response.data;
     })
 }
-const assetApproveReject = (data: any) =>{
+const assetApproveReject = (data: { assetId: string; status: string; ipfsPassword?: string }) =>{
     return server.post(`requestAssets/updateAssetStatus`, data)
     .then(res=>{
         return res.data
@@ -71,7 +71,7 @@ const mintTokens = (id: string) =>{
     })
 }
 
-const proposeTransaction = (data: any) =>{
+const proposeTransaction = (data: { assetId: string; action: string; transationData: { reason?: string; amount?: string; fromAddress?: string; dltWalletAddresses?: string[] } }) =>{
     return server.post(`blockchainTransaction/proposeTransaction`, data)
     .then(res=>{
         return res.data

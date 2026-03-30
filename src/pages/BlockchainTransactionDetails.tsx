@@ -141,7 +141,7 @@ const BlockchainTransactionDetails = () => {
   if (!id) return null;
 
   const approveCount = tx?.approveProposal?.signatures?.length ?? 0;
-  const rejectCount = tx?.rejectProposal?.signatures?.length ?? 0;
+  // const rejectCount = tx?.rejectProposal?.signatures?.length ?? 0;
   const totalSigners = tx?.owners?.length ?? 0;
   const progress = totalSigners > 0 ? (approveCount / totalSigners) * 100 : 0;
 
@@ -184,6 +184,7 @@ const BlockchainTransactionDetails = () => {
         toast.error(res.message || "Something went wrong");
       }
     } catch (error) {
+      console.log(error);
       toast.error( "Something went wrong");
     } 
     finally {
@@ -202,6 +203,13 @@ const BlockchainTransactionDetails = () => {
         <ArrowLeft className="w-4 h-4" />
         Back to transactions
       </button>
+
+     {loading && !tx && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading transaction…</span>
+        </div>
+      )}
 
      { tx &&
      <>

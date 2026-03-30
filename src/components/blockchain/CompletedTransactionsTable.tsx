@@ -17,8 +17,8 @@ const useCompletedTransactions = () => {
         if (res.data) {
           setRows(res.data);
         }
-      } catch (error: any) {
-        toast.error(error?.message || "Failed to fetch completed transactions");
+      } catch (error) {
+        toast.error((error as { message: string })?.message || "Failed to fetch completed transactions");
       }
     };
 

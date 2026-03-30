@@ -6,11 +6,12 @@ import assetsServices from "@/services/assetsServices";
 import { toast } from "sonner";
 import blockchainOperationServices from "@/services/blockchainOperationServices";
 import { TransferInvestor } from "@/types/investors";
+import { IGetAllAssetResponseInterface } from "@/types/assets";
 
 
 type MintAndTransferSectionProps = {
   assetId: string;
-  asset: any;
+  asset: IGetAllAssetResponseInterface;
   transferTab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED" ;
   setTransferTab: (tab: "APPROVED" | "TOKEN_TRANSFERRED_INITIATED" | "TOKEN_TRANSFERRED") => void;
   filteredInvestors: TransferInvestor[];
@@ -68,7 +69,7 @@ export const MintAndTransferSection = ({
     if (copiedTimeoutRef.current) window.clearTimeout(copiedTimeoutRef.current);
     copiedTimeoutRef.current = window.setTimeout(() => setCopiedKey(null), 1200);
   };
-
+console.log("asset", asset);
   useEffect(() => {
     return () => {
       if (copiedTimeoutRef.current) window.clearTimeout(copiedTimeoutRef.current);

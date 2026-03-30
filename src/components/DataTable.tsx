@@ -57,7 +57,7 @@ type DataTableProps<T> = {
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50];
 
-function DataTable<T extends Record<string, any>>({
+function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   searchableKeys,
@@ -99,8 +99,8 @@ function DataTable<T extends Record<string, any>>({
     if (!column || column.sortable === false) return filteredData;
 
     return [...filteredData].sort((a, b) => {
-      const aVal = (a as any)[sortKey];
-      const bVal = (b as any)[sortKey];
+      const aVal = (a as Record<string, unknown>)[sortKey];
+      const bVal = (b as Record<string, unknown>)[sortKey];
 
       if (aVal == null && bVal == null) return 0;
       if (aVal == null) return sortDirection === "asc" ? -1 : 1;
@@ -216,7 +216,7 @@ function DataTable<T extends Record<string, any>>({
                           col.align === "right" ? "text-right" : "text-left"
                         } ${col.className ?? ""}`}
                       >
-                        {col.render ? col.render(row) : String((row as any)[col.key])}
+                        {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key as string])}
                       </td>
                     ))}
                   </tr>

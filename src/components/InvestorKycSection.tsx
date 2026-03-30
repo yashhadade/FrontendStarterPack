@@ -1,6 +1,6 @@
 import investorsServices from "@/services/investorsServices";
 import DataTable, { DataTableColumn } from "@/components/DataTable";
-import { Eye, Image, CheckCircle2, XCircle } from "lucide-react";
+import { Eye, CheckCircle2, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,7 +27,7 @@ type KycInvestor = {
   noOfTokens?: number;
   status: string;
   documents?: { docUrl: string; docName: string }[];
-  [key: string]: any;
+  [key: string]: string | number | undefined | { docUrl: string; docName: string }[];
 };
 
 const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, onProceedToMint }: InvestorKycSectionProps) => {
@@ -74,8 +74,8 @@ const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, on
     try {
       const res = await investorsServices.updateInvestorStatus(payload);
 
-      if ((res as any)?.success === false) {
-        toast.error((res as any)?.message || "Failed to update investor status");
+      if ((res as { success: boolean; message: string })?.success === false) {
+        toast.error((res as { message: string })?.message || "Failed to update investor status");
         return;
       }
 
@@ -84,7 +84,7 @@ const InvestorKycSection = ({ assetId, assetTotalNoTokens, setInvestorsCount, on
       await fetchInvestors();
       await fetchInvestorById(selectedInvestorId);
     } catch (error) {
-      const message = (error as any)?.message ?? "Failed to update investor status";
+      const message = (error as { message: string })?.message ?? "Failed to update investor status";
       toast.error(message);
     }
   };
@@ -162,7 +162,7 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
       <DataTable
         data={kycInvestors}
         columns={columns}
-        getRowId={(row) => row._id || row.email || row.name}
+        getRowId={(row) => row._id || row.emailId || row.name}
         searchableKeys={["name", "emailId", "aadharCardNumber", "panNumber"]}
         searchPlaceholder="Search investors..."
         title="Investor KYC Verification"
@@ -220,7 +220,7 @@ const totalNoTokens = kycInvestors.reduce((acc, inv) => acc + (inv.noOfTokens ||
                   )}
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Aadhaar</p>
-                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCardNumber}</p>
+                    <p className="text-xs font-mono text-foreground break-all">{selectedInvestor.aadharCard}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">PAN</p>
