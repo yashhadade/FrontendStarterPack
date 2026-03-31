@@ -116,7 +116,10 @@ const NewTaskTab = () => {
 
       setLoadingUsers(true);
       try {
-        const res = await investorsServices.getInvestorsByAssetIdAndStatus(values.selectedAsset);
+        const res = await investorsServices.getInvestorsByAssetIdAndStatus(
+          values.selectedAsset,
+          'TOKEN_TRANSFERRED'
+        );
 
         if (res && Array.isArray(res?.data)) {
           const users = res?.data?.map((user) => ({
