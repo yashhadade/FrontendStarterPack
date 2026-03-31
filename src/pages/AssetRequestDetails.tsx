@@ -34,7 +34,12 @@ const stepIndex = (status: string) => {
 
   if (normalized === 'REJECTED' || normalized === 'PENDING') return 0;
   if (normalized === 'APPROVED') return 1;
-  if (!["REJECTED", "PENDING", "APPROVED"].includes(normalized)) return 2;
+  if (
+    normalized === 'ASSET_CREATION_PROCESSING' ||
+    normalized === 'COMPLETED' ||
+    normalized === 'ASSET_CREATED'
+  )
+    return 2;
 
   const idx = steps.findIndex((s) => s.key === normalized);
   return idx >= 0 ? idx : 0;
