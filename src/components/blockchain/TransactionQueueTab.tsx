@@ -1,14 +1,14 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle } from "lucide-react";
-import { useState } from "react";
-import PendingTransactionsTable from "./PendingTransactionsTable";
-import QueuedTransactionsTable from "./QueuedTransactionsTable";
-import CompletedTransactionsTable from "./CompletedTransactionsTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import PendingTransactionsTable from './PendingTransactionsTable';
+import QueuedTransactionsTable from './QueuedTransactionsTable';
+import CompletedTransactionsTable from './CompletedTransactionsTable';
 
-type StatusTab = "PENDING" | "QUEUED" | "COMPLETED";
+type StatusTab = 'PENDING' | 'QUEUED' | 'COMPLETED';
 
 const TransactionQueueTab = () => {
-  const [tab, setTab] = useState<StatusTab>("PENDING");
+  const [tab, setTab] = useState<StatusTab>('PENDING');
 
   return (
     <div className="glass-card p-5 space-y-4">
@@ -21,19 +21,24 @@ const TransactionQueueTab = () => {
         </div>
       </div>
 
-      <Tabs
-        value={tab}
-        onValueChange={(value) => setTab(value as StatusTab)}
-        className="space-y-4"
-      >
+      <Tabs value={tab} onValueChange={(value) => setTab(value as StatusTab)} className="space-y-4">
         <TabsList className="bg-muted/50 border border-border/50 p-1">
-          <TabsTrigger value="PENDING" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm">
+          <TabsTrigger
+            value="PENDING"
+            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm"
+          >
             Pending Approvals
           </TabsTrigger>
-          <TabsTrigger value="QUEUED" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm">
+          <TabsTrigger
+            value="QUEUED"
+            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm"
+          >
             Queued
           </TabsTrigger>
-          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm">
+          <TabsTrigger
+            value="COMPLETED"
+            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-sm"
+          >
             Completed
           </TabsTrigger>
         </TabsList>
@@ -76,4 +81,3 @@ const TransactionQueueTab = () => {
 };
 
 export default TransactionQueueTab;
-
