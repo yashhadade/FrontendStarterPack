@@ -5,8 +5,8 @@ import { getStorageItem } from '@/utils/storageUtils';
 
 const navItems = [
   // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { title: "Assets Requests", path: "/assets-requests", icon: ArrowLeftRight },
-  { title: "Blockchain Transactions", path: "/blockchain", icon: Link2 },
+  { title: 'Assets Requests', path: '/assets-requests', icon: ArrowLeftRight },
+  { title: 'Blockchain Transactions', path: '/blockchain', icon: Link2 },
 ];
 
 const AppSidebar = () => {

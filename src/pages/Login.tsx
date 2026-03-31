@@ -37,7 +37,7 @@ const Login = () => {
           setStorageItem('user', JSON.stringify(res.data?.custodian));
         }
 
-        navigate("/assets-requests");
+        navigate('/assets-requests');
       } else {
         toast.error(res?.error || 'Login failed. Please try again.', { position: 'top-right' });
       }
