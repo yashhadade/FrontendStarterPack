@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import DataTable, { DataTableColumn } from "@/components/DataTable";
-import assetsServices from "@/services/assetsServices";
-import { formatIndianNumber } from "@/utils/numberFormat";
-import { getStatusClass } from "@/utils/statusClass";
-import { IGetAllAssetResponseInterface } from "@/types/assets";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DataTable, { DataTableColumn } from '@/components/DataTable';
+import assetsServices from '@/services/assetsServices';
+import { formatIndianNumber } from '@/utils/numberFormat';
+import { getStatusClass } from '@/utils/statusClass';
+import { IGetAllAssetResponseInterface } from '@/types/assets';
 const TokenTransfers = () => {
   const [assetsRequests, setAssetsRequests] = useState<IGetAllAssetResponseInterface[]>([]);
   const navigate = useNavigate();
@@ -52,7 +52,9 @@ const TokenTransfers = () => {
       key: 'status',
       header: 'Status',
       render: (prop) => (
-        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusClass(prop.status)}`}>
+        <span
+          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusClass(prop.status)}`}
+        >
           {prop.status}
         </span>
       ),
