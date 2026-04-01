@@ -1,12 +1,12 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Link2, ArrowLeftRight, LogOut, Shield } from 'lucide-react';
+import { Link2, ArrowLeftRight, LogOut, Shield } from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
 
 const navItems = [
-  { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { title: 'Blockchain Transactions', path: '/blockchain', icon: Link2 },
+  // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { title: 'Assets Requests', path: '/assets-requests', icon: ArrowLeftRight },
+  { title: 'Blockchain Transactions', path: '/blockchain', icon: Link2 },
 ];
 
 const AppSidebar = () => {
