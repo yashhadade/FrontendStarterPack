@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import DataTable, { DataTableColumn } from '@/components/DataTable';
 import assetsServices from '@/services/assetsServices';
 import { formatIndianNumber } from '@/utils/numberFormat';
+import { getStatusClass } from '@/utils/statusClass';
 import { IGetAllAssetResponseInterface } from '@/types/assets';
-
 const TokenTransfers = () => {
   const [assetsRequests, setAssetsRequests] = useState<IGetAllAssetResponseInterface[]>([]);
   const navigate = useNavigate();
@@ -53,22 +53,7 @@ const TokenTransfers = () => {
       header: 'Status',
       render: (prop) => (
         <span
-          className={`text-[10px] px-2 py-0.5 rounded-full font-medium 
-            ${
-              prop.status === 'COMPLETED'
-                ? 'progress-step-done'
-                : prop.status === 'PENDING'
-                  ? 'status-pending'
-                  : prop.status === 'REJECTED'
-                    ? 'status-rejected'
-                    : prop.status === 'ASSET_CREATION_PROCESSING'
-                      ? 'progress-step-active'
-                      : prop.status === 'ASSET_CREATED'
-                        ? 'progress-step-done'
-                        : prop.status === 'APPROVED'
-                          ? 'status-approved'
-                          : 'bg-secondary/10 text-secondary border border-secondary/20'
-            }`}
+          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusClass(prop.status)}`}
         >
           {prop.status}
         </span>
