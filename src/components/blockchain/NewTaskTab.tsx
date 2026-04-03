@@ -9,9 +9,10 @@ import * as Yup from 'yup';
 
 const NewTaskTab = () => {
   type AssetOption = { _id: string; assetName: string };
+  type PolygonUser = { value: string; label: string; maxTokens: number };
   const [assets, setAssets] = useState<AssetOption[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const [polygonUsers, setPolygonUsers] = useState<{ value: string; label: string }[]>([]);
+  const [polygonUsers, setPolygonUsers] = useState<PolygonUser[]>([]);
 
   const validationSchema = Yup.object().shape({
     selectedAsset: Yup.string().required('Asset selection is required'),
@@ -21,11 +22,25 @@ const NewTaskTab = () => {
       then: (schema) => schema.required('Reason is required'),
       otherwise: (schema) => schema.optional(),
     }),
-    amount: Yup.number().when('selectedAction', {
-      is: 'FORCE_TRANSFER',
-      then: (schema) => schema.required('Amount is required').positive('Amount must be positive'),
-      otherwise: (schema) => schema.optional(),
-    }),
+    amount: Yup.number()
+      .when('selectedAction', {
+        is: 'FORCE_TRANSFER',
+        then: (schema) => schema.required('Amount is required').positive('Amount must be positive'),
+        otherwise: (schema) => schema.optional(),
+      })
+      .test(
+        'does-not-exceed-balance',
+        'Amount cannot exceed available tokens for the selected owner',
+        function (value) {
+          const { selectedAction, fromAddress } = this.parent;
+          if (selectedAction !== 'FORCE_TRANSFER' || !fromAddress || value == null) return true;
+
+          const owner = polygonUsers.find((u) => u.value === fromAddress);
+          if (!owner || owner.maxTokens == null) return true;
+
+          return Number(value) <= owner.maxTokens;
+        }
+      ),
     fromAddress: Yup.string().when('selectedAction', {
       is: 'FORCE_TRANSFER',
       then: (schema) => schema.required('From Address is required'),
@@ -125,6 +140,7 @@ const NewTaskTab = () => {
           const users = res?.data?.map((user) => ({
             value: user.dltAccount,
             label: `${user.name} - ${user.dltAccount} (${user.noOfTokens} Tokens)`,
+            maxTokens: Number(user.noOfTokens) || 0,
           }));
           setPolygonUsers(users);
         }
