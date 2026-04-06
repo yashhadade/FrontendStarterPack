@@ -174,7 +174,7 @@ const BlockchainTransactionDetails = () => {
   const handleRetryTransaction = async (transactionId: string) => {
     try {
       setExecuteLoading(true);
-      const res = await blockchainTransactionServices.retryTransaction(transactionId);      
+      const res = await blockchainTransactionServices.retryTransaction(transactionId);
       if (res && res.data?.success) {
         toast.success(res?.data?.message || 'Transaction executing...');
         fetchTransaction();
@@ -298,7 +298,11 @@ const BlockchainTransactionDetails = () => {
                         className="px-5 py-2.5 rounded-lg text-base font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
                       >
                         <CheckCircle2 className="w-4 h-4" />
-                        {hasApproved ? 'Approved' : signing === 'approve' ? 'Approving...' : 'Approve'}
+                        {hasApproved
+                          ? 'Approved'
+                          : signing === 'approve'
+                            ? 'Approving...'
+                            : 'Approve'}
                       </button>
                     )}
                   </div>
@@ -311,10 +315,10 @@ const BlockchainTransactionDetails = () => {
                         tx?.status === 'PROCESSING'
                           ? 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
                           : tx?.status === 'EXECUTING'
-                          ? 'bg-amber-100 text-amber-700 border-amber-200 cursor-not-allowed'
-                          : (tx?.status === 'FAILED' || tx?.status === 'DEADLOCK')
-                          ? 'bg-red-50 text-red-700 border-red-200 hover:border-red-300 hover:bg-red-100'
-                          : ''
+                            ? 'bg-amber-100 text-amber-700 border-amber-200 cursor-not-allowed'
+                            : tx?.status === 'FAILED' || tx?.status === 'DEADLOCK'
+                              ? 'bg-red-50 text-red-700 border-red-200 hover:border-red-300 hover:bg-red-100'
+                              : ''
                       }
                     `}
                     disabled={tx?.status === 'EXECUTING' || executeLoading}
@@ -335,9 +339,7 @@ const BlockchainTransactionDetails = () => {
                         <span>Executing...</span>
                       </>
                     )}
-                    {(tx?.status === 'FAILED' || tx?.status === 'DEADLOCK') && (
-                      'Retry Transaction'
-                    )}
+                    {(tx?.status === 'FAILED' || tx?.status === 'DEADLOCK') && 'Retry Transaction'}
                   </button>
                 )}
               </div>
