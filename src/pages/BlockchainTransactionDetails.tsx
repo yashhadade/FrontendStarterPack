@@ -7,7 +7,6 @@ import blockchainTransactionServices from '@/services/blockchainTransaction';
 import { toast } from 'sonner';
 import useSignTransaction from '@/hooks/useSignTransaction';
 import { BlockchainTransaction } from '@/components/blockchain/PendingTransactionsTable';
-import { FullScreenLoader } from '@/components/FullScreenLoader';
 
 const BlockchainTransactionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -176,8 +175,8 @@ const BlockchainTransactionDetails = () => {
     try {
       setExecuteLoading(true);
       const res = await blockchainTransactionServices.retryTransaction(transactionId);
-      if (res && res.success) {
-        toast.success(res.message);
+      if (res && res.data?.success) {
+        toast.success(res?.data?.message || 'Transaction executing...');
         fetchTransaction();
         setExecuteLoading(false);
       } else {
@@ -251,7 +250,7 @@ const BlockchainTransactionDetails = () => {
                   {tx?.description ? tx.description : '-'}
                 </span>
               </div>
-              {tx?.status === 'FAILED' && (
+              {(tx?.status === 'FAILED' || tx?.status === 'DEADLOCK') && (
                 <div className="flex items-center gap-2 mt-1">
                   <span className="px-2 py-0.5 rounded bg-background border border-muted text-xs text-muted-foreground ml-1 max-w-xs truncate">
                     {tx?.error?.message || 'Unknown error'}
@@ -259,41 +258,91 @@ const BlockchainTransactionDetails = () => {
                 </div>
               )}
             </div>
-            {/* Right section */}
-            <div className="flex flex-col items-end gap-2">
-              {['PROCESSING', 'EXECUTING', 'FAILED'].includes(tx?.status) && (
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex w-full justify-end">
                 <button
-                  disabled={tx?.status === 'EXECUTING'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRetryTransaction(tx?._id);
+                  className="border-2 border-green-100 rounded-xl text-sm px-3 py-1 flex items-end gap-2 bg-green-50 text-green-700 font-semibold transition hover:border-green-200"
+                  onClick={() => {
+                    if (isConnected) {
+                      disconnectWallet();
+                    } else {
+                      connectWallet();
+                    }
                   }}
                 >
-                  {(executeLoading || tx?.status === 'EXECUTING') && (
-                    <FullScreenLoader open={executeLoading} />
+                  <span>{isConnected ? 'Disconnect Wallet' : 'Connect Wallet'}</span>
+                  {isConnected && dltAddress && (
+                    <span className="bg-white border ml-2 px-2 py-0.5 rounded-md font-mono text-green-900 text-xs border-green-200">
+                      {dltAddress.slice(0, 6)}...{dltAddress.slice(-4)}
+                    </span>
                   )}
-                  {tx?.status === 'PROCESSING' && 'Execute Transaction'}
-                  {tx?.status === 'EXECUTING' && 'Executing..'}
-                  {tx?.status === 'FAILED' && 'Retry Transaction'}
                 </button>
-              )}
-              <button
-                className={`border-2 border-green-100 rounded-xl text-sm px-3 py-1 flex items-center gap-2 bg-green-50 text-green-700 font-semibold transition hover:border-green-200`}
-                onClick={() => {
-                  if (isConnected) {
-                    disconnectWallet();
-                  } else {
-                    connectWallet();
-                  }
-                }}
-              >
-                <span>{isConnected ? 'Disconnect Wallet' : 'Connect Wallet'}</span>
-                {isConnected && dltAddress && (
-                  <span className="bg-white border ml-2 px-2 py-0.5 rounded-md font-mono text-green-900 text-xs border-green-200">
-                    {dltAddress.slice(0, 6)}...{dltAddress.slice(-4)}
-                  </span>
+              </div>
+              <div className="flex gap-2 justify-end">
+                {(tx?.status === 'PENDING' || tx?.status === 'DEADLOCK') && (
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      disabled={!dltAddress || hasRejected || signing === 'approve'}
+                      onClick={() => handleSign('reject')}
+                      className="px-5 py-2.5 rounded-lg text-base font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {hasRejected ? 'Rejected' : signing === 'reject' ? 'Rejecting...' : 'Reject'}
+                    </button>
+                    {tx?.status === 'PENDING' && (
+                      <button
+                        type="button"
+                        disabled={!dltAddress || hasApproved || signing === 'reject'}
+                        onClick={() => handleSign('approve')}
+                        className="px-5 py-2.5 rounded-lg text-base font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        {hasApproved
+                          ? 'Approved'
+                          : signing === 'approve'
+                            ? 'Approving...'
+                            : 'Approve'}
+                      </button>
+                    )}
+                  </div>
                 )}
-              </button>
+                {['PROCESSING', 'EXECUTING', 'FAILED', 'DEADLOCK'].includes(tx?.status) && (
+                  <button
+                    className={`
+                      flex items-center gap-2 px-4 py-1 rounded-xl font-semibold text-sm border-2 transition align-center
+                      ${
+                        tx?.status === 'PROCESSING'
+                          ? 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
+                          : tx?.status === 'EXECUTING'
+                            ? 'bg-amber-100 text-amber-700 border-amber-200 cursor-not-allowed'
+                            : tx?.status === 'FAILED' || tx?.status === 'DEADLOCK'
+                              ? 'bg-red-50 text-red-700 border-red-200 hover:border-red-300 hover:bg-red-100'
+                              : ''
+                      }
+                    `}
+                    disabled={tx?.status === 'EXECUTING' || executeLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRetryTransaction(tx?._id);
+                    }}
+                  >
+                    {tx?.status === 'PROCESSING' && (
+                      <>
+                        <Play className="w-4 h-4" />
+                        <span>Execute Transaction</span>
+                      </>
+                    )}
+                    {tx?.status === 'EXECUTING' && (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Executing...</span>
+                      </>
+                    )}
+                    {(tx?.status === 'FAILED' || tx?.status === 'DEADLOCK') && 'Retry Transaction'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -405,29 +454,6 @@ const BlockchainTransactionDetails = () => {
               </p>
             )}
           </div>
-
-          {tx?.status === 'PENDING' && (
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                disabled={!dltAddress || hasRejected || signing === 'approve'}
-                onClick={() => handleSign('reject')}
-                className="px-5 py-2.5 rounded-lg text-base font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
-                {hasRejected ? 'Rejected' : signing === 'reject' ? 'Rejecting...' : 'Reject'}
-              </button>
-              <button
-                type="button"
-                disabled={!dltAddress || hasApproved || signing === 'reject'}
-                onClick={() => handleSign('approve')}
-                className="px-5 py-2.5 rounded-lg text-base font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                {hasApproved ? 'Approved' : signing === 'approve' ? 'Approving...' : 'Approve'}
-              </button>
-            </div>
-          )}
         </>
       )}
     </div>
