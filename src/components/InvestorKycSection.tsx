@@ -16,7 +16,7 @@ type KycInvestor = {
   name: string;
   emailId: string;
   mobileNumber?: string | number;
-  aadharCard: string;
+  aadharCardNumber: string;
   panNumber: string;
   address?: string;
   dltAccount?: string;
@@ -233,10 +233,10 @@ const InvestorKycSection = ({
                   )}
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      Aadhaar
+                      Aadhar Card
                     </p>
                     <p className="text-xs font-mono text-foreground break-all">
-                      {selectedInvestor.aadharCard}
+                      {selectedInvestor.aadharCardNumber}
                     </p>
                   </div>
                   <div>
