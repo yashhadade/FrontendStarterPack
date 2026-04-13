@@ -2,7 +2,7 @@ import { server } from '@/utils/server';
 
 const custodianLogin = (data: { usernameOrEmail: string; password: string }) => {
   return server
-    .post(`auth/custodian/login`, data)
+    .post(`auth/admin/login`, data)
     .then((res) => {
       return res.data;
     })

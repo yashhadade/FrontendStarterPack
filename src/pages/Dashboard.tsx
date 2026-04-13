@@ -8,6 +8,7 @@ import {
   AlertCircle,
   ArrowRight,
 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
 
 const stats = [
   {
@@ -95,10 +96,7 @@ const statusColors: Record<string, string> = {
 const Dashboard = () => {
   return (
     <div className="p-8 space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Custodian control overview</p>
-      </div>
+      <PageHeader title="Dashboard" description="Custodian control overview" />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

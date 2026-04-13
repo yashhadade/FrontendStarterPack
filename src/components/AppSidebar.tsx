@@ -1,12 +1,12 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Link2, ArrowLeftRight, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, LogOut, Package, Shield } from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
 
 const navItems = [
   // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { title: 'Assets Requests', path: '/assets-requests', icon: ArrowLeftRight },
-  { title: 'Blockchain Transactions', path: '/blockchain', icon: Link2 },
+  { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { title: 'Products', path: '/products', icon: Package },
 ];
 
 const AppSidebar = () => {
@@ -27,9 +27,9 @@ const AppSidebar = () => {
             <Shield className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground tracking-tight">WhiteBox</h2>
+            <h2 className="text-sm font-bold text-foreground tracking-tight">MahaLaxmi</h2>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-              Custodian Panel
+              Enterprise Panel
             </p>
           </div>
         </div>
@@ -60,9 +60,9 @@ const AppSidebar = () => {
       <div className="p-4 border-t border-sidebar-border space-y-3">
         <div className="glass-card p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Custodian</span>
+            <span className="text-xs text-muted-foreground">Admin</span>
             <span className="text-xs font-medium text-foreground">
-              {JSON.parse(getStorageItem('user'))?.username}
+              {JSON.parse(getStorageItem('user'))?.name}
             </span>
           </div>
         </div>

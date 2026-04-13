@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import custodianServices from '@/services/custodianServices';
+import custodianServices from '@/services/adminServices';
 import { setStorageItem } from '@/utils/storageUtils';
 import { toast } from 'sonner';
 
@@ -30,14 +30,14 @@ const Login = () => {
         if (res.data) {
           setStorageItem('refresh', res.data.refreshToken);
         }
-        if (res.data?.custodian?._id) {
-          setStorageItem('userId', String(res.data?.custodian?._id));
+        if (res.data?.admin?._id) {
+          setStorageItem('userId', String(res.data?.admin?._id));
         }
-        if (res.data?.custodian) {
-          setStorageItem('user', JSON.stringify(res.data?.custodian));
+        if (res.data?.admin) {
+          setStorageItem('user', JSON.stringify(res.data?.admin));
         }
 
-        navigate('/assets-requests');
+        navigate('/dashboard');
       } else {
         toast.error(res?.error || 'Login failed. Please try again.', { position: 'top-right' });
       }
@@ -66,11 +66,8 @@ const Login = () => {
             <Shield className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            WhiteBox <span className="neon-text">Custodian Access</span>
+            MahaLaxmi <span className="neon-text">Enterprise</span>
           </h1>
-          <p className="text-muted-foreground text-sm mt-2">
-            Multi-signature protected administrative access
-          </p>
         </div>
 
         {/* Login Card */}
