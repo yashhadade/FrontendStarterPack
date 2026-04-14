@@ -15,6 +15,7 @@ import {
 type ProductFormValues = {
   name: string;
   selling_price: string;
+  buying_price: string;
   hsn_code: string;
 };
 
@@ -29,6 +30,7 @@ type ProductFormDialogProps = {
 const DEFAULT_VALUES: ProductFormValues = {
   name: "",
   selling_price: "",
+  buying_price: "",
   hsn_code: "",
 };
 
@@ -36,6 +38,7 @@ const normalizeValues = (values: ProductFormValues): CreateProductInterface => (
   name: values.name.trim(),
   hsn_code: values.hsn_code.trim(),
   selling_price: Number(values.selling_price),
+  buying_price: Number(values.buying_price),
 });
 
 const ProductFormDialog = ({
@@ -57,6 +60,10 @@ const ProductFormDialog = ({
       const sellingPrice = Number(values.selling_price);
       if (!values.selling_price.trim() || Number.isNaN(sellingPrice) || sellingPrice <= 0) {
         errors.selling_price = "Selling price must be greater than 0";
+      }
+      const buyingPrice = Number(values.buying_price);
+      if (!values.buying_price.trim() || Number.isNaN(buyingPrice) || buyingPrice <= 0) {
+        errors.buying_price = "Buying price must be greater than 0";
       }
       return errors;
     },
@@ -80,6 +87,9 @@ const ProductFormDialog = ({
       }
       if (normalized.selling_price !== initialNormalized.selling_price) {
         updatedPayload.selling_price = normalized.selling_price;
+      }
+      if (normalized.buying_price !== initialNormalized.buying_price) {
+        updatedPayload.buying_price = normalized.buying_price;
       }
 
       await onSubmit(updatedPayload);
@@ -151,6 +161,22 @@ const ProductFormDialog = ({
             />
             {formik.touched.hsn_code && formik.errors.hsn_code ? (
               <p className="text-xs text-destructive">{formik.errors.hsn_code}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="buying-price">Buying Price</Label>
+            <Input
+              id="buying-price"
+              name="buying_price"
+              type="text"
+              value={formik.values.buying_price}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="Enter buying price"
+            />
+            {formik.touched.buying_price && formik.errors.buying_price ? (
+              <p className="text-xs text-destructive">{formik.errors.buying_price}</p>
             ) : null}
           </div>
 

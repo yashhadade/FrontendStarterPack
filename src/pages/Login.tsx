@@ -62,11 +62,8 @@ const Login = () => {
       <div className="w-full max-w-md animate-fade-in relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass-card-glow mb-4">
-            <Shield className="w-8 h-8 text-primary" />
-          </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            MahaLaxmi <span className="neon-text">Enterprise</span>
+            Mahalaxmi <span className="neon-text">Enterprise</span>
           </h1>
         </div>
 
@@ -123,10 +120,6 @@ const Login = () => {
             </button>
           </form>
         </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Multi-signature protected administrative access.
-        </p>
       </div>
     </div>
   );

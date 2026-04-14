@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, LogOut, Package, Shield } from 'lucide-react';
+import { LayoutDashboard, LogOut, Package, Shield, Users } from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
 
@@ -7,6 +7,7 @@ const navItems = [
   // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { title: 'Products', path: '/products', icon: Package },
+  { title: 'Clients', path: '/clients', icon: Users },
 ];
 
 const AppSidebar = () => {
@@ -23,11 +24,8 @@ const AppSidebar = () => {
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center neon-border">
-            <Shield className="w-5 h-5 text-primary" />
-          </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground tracking-tight">MahaLaxmi</h2>
+            <h2 className="text-sm font-bold text-foreground tracking-tight">Mahalaxmi</h2>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
               Enterprise Panel
             </p>

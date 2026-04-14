@@ -64,7 +64,7 @@ function DataTable<T extends Record<string, unknown>>({
   getRowId,
   onRowClick,
   searchPlaceholder = 'Search…',
-  title = 'Assets Requests',
+  title = '',
   selectedRowId,
   initialSortKey = null,
   initialSortDirection = 'asc',

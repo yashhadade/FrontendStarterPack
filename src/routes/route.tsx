@@ -7,6 +7,8 @@ import Index from '../pages/Index';
 import Login from '../pages/Login';
 import NotFound from '../pages/NotFound';
 import Products from '../pages/Products';
+import Client from '@/pages/Client';
+import ClientDetail from '@/pages/ClinetDetail';
 
 const AppRoutes = () => (
   <Routes>
@@ -19,6 +21,8 @@ const AppRoutes = () => (
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Index />} />
         <Route path="products" element={<Products />} />
+        <Route path="clients" element={<Client />} />
+        <Route path="clients/:id" element={<ClientDetail />} />
       </Route>
     </Route>
     <Route path="*" element={<NotFound />} />

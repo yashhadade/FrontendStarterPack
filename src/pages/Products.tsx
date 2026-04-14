@@ -71,6 +71,7 @@ const Products = () => {
     ? {
         name: selectedProduct.name ?? "",
         selling_price: String(selectedProduct.selling_price ?? ""),
+        buying_price: String(selectedProduct.buying_price ?? ""),
         hsn_code: selectedProduct.hsn_code ?? "",
       }
     : undefined;
@@ -83,6 +84,10 @@ const Products = () => {
     {
       key: 'name',
       header: 'Name',
+    },
+    {
+      key: 'buying_price',
+      header: 'Buying Price',
     },
     {
       key: 'selling_price',
