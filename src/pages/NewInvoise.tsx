@@ -15,7 +15,10 @@ import type { Client as ClientData } from "@/types/client";
 import InvoicePreview from "@/components/InvoicePreview";
 import itemCodeServices from "@/services/itemCodeServices";
 import { ItemCode } from "@/types/itemCode";
-
+import invoiceServices from "@/services/invoiceServices";
+import { CreateInvoiceInterface } from "@/types/invoice";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 type InvoiceItem = {
   itemCodeId: string;
   description: string;
@@ -23,6 +26,7 @@ type InvoiceItem = {
   quantity: string;
   units: string;
   rate: string;
+  buyingRate: string;
 };
 
 type InvoiceFormValues = {
@@ -36,14 +40,22 @@ type InvoiceFormValues = {
   lrDt: string;
   challanNo: string;
   poNo: string;
-  invoiceNo: string;
   invoiceDate: string;
 };
 
 const NewInvoise = () => {
+  const navigate = useNavigate();
+  const formatDateAsDDMMYYYY = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  const getTodayDate = () => formatDateAsDDMMYYYY(new Date());
+
   const [clients, setClients] = useState<ClientData[]>([]);
   const [items, setItems] = useState<InvoiceItem[]>([
-    { itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0" },
+    { itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
   ]);
   const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
   const [openItemPicker, setOpenItemPicker] = useState<number | null>(null);
@@ -56,7 +68,7 @@ const NewInvoise = () => {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0" },
+      { itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
     ]);
   };
 
@@ -76,6 +88,9 @@ const NewInvoise = () => {
                 : "",
               hsnCode: selectedItemCode?.product_hsn_code ?? "",
               rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : "0",
+              buyingRate: selectedItemCode
+                ? String(selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price)
+                : "0",
             }
           : item
       )
@@ -88,21 +103,19 @@ const NewInvoise = () => {
       nameOfExcisableCommodity: "",
       placeOfSupply: "",
       transportName: "",
-      invoiceNumber: "INV-001",
+      invoiceNumber: "",
       discription: "",
       lrNo: "",
       lrDt: "",
       challanNo: "",
       poNo: "",
-      invoiceNo: "INV-001",
-      invoiceDate: new Date().toISOString().split("T")[0],
+      invoiceDate: getTodayDate(),
     },
     validate: (values) => {
       const errors: Partial<Record<keyof InvoiceFormValues, string>> = {};
 
       // Validate key fields first.
       if (!values.clientId.trim()) errors.clientId = "Client ID is required";
-      if (!values.invoiceNumber.trim()) errors.invoiceNumber = "Invoice number is required";
       if (!values.nameOfExcisableCommodity.trim()) {
         errors.nameOfExcisableCommodity = "Please select commodity";
       }
@@ -111,21 +124,55 @@ const NewInvoise = () => {
       return errors;
     },
     onSubmit: async (values) => {
+      const sellingAmount = items.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.rate) || 0),
+        0
+      );
+      const buyingAmount = items.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
+        0
+      );
+      const gstAmount = Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
+      const todayDate = getTodayDate();
+      formik.setFieldValue("invoiceDate", todayDate);
+
       const invoicePayload = {
-        ...values,
-        items: items.map((item) => ({
+        clientId: values.clientId,
+        name_of_excisable_commodity: values.nameOfExcisableCommodity,
+        place_of_supply: values.placeOfSupply,
+        transport_name: values.transportName,
+        discription: values.discription,
+        lr_no: values.lrNo,
+        lr_dt: values.lrDt,
+        challan_no: values.challanNo,
+        po_no: values.poNo,
+        selling_Amount: sellingAmount,
+        buying_Amount: buyingAmount,
+        gst_amount: gstAmount,
+        invoice_date: todayDate,
+        item_details: items.map((item) => ({
           itemCodeId: item.itemCodeId,
-          description: item.description,
-          hsn_code: item.hsnCode,
           quantity: Number(item.quantity) || 0,
           units: item.units,
-          rate: Number(item.rate) || 0,
-          total: (Number(item.quantity) || 0) * (Number(item.rate) || 0),
+          selling_price: (Number(item.quantity) || 0) * (Number(item.rate) || 0),
+          buying_price: (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
         })),
-        // Backend expects selected client _id.
-        clientId: values.clientId,
       };
-      console.log("invoicePayload", invoicePayload);
+      const res = await invoiceServices.createInvoice(invoicePayload as unknown as CreateInvoiceInterface);
+      if (res && res?.data) {
+        const createdInvoice = res.data;
+        const generatedInvoiceNumber =
+          createdInvoice?.invoice_number ??
+          "";
+        if (generatedInvoiceNumber) {
+          await formik.setFieldValue("invoiceNumber", String(generatedInvoiceNumber));
+        }
+        toast.success("Invoice created successfully");
+        await handleDownloadPdf(String(generatedInvoiceNumber || "draft"));
+        navigate("/invoices");
+      } else {
+        toast.error(res?.error || "Failed to create invoice");
+      }
     },
   });
 
@@ -137,10 +184,12 @@ const NewInvoise = () => {
     }, 0);
   }, [items]);
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async (invoiceNumberForFile?: string) => {
     if (!invoicePreviewRef.current) return;
     try {
       setIsDownloadingPdf(true);
+      // Wait for React to paint latest invoice number before screenshot.
+      await new Promise((resolve) => setTimeout(resolve, 120));
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
       const canvas = await html2canvas(invoicePreviewRef.current, {
         scale: 2,
@@ -167,7 +216,7 @@ const NewInvoise = () => {
         }
       }
 
-      pdf.save(`invoice-${formik.values.invoiceNumber || "draft"}.pdf`);
+      pdf.save(`invoice-${invoiceNumberForFile || formik.values.invoiceNumber || "draft"}.pdf`);
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -243,32 +292,13 @@ const NewInvoise = () => {
                 <p className="text-xs text-destructive">{formik.errors.clientId}</p>
               ) : null}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="invoiceNumber">
-                Invoice Number (Payload) <span className="text-destructive">*</span>
-              </Label>
+             <div className="space-y-2">
+              <Label htmlFor="invoiceNumber">Invoice Number</Label>
               <Input
                 id="invoiceNumber"
                 name="invoiceNumber"
-                value={formik.values.invoiceNumber}
-                onChange={(e) => {
-                  formik.handleChange(e);
-                  formik.setFieldValue("invoiceNo", e.target.value);
-                }}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.invoiceNumber && formik.errors.invoiceNumber ? (
-                <p className="text-xs text-destructive">{formik.errors.invoiceNumber}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="invoiceNo">Invoice Number</Label>
-              <Input
-                id="invoiceNo"
-                name="invoiceNo"
-                value={formik.values.invoiceNo}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                value={formik.values.invoiceNumber || "Will be generated after save"}
+                readOnly
               />
             </div>
             <div className="space-y-2">
@@ -276,10 +306,8 @@ const NewInvoise = () => {
               <Input
                 id="invoiceDate"
                 name="invoiceDate"
-                type="date"
                 value={formik.values.invoiceDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                readOnly
               />
             </div>
           </div>
@@ -462,8 +490,7 @@ const NewInvoise = () => {
                     <div className="space-y-2">
                       <Label>Quantity <span className="text-destructive">*</span></Label>
                       <Input
-                        type="number"
-                        min="1"
+                        type="text"
                         value={item.quantity}
                         onChange={(e) => updateItem(index, "quantity", e.target.value)}
                       />
@@ -484,8 +511,7 @@ const NewInvoise = () => {
                     <div className="space-y-2">
                       <Label>Rate <span className="text-destructive">*</span></Label>
                       <Input
-                        type="number"
-                        min="0"
+                        type="text"
                         value={item.rate}
                         onChange={(e) => updateItem(index, "rate", e.target.value)}
                       />
@@ -518,7 +544,15 @@ const NewInvoise = () => {
               <Save className="w-4 h-4" />
               Save Invoice
             </Button>
-            <Button type="button" variant="secondary" onClick={handleDownloadPdf} className="gap-2" disabled={isDownloadingPdf}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                void handleDownloadPdf();
+              }}
+              className="gap-2"
+              disabled={isDownloadingPdf}
+            >
               <Download className="w-4 h-4" />
               {isDownloadingPdf ? "Generating PDF..." : "Download PDF"}
             </Button>

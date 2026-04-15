@@ -64,14 +64,26 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           </div>
 
           <div className="border-b border-black p-2 text-[10px]">
-            <div className="flex items-center justify-end gap-6">
-              <div>
-                <span className="font-semibold">Invoice No. : </span>
-                <span>{values.invoiceNumber || "-"}</span>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-4 whitespace-nowrap">
+                <div className="whitespace-nowrap">
+                  <span className="font-semibold">GSTIN No. : </span>
+                  <span>27APWPM0688K1ZZ</span>
+                </div>
+                <div className="whitespace-nowrap">
+                  <span className="font-semibold">PAN No. : </span>
+                  <span>APWPM0688K</span>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold">DATE : </span>
-                <span>{values.invoiceDate || "-"}</span>
+              <div className="flex items-center justify-end gap-4 whitespace-nowrap">
+                <div className="whitespace-nowrap">
+                  <span className="font-semibold">Invoice No. : </span>
+                  <span>{values.invoiceNumber || "Generated after save"}</span>
+                </div>
+                <div className="whitespace-nowrap">
+                  <span className="font-semibold">DATE : </span>
+                  <span>{values.invoiceDate || "-"}</span>
+                </div>
               </div>
             </div>
           </div>
