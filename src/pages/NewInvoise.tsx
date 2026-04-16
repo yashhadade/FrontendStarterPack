@@ -41,6 +41,7 @@ type InvoiceFormValues = {
   challanNo: string;
   poNo: string;
   invoiceDate: string;
+  other_charges: number;
 };
 
 const NewInvoise = () => {
@@ -109,6 +110,7 @@ const NewInvoise = () => {
       lrDt: "",
       challanNo: "",
       poNo: "",
+      other_charges: 0,
       invoiceDate: getTodayDate(),
     },
     validate: (values) => {
@@ -146,6 +148,7 @@ const NewInvoise = () => {
         lr_dt: values.lrDt,
         challan_no: values.challanNo,
         po_no: values.poNo,
+        other_charges: values.other_charges,
         selling_Amount: sellingAmount,
         buying_Amount: buyingAmount,
         gst_amount: gstAmount,
@@ -153,6 +156,7 @@ const NewInvoise = () => {
         item_details: items.map((item) => ({
           itemCodeId: item.itemCodeId,
           quantity: Number(item.quantity) || 0,
+          rate: Number(item.rate) || 0,
           units: item.units,
           selling_price: (Number(item.quantity) || 0) * (Number(item.rate) || 0),
           buying_price: (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
@@ -397,6 +401,19 @@ const NewInvoise = () => {
             <div className="space-y-2">
               <Label htmlFor="poNo">PO No</Label>
               <Input id="poNo" name="poNo" value={formik.values.poNo} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="other_charges">Other Charges</Label>
+              <Input
+                id="other_charges"
+                name="other_charges"
+                value={String(formik.values.other_charges ?? 0)}
+                onChange={(e) => {
+                  const value = e.target.value.trim();
+                  formik.setFieldValue("other_charges", value === "" ? 0 : Number(value));
+                }}
+                onBlur={formik.handleBlur}
+              />
             </div>
           </div>
 

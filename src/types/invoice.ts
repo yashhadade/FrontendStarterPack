@@ -14,6 +14,7 @@ export type CreateInvoiceInterface = {
     sellingAmount: number;
     buyingAmount: number;
     gstAmount: number;
+    other_charges?: number;
     itemDetails: {
         itemCodeId: string;
         quantity: number;
@@ -21,5 +22,38 @@ export type CreateInvoiceInterface = {
         sellingPrice: number;
         buyingPrice: number;
         hsnCode: string;
+    }[];
+}
+
+export type Invoice = {
+    _id: string;
+    invoice_number: string;
+    invoice_date: string;
+    selling_Amount: number;
+    gst_amount: number;
+    other_charges: number;
+    status: string;
+    placeOfSupply: string;
+    transportName: string;
+    invoiceDate: string;
+    lrNo: string;
+    lrDt: string;
+    challanNo: string;
+    poNo: string;
+    discription: string;
+    selectedClient: {
+      name: string;
+      address: string;
+      gst_number: string;
+      state: string;
+      code: string;
+    };
+    item_details: {
+        quantity: number;
+        units: string;
+        rate: number;
+        buyingPrice: number;
+        hsnCode: string;
+        description: string;
     }[];
 }

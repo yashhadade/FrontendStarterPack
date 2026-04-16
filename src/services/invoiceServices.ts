@@ -11,6 +11,17 @@ const createInvoice = (data: CreateInvoiceInterface) => {
     });
   }
 
+  const getAllInvoice = () => {
+    return server.get(`/invoices/`)
+    .then((res) => {
+      return res.data;
+    }).catch((err) => {
+      console.log(err);
+      return err.response.data;
+    });
+  }
+
 export default {
     createInvoice,
+    getAllInvoice,
 }
