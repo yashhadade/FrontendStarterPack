@@ -650,7 +650,7 @@ const NewInvoise = () => {
                               ? (() => {
                                   const selected = itemCodes.find((code) => code._id === item.itemCodeId);
                                   return selected
-                                    ? `${selected.code} ${selected.product_name}`
+                                    ? `${selected?.code||""} ${selected?.product_name||""}`
                                     : "Select item code";
                                 })()
                               : "Select item code"}
