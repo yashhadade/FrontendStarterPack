@@ -16,9 +16,9 @@ import InvoicePreview from "@/components/InvoicePreview";
 import itemCodeServices from "@/services/itemCodeServices";
 import { ItemCode } from "@/types/itemCode";
 import invoiceServices from "@/services/invoiceServices";
-import { CreateInvoiceInterface } from "@/types/invoice";
+import { CreateInvoiceInterface, Invoice } from "@/types/invoice";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 type InvoiceItem = {
   itemCodeId: string;
   description: string;
@@ -46,6 +46,25 @@ type InvoiceFormValues = {
 
 const NewInvoise = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const getInvoiceById = async () => {
+    try {
+      const res = await invoiceServices.getInvoiceById(id || "");
+      if (res && res?.data) {
+        setInvoice(res.data);
+      } else {
+        console.error(res?.error || "Failed to fetch invoice");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    if (id) {
+      getInvoiceById();
+    }
+  }, [id]);
   const formatDateAsDDMMYYYY = (date: Date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -62,6 +81,79 @@ const NewInvoise = () => {
   const [openItemPicker, setOpenItemPicker] = useState<number | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const invoicePreviewRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!invoice) return;
+
+    const invoiceData = invoice as unknown as {
+      _id?: string;
+      clientId?: string;
+      name_of_excisable_commodity?: string;
+      place_of_supply?: string;
+      transport_name?: string;
+      invoice_number?: string;
+      discription?: string;
+      lr_no?: string;
+      lr_dt?: string | null;
+      challan_no?: string;
+      po_no?: string;
+      invoice_date?: string;
+      other_charges?: number;
+      item_details?: Array<{
+        itemCodeId?: string;
+        quantity?: number;
+        rate?: number;
+        units?: string;
+        buying_price?: number;
+      }>;
+    };
+
+    const normalizeDate = (dateValue?: string | null) => {
+      if (!dateValue) return "";
+      if (dateValue.includes("/")) return dateValue;
+      const parsedDate = new Date(dateValue);
+      return Number.isNaN(parsedDate.getTime()) ? "" : formatDateAsDDMMYYYY(parsedDate);
+    };
+
+    formik.setValues({
+      clientId: invoiceData.clientId ?? "",
+      nameOfExcisableCommodity: invoiceData.name_of_excisable_commodity ?? "",
+      placeOfSupply: invoiceData.place_of_supply ?? "",
+      transportName: invoiceData.transport_name ?? "",
+      invoiceNumber: invoiceData.invoice_number ?? "",
+      discription: invoiceData.discription ?? "",
+      lrNo: invoiceData.lr_no ?? "",
+      lrDt: normalizeDate(invoiceData.lr_dt),
+      challanNo: invoiceData.challan_no ?? "",
+      poNo: invoiceData.po_no ?? "",
+      other_charges: Number(invoiceData.other_charges ?? 0),
+      invoiceDate: normalizeDate(invoiceData.invoice_date) || getTodayDate(),
+    });
+
+    const mappedItems =
+      invoiceData.item_details?.map((invoiceItem) => {
+        const matchedItemCode = itemCodes.find((code) => code._id === (invoiceItem.itemCodeId ?? ""));
+        const quantity = Number(invoiceItem.quantity ?? 0);
+        const itemBuyingPrice = Number(invoiceItem.buying_price ?? 0);
+
+        return {
+          itemCodeId: invoiceItem.itemCodeId ?? "",
+          description: matchedItemCode
+            ? `${matchedItemCode.code || ""} ${matchedItemCode.product_name || ""}`.trim()
+            : "",
+          hsnCode: matchedItemCode?.product_hsn_code ?? "",
+          quantity: String(quantity || 0),
+          units: invoiceItem.units ?? "NOS",
+          rate: String(Number(invoiceItem.rate ?? 0)),
+          buyingRate: quantity > 0 ? String(itemBuyingPrice / quantity) : "0",
+        };
+      }) ?? [];
+
+    setItems(
+      mappedItems.length
+        ? mappedItems
+        : [{ itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" }]
+    );
+  }, [invoice, itemCodes]);
   const updateItem = (index: number, key: keyof InvoiceItem, value: string) => {
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [key]: value } : item)));
   };
@@ -136,7 +228,10 @@ const NewInvoise = () => {
       );
       const gstAmount = Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
       const todayDate = getTodayDate();
-      formik.setFieldValue("invoiceDate", todayDate);
+      const invoiceDateForPayload = id ? values.invoiceDate : todayDate;
+      if (!id) {
+        formik.setFieldValue("invoiceDate", todayDate);
+      }
 
       const invoicePayload = {
         clientId: values.clientId,
@@ -152,7 +247,7 @@ const NewInvoise = () => {
         selling_Amount: sellingAmount,
         buying_Amount: buyingAmount,
         gst_amount: gstAmount,
-        invoice_date: todayDate,
+        invoice_date: invoiceDateForPayload,
         item_details: items.map((item) => ({
           itemCodeId: item.itemCodeId,
           quantity: Number(item.quantity) || 0,
@@ -162,12 +257,107 @@ const NewInvoise = () => {
           buying_price: (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
         })),
       };
+
+      if (id && invoice) {
+        const initialInvoice = invoice as unknown as {
+          clientId?: string;
+          name_of_excisable_commodity?: string;
+          place_of_supply?: string;
+          transport_name?: string;
+          discription?: string;
+          lr_no?: string;
+          lr_dt?: string | null;
+          challan_no?: string;
+          po_no?: string;
+          invoice_date?: string;
+          other_charges?: number;
+          item_details?: Array<{
+            itemCodeId?: string;
+            quantity?: number;
+            rate?: number;
+            units?: string;
+            selling_price?: number;
+            buying_price?: number;
+          }>;
+        };
+
+        const normalizeDateString = (dateValue?: string | null) => {
+          if (!dateValue) return "";
+          if (dateValue.includes("/")) return dateValue;
+          const parsedDate = new Date(dateValue);
+          return Number.isNaN(parsedDate.getTime()) ? "" : formatDateAsDDMMYYYY(parsedDate);
+        };
+
+        const currentItemDetails = invoicePayload.item_details.map((item) => ({
+          itemCodeId: item.itemCodeId,
+          quantity: Number(item.quantity) || 0,
+          rate: Number(item.rate) || 0,
+          units: item.units || "NOS",
+          selling_price: Number(item.selling_price) || 0,
+          buying_price: Number(item.buying_price) || 0,
+        }));
+
+        const initialItemDetails = (initialInvoice.item_details ?? []).map((item) => ({
+          itemCodeId: item.itemCodeId ?? "",
+          quantity: Number(item.quantity) || 0,
+          rate: Number(item.rate) || 0,
+          units: item.units || "NOS",
+          selling_price: Number(item.selling_price) || 0,
+          buying_price: Number(item.buying_price) || 0,
+        }));
+
+        const updatedPayload: Record<string, unknown> = {};
+        if ((initialInvoice.clientId ?? "") !== invoicePayload.clientId) updatedPayload.clientId = invoicePayload.clientId;
+        if ((initialInvoice.name_of_excisable_commodity ?? "") !== invoicePayload.name_of_excisable_commodity) {
+          updatedPayload.name_of_excisable_commodity = invoicePayload.name_of_excisable_commodity;
+        }
+        if ((initialInvoice.place_of_supply ?? "") !== invoicePayload.place_of_supply) {
+          updatedPayload.place_of_supply = invoicePayload.place_of_supply;
+        }
+        if ((initialInvoice.transport_name ?? "") !== invoicePayload.transport_name) {
+          updatedPayload.transport_name = invoicePayload.transport_name;
+        }
+        if ((initialInvoice.discription ?? "") !== invoicePayload.discription) {
+          updatedPayload.discription = invoicePayload.discription;
+        }
+        if ((initialInvoice.lr_no ?? "") !== invoicePayload.lr_no) updatedPayload.lr_no = invoicePayload.lr_no;
+        if (normalizeDateString(initialInvoice.lr_dt) !== (invoicePayload.lr_dt ?? "")) updatedPayload.lr_dt = invoicePayload.lr_dt;
+        if ((initialInvoice.challan_no ?? "") !== invoicePayload.challan_no) updatedPayload.challan_no = invoicePayload.challan_no;
+        if ((initialInvoice.po_no ?? "") !== invoicePayload.po_no) updatedPayload.po_no = invoicePayload.po_no;
+        if (Number(initialInvoice.other_charges ?? 0) !== Number(invoicePayload.other_charges ?? 0)) {
+          updatedPayload.other_charges = invoicePayload.other_charges;
+        }
+        if (normalizeDateString(initialInvoice.invoice_date) !== (invoicePayload.invoice_date ?? "")) {
+          updatedPayload.invoice_date = invoicePayload.invoice_date;
+        }
+
+        const itemsChanged = JSON.stringify(initialItemDetails) !== JSON.stringify(currentItemDetails);
+        if (itemsChanged) {
+          updatedPayload.item_details = currentItemDetails;
+          updatedPayload.selling_Amount = sellingAmount;
+          updatedPayload.buying_Amount = buyingAmount;
+          updatedPayload.gst_amount = gstAmount;
+        }
+
+        if (Object.keys(updatedPayload).length === 0) {
+          toast.info("No changes to update");
+          return;
+        }
+
+        const updateRes = await invoiceServices.updateInvoice(id, updatedPayload);
+        if (updateRes && updateRes?.data) {
+          toast.success("Invoice updated successfully");
+          navigate("/invoices");
+        } else {
+          toast.error(updateRes?.error || "Failed to update invoice");
+        }
+        return;
+      }
+
       const res = await invoiceServices.createInvoice(invoicePayload as unknown as CreateInvoiceInterface);
       if (res && res?.data) {
         const createdInvoice = res.data;
-        const generatedInvoiceNumber =
-          createdInvoice?.invoice_number ??
-          "";
+        const generatedInvoiceNumber = createdInvoice?.invoice_number ?? "";
         if (generatedInvoiceNumber) {
           await formik.setFieldValue("invoiceNumber", String(generatedInvoiceNumber));
         }
@@ -559,7 +749,7 @@ const NewInvoise = () => {
           <div className="flex items-center gap-3">
             <Button type="submit" className="gap-2">
               <Save className="w-4 h-4" />
-              Save Invoice
+              {id ? "Update Invoice" : "Save Invoice"}
             </Button>
             <Button
               type="button"

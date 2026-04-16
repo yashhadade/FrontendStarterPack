@@ -1,5 +1,15 @@
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Download, FileText, PlusCircle, ReceiptText } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -9,13 +19,17 @@ import invoiceServices from "@/services/invoiceServices";
 import DataTable, { DataTableColumn } from "@/components/DataTable";
 import InvoicePreview from "@/components/InvoicePreview";
 import { formatIndianNumber } from "@/utils/numberFormat";
+import { toast } from "sonner";
 
 const Invoices = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isPaidConfirmOpen, setIsPaidConfirmOpen] = useState(false);
+  const [invoiceForPaidConfirm, setInvoiceForPaidConfirm] = useState<InvoiceData | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [invoiceDashboard, setInvoiceDashboard] = useState<any>(null);
   const invoicePreviewRef = useRef<HTMLDivElement | null>(null);
   const formatInvoiceDate = (dateValue?: string) => {
     if (!dateValue) return "-";
@@ -36,10 +50,36 @@ const Invoices = () => {
       console.error(error);
     }
   };
+  const getInvoiceDashboard = async () => {
+    try {
+      const res = await invoiceServices.getInvoicedashboard();
+      if (res && res?.data) {
+        setInvoiceDashboard(res.data);
+      } else {
+       console.error(res?.error || "Failed to fetch invoice dashboard");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
   useEffect(() => {
     getAllInvoices();
+    getInvoiceDashboard();
   }, []);
-
+const handleUpdateStatus = async (id: string) => {
+  try {
+    const res = await invoiceServices.updateStatus({ id });
+    if (res && res?.data) {
+      toast.success("Status updated successfully");
+      getAllInvoices();
+    } else {
+      toast.error(res?.error || "Failed to update status");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error(error?.message || "Failed to update status");
+  }
+};
   const getPreviewValues = (invoice: InvoiceData) => {
     const data = invoice as any;
     return {
@@ -147,6 +187,7 @@ const Invoices = () => {
       key: 'action',
       header: 'Action',
       render: (row) => (
+        <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -157,6 +198,28 @@ const Invoices = () => {
         >
           View
         </Button>
+        {row.status !== "PAID" && <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setSelectedInvoice(row);
+            navigate(`/invoices/${row._id}`);
+          }}
+        >
+          Edit
+        </Button>}
+        {row.status !== "PAID" && <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setInvoiceForPaidConfirm(row);
+            setIsPaidConfirmOpen(true);
+          }}
+        >
+          Invoice Paid
+        </Button>
+        }
+        </div>
       ),
     },
   ];
@@ -178,7 +241,7 @@ const Invoices = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Invoices</p>
-              <p className="text-xl font-semibold text-foreground">0</p>
+              <p className="text-xl font-semibold text-foreground">{invoiceDashboard?.totalInvoices || 0}</p>
             </div>
           </div>
         </div>
@@ -189,8 +252,8 @@ const Invoices = () => {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Draft Invoices</p>
-              <p className="text-xl font-semibold text-foreground">0</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Unpaid Invoices</p>
+              <p className="text-xl font-semibold text-foreground">{invoiceDashboard?.pendingInvoices || 0}</p>
             </div>
           </div>
         </div>
@@ -202,7 +265,7 @@ const Invoices = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Paid Invoices</p>
-              <p className="text-xl font-semibold text-foreground">0</p>
+              <p className="text-xl font-semibold text-foreground">{invoiceDashboard?.paidInvoices || 0}</p>
             </div>
           </div>
         </div>
@@ -256,6 +319,58 @@ const Invoices = () => {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isPaidConfirmOpen} onOpenChange={setIsPaidConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Paid Invoice</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Are you sure this invoice is paid?</p>
+                {invoiceForPaidConfirm ? (
+                  <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">
+                    <p>
+                      <span className="font-medium">Name:</span> {invoiceForPaidConfirm?.selectedClient?.name || "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Invoice Number:</span> {invoiceForPaidConfirm?.invoice_number || "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Amount:</span>{" "}
+                      {formatIndianNumber(
+                        Number(
+                          (invoiceForPaidConfirm?.selling_Amount ?? 0) +
+                            (invoiceForPaidConfirm?.gst_amount ?? 0) +
+                            (invoiceForPaidConfirm?.other_charges ?? 0)
+                        )
+                      )}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setInvoiceForPaidConfirm(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!invoiceForPaidConfirm?._id) return;
+                await handleUpdateStatus(invoiceForPaidConfirm._id);
+                setInvoiceForPaidConfirm(null);
+                setIsPaidConfirmOpen(false);
+              }}
+            >
+              Yes, Mark as Paid
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

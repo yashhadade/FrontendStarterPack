@@ -27,6 +27,7 @@ const AppRoutes = () => (
         <Route path="clients/:id" element={<ClientDetail />} />
         <Route path="invoices" element={<Invoices />} />
         <Route path="/invoices/new" element={<NewInvoise />} />
+        <Route path="/invoices/:id" element={<NewInvoise />} />
       </Route>
     </Route>
     <Route path="*" element={<NotFound />} />
