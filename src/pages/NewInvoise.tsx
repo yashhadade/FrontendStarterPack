@@ -219,7 +219,7 @@ const NewInvoise = () => {
     },
     onSubmit: async (values) => {
       const sellingAmount = items.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.rate) || 0),
+        (sum, item) => sum + Math.ceil((Number(item.quantity) || 0) * (Number(item.rate) || 0)),
         0
       );
       const buyingAmount = items.reduce(
@@ -374,7 +374,7 @@ const NewInvoise = () => {
     return items.reduce((sum, item) => {
       const qty = Number(item.quantity) || 0;
       const rate = Number(item.rate) || 0;
-      return sum + qty * rate;
+      return sum + Math.ceil(qty * rate);
     }, 0);
   }, [items]);
 
