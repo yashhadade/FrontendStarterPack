@@ -4,6 +4,7 @@ import type { Client as ClientData } from "@/types/client";
 
 type InvoiceItem = {
   description: string;
+  itemCode:string;
   hsnCode: string;
   quantity: string;
   units: string;
@@ -15,6 +16,7 @@ type InvoicePreviewValues = {
   nameOfExcisableCommodity: string;
   placeOfSupply: string;
   transportName: string;
+  transportGstNumber: string;
   invoiceNumber: string;
   discription: string;
   lrNo: string;
@@ -35,17 +37,18 @@ type InvoicePreviewProps = {
 
 const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef }: InvoicePreviewProps) => {
   const totalQuantityOfGoods = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-  const cgstRate = 0.09;
-  const sgstRate = 0.09;
+  selectedClient?.i_gst;
+  const cgstRate = selectedClient?.i_gst ? 0.18 : 0.09;
+  const sgstRate = selectedClient?.i_gst ? 0 : 0.09;
   const cgstAmount = Math.ceil(totalAmount * cgstRate);
   const sgstAmount = Math.ceil(totalAmount * sgstRate);
-  const igstAmount = 0;
   const otherCharges = Number(values.other_charges) || 0;
   const grandTotal = totalAmount + cgstAmount + sgstAmount + otherCharges;
+  const hasItemCode = items.some((item) => (item.itemCode || "").trim() !== "");
   const fixedRows = 18;
   const tableRows = [...items];
   while (tableRows.length < fixedRows) {
-    tableRows.push({ description: "", hsnCode: "", quantity: "", units: "", rate: "" });
+    tableRows.push({ description: "", itemCode: "", hsnCode: "", quantity: "", units: "", rate: "" });
   }
   const formatIndianAmount = (value: number) =>
     new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
@@ -69,7 +72,7 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
 
           <div className="border-b border-black text-center py-0.5 leading-tight">
             <p className="text-[10px]">From : Name & Address of Office / Factory</p>
-            <p className="text-[18px] leading-none font-black tracking-tight">MAHALAXMI ENTERPRISES</p>
+            <p className="text-[22px] leading-none font-black tracking-tight">MAHALAXMI ENTERPRISES</p>
             <p>Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
             <p>9 FLOOR GRD 4 TH KORSEY JIYRAI BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
             <p>Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
@@ -102,6 +105,7 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <div className="border-r border-black p-1 space-y-1 leading-tight">
               <div><span className="font-semibold">PLACE OF SUPPLY </span>: {values.placeOfSupply || "-"}</div>
               <div><span className="font-semibold">Transport Name </span>: {values.transportName || "-"}</div>
+              <div><span className="font-semibold">Transport GSTIN </span>: {values.transportGstNumber || "-"}</div>
             </div>
             <div className="p-1 space-y-1 leading-tight">
               <div><span className="font-semibold">GSTIN </span>: {selectedClient?.gst_number || "-"}</div>
@@ -123,11 +127,20 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <thead>
               <tr className="border-b border-black">
                 <th className="border-r border-black py-1 w-[6%] align-middle">Sr.No.</th>
-                <th className="border-r border-black py-1 text-left px-1 w-[34%] align-middle">Description and Specification of Goods</th>
+                {hasItemCode ? (
+                  <th className="border-r border-black py-1 w-[12%] align-middle">Item Code</th>
+                ) : null}
+                <th
+                  className={`border-r border-black py-1 text-left px-1 ${
+                    hasItemCode ? 'w-[42%]' : 'w-[54%]'
+                  } align-middle`}
+                >
+                  Description and Specification of Goods
+                </th>
                 <th className="border-r border-black py-1 w-[9%] align-middle">HSN CODE</th>
-                <th className="border-r border-black py-1 w-[12%] align-middle">Quantity</th>
-                <th className="border-r border-black py-1 w-[7%] align-middle">UNITS</th>
-                <th className="border-r border-black py-1 w-[10%] align-middle">Rate</th>
+                <th className="border-r border-black py-1 w-[6%] align-middle">Quantity</th>
+                <th className="border-r border-black py-1 w-[6%] align-middle">UNITS</th>
+                <th className="border-r border-black py-1 w-[7%] align-middle">Rate</th>
                 <th className="py-1 w-[12%] align-middle">Total</th>
               </tr>
             </thead>
@@ -137,6 +150,11 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                 return (
                   <tr key={`preview-item-${index}`} className="border-b border-black h-[22px]">
                     <td className="border-r border-black text-center py-1 align-middle">{item.description ? index + 1 : ""}</td>
+                    {hasItemCode ? (
+                      <td className="border-r border-black text-center py-1 align-middle">
+                        {item.itemCode || ""}
+                      </td>
+                    ) : null}
                     <td className="border-r border-black px-1 py-1 align-middle">{item.description || ""}</td>
                     <td className="border-r border-black text-center py-1 align-middle">{item.hsnCode || ""}</td>
                     <td className="border-r border-black text-center py-1 align-middle">{item.quantity || ""}</td>
@@ -160,17 +178,13 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                 <span className="px-1 py-1 border-l border-black">{formatIndianAmount(totalAmount)}</span>
               </div>
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 py-1">IGST @ 18%</span>
-                <span className="px-1 py-1 border-l border-black">{formatIndianAmount(igstAmount)}</span>
-              </div>
-              <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 py-1">CGST @ 9%</span>
+                <span className="px-1 py-1">{selectedClient?.i_gst ? "IGST @ 18%" : "CGST @ 9%"}</span>
                 <span className="px-1 py-1 border-l border-black">{formatIndianAmount(cgstAmount)}</span>
               </div>
-              <div className="grid grid-cols-[1fr_auto] border-b border-black">
+              {!selectedClient?.i_gst && <div className="grid grid-cols-[1fr_auto] border-b border-black">
                 <span className="px-1 py-1">SGST @ 9%</span>
                 <span className="px-1 py-1 border-l border-black">{formatIndianAmount(sgstAmount)}</span>
-              </div>
+              </div>}
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
                 <span className="px-1 py-1">Other Charges</span>
                 <span className="px-1 py-1 border-l border-black">{formatIndianAmount(otherCharges)}</span>

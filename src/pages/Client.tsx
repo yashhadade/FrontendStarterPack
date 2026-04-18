@@ -82,6 +82,7 @@ const Client = () => {
         contact_Person_name: selectedClient.contact_Person_name ?? "",
         contact_Person_email: selectedClient.contact_Person_email ?? "",
         contact_Person_number: selectedClient.contact_Person_number ?? "",
+        i_gst: selectedClient.i_gst ?? false,
       }
     : undefined;
 
@@ -101,6 +102,11 @@ const Client = () => {
     {
       key: "code",
       header: 'Code',
+    },
+    {
+      key: "i_gst",
+      header: 'IGST',
+      render: (row) => row.i_gst ? "Yes" : "No",
     },
     {
       key: "action",

@@ -8,6 +8,7 @@ export type CreateClientInterface = {
   contact_Person_number?: string;
   contact_Person_email?: string;
   contact_Person_name?: string;
+  i_gst?: boolean;
 };
 
 export type Client = CreateClientInterface & {
@@ -28,4 +29,5 @@ export type UpdateClientInterface = {
     contact_Person_number?: string;
     contact_Person_email?: string ;
     contact_Person_name?: string ;
+    i_gst?: boolean;
   };

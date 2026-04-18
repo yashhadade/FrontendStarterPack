@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 type InvoiceItem = {
   itemCodeId: string;
+  itemCode: string;
   description: string;
   hsnCode: string;
   quantity: string;
@@ -34,6 +35,7 @@ type InvoiceFormValues = {
   nameOfExcisableCommodity: string;
   placeOfSupply: string;
   transportName: string;
+  transportGstNumber: string;
   invoiceNumber: string;
   discription: string;
   lrNo: string;
@@ -75,8 +77,8 @@ const NewInvoise = () => {
 
   const [clients, setClients] = useState<ClientData[]>([]);
   const [items, setItems] = useState<InvoiceItem[]>([
-    { itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
-  ]);
+    { itemCodeId: "", itemCode: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
+  ]);console.log("items",items);
   const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
   const [openItemPicker, setOpenItemPicker] = useState<number | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -90,6 +92,7 @@ const NewInvoise = () => {
       name_of_excisable_commodity?: string;
       place_of_supply?: string;
       transport_name?: string;
+      transport_gst_number?: string;
       invoice_number?: string;
       discription?: string;
       lr_no?: string;
@@ -119,6 +122,7 @@ const NewInvoise = () => {
       nameOfExcisableCommodity: invoiceData.name_of_excisable_commodity ?? "",
       placeOfSupply: invoiceData.place_of_supply ?? "",
       transportName: invoiceData.transport_name ?? "",
+      transportGstNumber: invoiceData.transport_gst_number ?? "",
       invoiceNumber: invoiceData.invoice_number ?? "",
       discription: invoiceData.discription ?? "",
       lrNo: invoiceData.lr_no ?? "",
@@ -137,6 +141,7 @@ const NewInvoise = () => {
 
         return {
           itemCodeId: invoiceItem.itemCodeId ?? "",
+          itemCode: matchedItemCode?.code ?? "",
           description: matchedItemCode
             ? `${matchedItemCode.code || ""} ${matchedItemCode.product_name || ""}`.trim()
             : "",
@@ -151,7 +156,7 @@ const NewInvoise = () => {
     setItems(
       mappedItems.length
         ? mappedItems
-        : [{ itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" }]
+        : [{ itemCodeId: "", itemCode: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" }]
     );
   }, [invoice, itemCodes]);
   const updateItem = (index: number, key: keyof InvoiceItem, value: string) => {
@@ -161,7 +166,7 @@ const NewInvoise = () => {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { itemCodeId: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
+      { itemCodeId: "", itemCode: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
     ]);
   };
 
@@ -176,6 +181,7 @@ const NewInvoise = () => {
           ? {
               ...item,
               itemCodeId,
+              itemCode: selectedItemCode?.code ?? "",
               description: selectedItemCode
                 ? `${selectedItemCode?.code||""} ${selectedItemCode?.product_name||""}`
                 : "",
@@ -196,6 +202,7 @@ const NewInvoise = () => {
       nameOfExcisableCommodity: "",
       placeOfSupply: "",
       transportName: "",
+      transportGstNumber: "",
       invoiceNumber: "",
       discription: "",
       lrNo: "",
@@ -226,7 +233,7 @@ const NewInvoise = () => {
         (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
         0
       );
-      const gstAmount = Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
+      const gstAmount = selectedClient?.i_gst ? Math.ceil(sellingAmount * 0.18) : Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
       const todayDate = getTodayDate();
       const invoiceDateForPayload = id ? values.invoiceDate : todayDate;
       if (!id) {
@@ -238,6 +245,7 @@ const NewInvoise = () => {
         name_of_excisable_commodity: values.nameOfExcisableCommodity,
         place_of_supply: values.placeOfSupply,
         transport_name: values.transportName,
+        transport_gst_number: values.transportGstNumber,
         discription: values.discription,
         lr_no: values.lrNo,
         lr_dt: values.lrDt,
@@ -264,6 +272,7 @@ const NewInvoise = () => {
           name_of_excisable_commodity?: string;
           place_of_supply?: string;
           transport_name?: string;
+          transport_gst_number?: string;
           discription?: string;
           lr_no?: string;
           lr_dt?: string | null;
@@ -316,6 +325,9 @@ const NewInvoise = () => {
         }
         if ((initialInvoice.transport_name ?? "") !== invoicePayload.transport_name) {
           updatedPayload.transport_name = invoicePayload.transport_name;
+        }
+        if ((initialInvoice.transport_gst_number ?? "") !== invoicePayload.transport_gst_number) {
+          updatedPayload.transport_gst_number = invoicePayload.transport_gst_number;
         }
         if ((initialInvoice.discription ?? "") !== invoicePayload.discription) {
           updatedPayload.discription = invoicePayload.discription;
@@ -551,6 +563,17 @@ const NewInvoise = () => {
                 name="transportName"
                 placeholder="Enter transport name"
                 value={formik.values.transportName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="transportGstNumber">Transport GST Number</Label>
+              <Input
+                id="transportGstNumber"
+                name="transportGstNumber"
+                placeholder="Enter transport GST number"
+                value={formik.values.transportGstNumber}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
               />

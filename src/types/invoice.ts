@@ -3,6 +3,7 @@ export type CreateInvoiceInterface = {
     nameOfExcisableCommodity: string;
     placeOfSupply: string;
     transportName: string;
+    transportGstNumber?: string;
     invoiceNumber: string;
     discription: string;
     lrNo: string;
@@ -36,6 +37,7 @@ export type Invoice = {
     status: string;
     placeOfSupply: string;
     transportName: string;
+    transportGstNumber?: string;
     invoiceDate: string;
     lrNo: string;
     lrDt: string;

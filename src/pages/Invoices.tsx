@@ -115,6 +115,7 @@ const handleUpdateStatus = async (id: string) => {
       nameOfExcisableCommodity: data.nameOfExcisableCommodity || data.name_of_excisable_commodity || "",
       placeOfSupply: data.placeOfSupply || data.place_of_supply || "",
       transportName: data.transportName || data.transport_name || "",
+      transportGstNumber: data.transportGstNumber || data.transport_gst_number || "",
       invoiceNumber: data.invoice_number || data.invoiceNumber || data.invoice_no || "",
       discription: data.discription || "",
       lrNo: data.lrNo || data.lr_no || "",
@@ -131,6 +132,7 @@ const handleUpdateStatus = async (id: string) => {
     const rawItems = data.itemDetails || data.item_details || [];
     return rawItems.map((item: any) => ({
       description: item.description || item.product_name || "",
+      itemCode:  item.code ||"",
       hsnCode: item.hsnCode || item.hsn_code || "",
       quantity: String(item.quantity ?? "0"),
       units: item.units || "",
