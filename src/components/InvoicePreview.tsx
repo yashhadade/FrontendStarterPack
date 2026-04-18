@@ -42,7 +42,7 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
   const igstAmount = 0;
   const otherCharges = Number(values.other_charges) || 0;
   const grandTotal = totalAmount + cgstAmount + sgstAmount + otherCharges;
-  const fixedRows = 10;
+  const fixedRows = 18;
   const tableRows = [...items];
   while (tableRows.length < fixedRows) {
     tableRows.push({ description: "", hsnCode: "", quantity: "", units: "", rate: "" });
