@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Download, FileText, PlusCircle, ReceiptText } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Invoice as InvoiceData } from "@/types/invoice";
 import invoiceServices from "@/services/invoiceServices";
@@ -30,6 +30,10 @@ const Invoices = () => {
   const [invoiceForPaidConfirm, setInvoiceForPaidConfirm] = useState<InvoiceData | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [invoiceDashboard, setInvoiceDashboard] = useState<any>(null);
+  const [tablePage, setTablePage] = useState(0);
+  const [tablePageSize, setTablePageSize] = useState(10);
+  const [invoiceListTotal, setInvoiceListTotal] = useState(0);
+  const [search, setSearch] = useState("");
   const invoicePreviewRef = useRef<HTMLDivElement | null>(null);
   const formatInvoiceDate = (dateValue?: string) => {
     if (!dateValue) return "-";
@@ -40,16 +44,36 @@ const Invoices = () => {
     const year = parsedDate.getUTCFullYear();
     return `${day}/${month}/${year}`;
   };
-  const getAllInvoices = async () => {
+  const getAllInvoices = useCallback(async () => {
     try {
-      const res = await invoiceServices.getAllInvoice();
-      if (res && res?.data) {
-        setInvoices(res.data);
-      }
+      const res = await invoiceServices.getAllInvoice({
+        page: tablePage + 1,
+        limit: tablePageSize,
+        search: search.trim() || undefined,
+      });
+      if (!res) return;
+
+      const body = res.data as Record<string, unknown>;
+      const rowCandidate = body.data;
+      const rows = Array.isArray(rowCandidate)
+        ? (rowCandidate as InvoiceData[])
+        : Array.isArray((rowCandidate as { data?: unknown })?.data)
+          ? ((rowCandidate as { data: InvoiceData[] }).data ?? [])
+          : [];
+
+      setInvoices(rows);
+
+      const backendPage = Number(body.page ?? 1);
+      const limit = Number(body.limit ?? tablePageSize);
+      const totalCount = Number(body.totalCount ?? 0);
+
+      setTablePage(Math.max(0, backendPage - 1));
+      setTablePageSize(Number.isFinite(limit) && limit > 0 ? limit : tablePageSize);
+      setInvoiceListTotal(Number.isFinite(totalCount) ? totalCount : 0);
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [tablePage, tablePageSize, search]);
   const getInvoiceDashboard = async () => {
     try {
       const res = await invoiceServices.getInvoicedashboard();
@@ -63,9 +87,13 @@ const Invoices = () => {
     }
   };
   useEffect(() => {
-    getAllInvoices();
     getInvoiceDashboard();
   }, []);
+
+  useEffect(() => {
+    getAllInvoices();
+  }, [getAllInvoices]);
+
 const handleUpdateStatus = async (id: string) => {
   try {
     const res = await invoiceServices.updateStatus({ id });
@@ -227,7 +255,7 @@ const handleUpdateStatus = async (id: string) => {
     <div className="p-8 space-y-8 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <PageHeader title="Invoices" description="Manage and review all invoices" />
-        <Button onClick={() => navigate("/invoices/new")} className="gap-2">
+        <Button onClick={() => navigate('/invoices/new')} className="gap-2">
           <PlusCircle className="w-4 h-4" />
           New Invoice
         </Button>
@@ -240,8 +268,12 @@ const handleUpdateStatus = async (id: string) => {
               <ReceiptText className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Invoices</p>
-              <p className="text-xl font-semibold text-foreground">{invoiceDashboard?.totalInvoices || 0}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Total Invoices
+              </p>
+              <p className="text-xl font-semibold text-foreground">
+                {invoiceDashboard?.totalInvoices || 0}
+              </p>
             </div>
           </div>
         </div>
@@ -252,8 +284,12 @@ const handleUpdateStatus = async (id: string) => {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Unpaid Invoices</p>
-              <p className="text-xl font-semibold text-foreground">{invoiceDashboard?.pendingInvoices || 0}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Unpaid Invoices
+              </p>
+              <p className="text-xl font-semibold text-foreground">
+                {invoiceDashboard?.pendingInvoices || 0}
+              </p>
             </div>
           </div>
         </div>
@@ -265,30 +301,50 @@ const handleUpdateStatus = async (id: string) => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Paid Invoices</p>
-              <p className="text-xl font-semibold text-foreground">{invoiceDashboard?.paidInvoices || 0}</p>
+              <p className="text-xl font-semibold text-foreground">
+                {invoiceDashboard?.paidInvoices || 0}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {invoices.length > 0 ? (
-        <DataTable columns={columns} data={invoices as any} getRowId={(row) => row._id} />
+      {invoices.length > 0 || search.trim() !== "" ? (
+        <DataTable
+          search={search}
+          onSearchChange={setSearch}
+          serverSearch
+          columns={columns}
+          data={invoices as any}
+          getRowId={(row) => row._id}
+          serverPagination
+          totalRows={invoiceListTotal}
+          currentPage={tablePage}
+          currentPageSize={tablePageSize}
+          pageSizes={[10]}
+          onPageChange={(page) => setTablePage(page)}
+          onPageSizeChange={(size) => {
+            setTablePageSize(size);
+            setTablePage(0);
+          }}
+        />
       ) : (
         <section className="glass-card p-10 text-center space-y-4">
-        <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-          <ReceiptText className="w-7 h-7" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-foreground">No invoices yet</h2>
-          <p className="text-sm text-muted-foreground">
-            Start by creating your first invoice. You can track drafts, sent, and paid invoices here.
-          </p>
-        </div>
-        <Button onClick={() => navigate("/invoices/new")} className="gap-2">
-          <PlusCircle className="w-4 h-4" />
-          Create Invoice
-        </Button>
-      </section>
+          <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <ReceiptText className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-foreground">No invoices yet</h2>
+            <p className="text-sm text-muted-foreground">
+              Start by creating your first invoice. You can track drafts, sent, and paid invoices
+              here.
+            </p>
+          </div>
+          <Button onClick={() => navigate('/invoices/new')} className="gap-2">
+            <PlusCircle className="w-4 h-4" />
+            Create Invoice
+          </Button>
+        </section>
       )}
 
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -305,7 +361,7 @@ const handleUpdateStatus = async (id: string) => {
               disabled={isDownloadingPdf}
             >
               <Download className="w-4 h-4" />
-              {isDownloadingPdf ? "Generating PDF..." : "Download PDF"}
+              {isDownloadingPdf ? 'Generating PDF...' : 'Download PDF'}
             </Button>
           </DialogHeader>
           {selectedInvoice ? (
@@ -313,7 +369,11 @@ const handleUpdateStatus = async (id: string) => {
               values={getPreviewValues(selectedInvoice) as any}
               items={getPreviewItems(selectedInvoice) as any}
               selectedClient={selectedInvoice.selectedClient as any}
-              totalAmount={Number((selectedInvoice as any).selling_Amount ?? (selectedInvoice as any).selling_amount ?? 0)}
+              totalAmount={Number(
+                (selectedInvoice as any).selling_Amount ??
+                  (selectedInvoice as any).selling_amount ??
+                  0
+              )}
               invoiceRef={invoicePreviewRef}
             />
           ) : null}
@@ -330,13 +390,15 @@ const handleUpdateStatus = async (id: string) => {
                 {invoiceForPaidConfirm ? (
                   <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">
                     <p>
-                      <span className="font-medium">Name:</span> {invoiceForPaidConfirm?.selectedClient?.name || "-"}
+                      <span className="font-medium">Name:</span>{' '}
+                      {invoiceForPaidConfirm?.selectedClient?.name || '-'}
                     </p>
                     <p>
-                      <span className="font-medium">Invoice Number:</span> {invoiceForPaidConfirm?.invoice_number || "-"}
+                      <span className="font-medium">Invoice Number:</span>{' '}
+                      {invoiceForPaidConfirm?.invoice_number || '-'}
                     </p>
                     <p>
-                      <span className="font-medium">Amount:</span>{" "}
+                      <span className="font-medium">Amount:</span>{' '}
                       {formatIndianNumber(
                         Number(
                           (invoiceForPaidConfirm?.selling_Amount ?? 0) +

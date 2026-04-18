@@ -11,15 +11,17 @@ const createInvoice = (data: CreateInvoiceInterface) => {
     });
   }
 
-  const getAllInvoice = () => {
-    return server.get(`/invoices/`)
-    .then((res) => {
-      return res.data;
-    }).catch((err) => {
-      console.log(err);
-      return err.response.data;
-    });
-  }
+  const getAllInvoice = (params?: { page?: number; limit?: number; search?: string }) => {
+    return server
+      .get(`/invoices/`, { params })
+      .then((res) => {
+        return res.data;
+      })
+      .catch((err) => {
+        console.log(err);
+        return err.response?.data;
+      });
+  };
   const getInvoiceById = (id: string) => {
     return server.get(`/invoices/${id}`)
     .then((res) => {

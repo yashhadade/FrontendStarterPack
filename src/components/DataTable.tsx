@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -20,6 +20,26 @@ export type DataTableColumn<T> = {
 type DataTableProps<T> = {
   data: T[];
   columns: DataTableColumn<T>[];
+  /**
+   * Controlled search string. When set, pair with `onSearchChange` so the input stays in sync.
+   */
+  search?: string;
+  /**
+   * Called when the search box value changes.
+   * Use with `serverSearch` (and usually `serverPagination`) to query the backend.
+   */
+  onSearchChange?: (query: string) => void;
+  /**
+   * When true, rows are not filtered by the search string in the browser; use `onSearchChange`
+   * so the parent can load matching data from the server.
+   * When false with `serverPagination`, search still filters the current page client-side.
+   */
+  serverSearch?: boolean;
+  /**
+   * Debounce (ms) before calling `onSearchChange` when `serverSearch` is true and search is
+   * uncontrolled (`search` prop omitted). Omit or 0 for immediate updates.
+   */
+  searchDebounceMs?: number;
   /**
    * Keys to use when filtering with the search box.
    * If omitted, all primitive fields will be considered.
@@ -53,13 +73,47 @@ type DataTableProps<T> = {
    * Optional default sort direction for `initialSortKey`.
    */
   initialSortDirection?: SortDirection;
+  /**
+   * Set true to enable backend-driven pagination.
+   * In this mode, `data` should already be paginated by API.
+   */
+  serverPagination?: boolean;
+  /**
+   * Total rows available on backend. Used only when `serverPagination` is true.
+   */
+  totalRows?: number;
+  /**
+   * Current page index from backend (0-based). Used only when `serverPagination` is true.
+   */
+  currentPage?: number;
+  /**
+   * Current page size from backend. Used only when `serverPagination` is true.
+   */
+  currentPageSize?: number;
+  /**
+   * Callback for backend page changes.
+   */
+  onPageChange?: (page: number) => void;
+  /**
+   * Callback for backend page size changes.
+   */
+  onPageSizeChange?: (pageSize: number) => void;
+  /**
+   * Row counts shown in the "Rows per page" select. Defaults to [5, 10, 25, 50].
+   * If the current page size is not in this list (e.g. from the API), it is added automatically.
+   */
+  pageSizes?: number[];
 };
 
-const DEFAULT_PAGE_SIZES = [5, 10, 25, 50];
+const DEFAULT_PAGE_SIZES = [5, 10, 25, 50] as const;
 
 function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
+  search: controlledSearch,
+  onSearchChange,
+  serverSearch = false,
+  searchDebounceMs = 0,
   searchableKeys,
   getRowId,
   onRowClick,
@@ -68,8 +122,19 @@ function DataTable<T extends Record<string, unknown>>({
   selectedRowId,
   initialSortKey = null,
   initialSortDirection = 'asc',
+  serverPagination = false,
+  totalRows,
+  currentPage,
+  currentPageSize,
+  onPageChange,
+  onPageSizeChange,
+  pageSizes,
 }: DataTableProps<T>) {
-  const [search, setSearch] = useState('');
+  const [internalSearch, setInternalSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSearchControlled = controlledSearch !== undefined;
+  const searchQuery = isSearchControlled ? controlledSearch : internalSearch;
+
   const [sortKey, setSortKey] = useState<string | null>(initialSortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortDirection);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -82,8 +147,9 @@ function DataTable<T extends Record<string, unknown>>({
   }, [data, searchableKeys]);
 
   const filteredData = useMemo(() => {
-    if (!search.trim()) return data;
-    const query = search.toLowerCase();
+    if (serverSearch) return data;
+    if (!searchQuery.trim()) return data;
+    const query = searchQuery.toLowerCase();
     return data.filter((row) =>
       effectiveSearchKeys.some((key) => {
         const value = row[key];
@@ -91,9 +157,10 @@ function DataTable<T extends Record<string, unknown>>({
         return String(value).toLowerCase().includes(query);
       })
     );
-  }, [data, effectiveSearchKeys, search]);
+  }, [data, effectiveSearchKeys, searchQuery, serverSearch]);
 
   const sortedData = useMemo(() => {
+    if (serverPagination) return filteredData;
     if (!sortKey) return filteredData;
     const column = columns.find((c) => c.key === sortKey);
     if (!column || column.sortable === false) return filteredData;
@@ -113,13 +180,25 @@ function DataTable<T extends Record<string, unknown>>({
   }, [filteredData, sortKey, sortDirection, columns]);
 
   const paginatedData = useMemo(() => {
+    if (serverPagination) return sortedData;
     const start = page * pageSize;
     return sortedData.slice(start, start + pageSize);
-  }, [sortedData, page, pageSize]);
+  }, [sortedData, page, pageSize, serverPagination]);
 
-  const total = sortedData.length;
-  const from = total === 0 ? 0 : page * pageSize + 1;
-  const to = Math.min(total, (page + 1) * pageSize);
+  const activePageSize = serverPagination ? currentPageSize ?? pageSize : pageSize;
+  const activePage = serverPagination ? currentPage ?? 0 : page;
+
+  const pageSizeSelectOptions = useMemo(() => {
+    const base =
+      pageSizes && pageSizes.length > 0 ? [...pageSizes] : [...DEFAULT_PAGE_SIZES];
+    const size = activePageSize;
+    const merged = size > 0 && !base.includes(size) ? [...base, size] : base;
+    return [...new Set(merged)].sort((a, b) => a - b);
+  }, [pageSizes, activePageSize]);
+
+  const total = serverPagination ? totalRows ?? 0 : sortedData.length;
+  const from = total === 0 ? 0 : activePage * activePageSize + 1;
+  const to = Math.min(total, activePage * activePageSize + paginatedData.length);
 
   const handleHeaderClick = (col: DataTableColumn<T>) => {
     if (col.sortable === false) return;
@@ -134,14 +213,75 @@ function DataTable<T extends Record<string, unknown>>({
 
   const handlePageSizeChange = (value: string) => {
     const size = Number(value);
-    if (!Number.isNaN(size)) {
-      setPageSize(size);
-      setPage(0);
+    if (Number.isNaN(size)) return;
+    if (serverPagination) {
+      onPageSizeChange?.(size);
+      onPageChange?.(0);
+      return;
+    }
+    setPageSize(size);
+    setPage(0);
+  };
+
+  const canPreviousPage = activePage > 0;
+  const canNextPage = (activePage + 1) * activePageSize < total;
+
+  const flushSearchDebounce = () => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
     }
   };
 
-  const canPreviousPage = page > 0;
-  const canNextPage = (page + 1) * pageSize < total;
+  const handleSearchInputChange = (value: string) => {
+    if (!isSearchControlled) {
+      setInternalSearch(value);
+    }
+
+    setPage(0);
+
+    const debounceMs = searchDebounceMs > 0 ? searchDebounceMs : 0;
+    const useDebounce = serverSearch && debounceMs > 0 && onSearchChange && !isSearchControlled;
+
+    if (useDebounce) {
+      flushSearchDebounce();
+      searchDebounceRef.current = setTimeout(() => {
+        onSearchChange(value);
+        if (serverPagination) onPageChange?.(0);
+        searchDebounceRef.current = null;
+      }, debounceMs);
+      return;
+    }
+
+    onSearchChange?.(value);
+    if (serverPagination && serverSearch) onPageChange?.(0);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
+  const handlePreviousPage = () => {
+    if (!canPreviousPage) return;
+    if (serverPagination) {
+      onPageChange?.(Math.max(0, activePage - 1));
+      return;
+    }
+    setPage((p) => Math.max(0, p - 1));
+  };
+
+  const handleNextPage = () => {
+    if (!canNextPage) return;
+    if (serverPagination) {
+      onPageChange?.(activePage + 1);
+      return;
+    }
+    setPage((p) => p + 1);
+  };
 
   return (
     <div className="glass-card p-5 space-y-4">
@@ -150,10 +290,9 @@ function DataTable<T extends Record<string, unknown>>({
         <div className="relative w-full max-w-xs">
           <input
             type="text"
-            value={search}
+            value={searchQuery}
             onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(0);
+              handleSearchInputChange(e.target.value);
             }}
             placeholder={searchPlaceholder}
             className="w-full rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
@@ -234,10 +373,10 @@ function DataTable<T extends Record<string, unknown>>({
             <span>Rows per page:</span>
             <select
               className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground"
-              value={pageSize}
+              value={activePageSize}
               onChange={(e) => handlePageSizeChange(e.target.value)}
             >
-              {DEFAULT_PAGE_SIZES.map((size) => (
+              {pageSizeSelectOptions.map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>
@@ -251,14 +390,14 @@ function DataTable<T extends Record<string, unknown>>({
             <div className="flex items-center gap-1">
               <button
                 className="px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => canPreviousPage && setPage((p) => Math.max(0, p - 1))}
+                onClick={handlePreviousPage}
                 disabled={!canPreviousPage}
               >
                 Prev
               </button>
               <button
                 className="px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => canNextPage && setPage((p) => p + 1)}
+                onClick={handleNextPage}
                 disabled={!canNextPage}
               >
                 Next
