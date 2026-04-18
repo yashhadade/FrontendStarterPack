@@ -58,6 +58,15 @@ const createInvoice = (data: CreateInvoiceInterface) => {
       return err.response.data;
     });
   }
+  const financialYearSummary = () => {
+    return server.get(`/invoices/financialYearSummary`)
+    .then((res) => {
+      return res.data;
+    }).catch((err) => {
+      console.log(err);
+      return err.response.data;
+    });
+  }
   
 
 export default {
@@ -66,5 +75,6 @@ export default {
     getInvoiceById,
     updateInvoice,
     updateStatus,
-    getInvoicedashboard
+    getInvoicedashboard,
+    financialYearSummary
 }

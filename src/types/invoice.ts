@@ -29,6 +29,7 @@ export type Invoice = {
     _id: string;
     invoice_number: string;
     invoice_date: string;
+    buying_Amount: number;
     selling_Amount: number;
     gst_amount: number;
     other_charges: number;

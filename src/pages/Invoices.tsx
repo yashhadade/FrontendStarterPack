@@ -194,6 +194,11 @@ const handleUpdateStatus = async (id: string) => {
       render: (row) => formatIndianNumber(Number(row.selling_Amount+row.gst_amount+row.other_charges)),
     },
     {
+      key:'Profit',
+      header: 'Profit',
+      render: (row) => formatIndianNumber(Number(row.selling_Amount-row.buying_Amount)),
+    },
+    {
       key: 'status',
       header: 'Status',
       render: (row) => {
