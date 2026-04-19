@@ -3,6 +3,16 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, FileText, LayoutDashboard, LogOut, Package, Users } from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const navItems = [
   // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -16,6 +26,7 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -98,7 +109,7 @@ const AppSidebar = () => {
           </div>
         ) : null}
         <button
-          onClick={handleLogout}
+          onClick={() => setIsLogoutDialogOpen(true)}
           title={isCollapsed ? 'Logout' : undefined}
           className={`flex items-center px-3 py-2 text-sm text-muted-foreground hover:text-destructive transition-colors w-full ${
             isCollapsed ? 'justify-center' : 'gap-2'
@@ -108,6 +119,26 @@ const AppSidebar = () => {
           {!isCollapsed ? 'Logout' : null}
         </button>
       </div>
+
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will be signed out of your account and redirected to the login page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLogout}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Logout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 };
