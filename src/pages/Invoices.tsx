@@ -35,6 +35,13 @@ const Invoices = () => {
   const [invoiceListTotal, setInvoiceListTotal] = useState(0);
   const [search, setSearch] = useState("");
   const invoicePreviewRef = useRef<HTMLDivElement | null>(null);
+  const isWithin24Hours = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const parsedDate = new Date(dateValue);
+    if (Number.isNaN(parsedDate.getTime())) return false;
+    const diffMs = Date.now() - parsedDate.getTime();
+    return diffMs >= 0 && diffMs <= 24 * 60 * 60 * 1000;
+  };
   const formatInvoiceDate = (dateValue?: string) => {
     if (!dateValue) return "-";
     const parsedDate = new Date(dateValue);
@@ -94,9 +101,9 @@ const Invoices = () => {
     getAllInvoices();
   }, [getAllInvoices]);
 
-const handleUpdateStatus = async (id: string) => {
+const handleUpdateStatus = async (id: string,status: string) => {
   try {
-    const res = await invoiceServices.updateStatus({ id });
+    const res = await invoiceServices.updateStatus({ id,status });
     if (res && res?.data) {
       toast.success("Status updated successfully");
       getAllInvoices();
@@ -183,7 +190,12 @@ const handleUpdateStatus = async (id: string) => {
     {
       key: 'invoice_date',
       header: 'Invoice Date',
-      render: (row) => formatInvoiceDate((row as any)?.invoiceDate || row?.invoice_date),
+      render: (row) => formatInvoiceDate((row as any)?.invoiceDate),
+    },
+    {
+      key: 'paidDate',
+      header: 'Paid Date',
+      render: (row) => formatInvoiceDate((row as any)?.paidDate),
     },
     {
       key: 'name',
@@ -243,7 +255,7 @@ const handleUpdateStatus = async (id: string) => {
         >
           Edit
         </Button>}
-        {row.status !== "PAID" && <Button
+        {(row.status !== "PAID" || isWithin24Hours((row as any).paidDate)) && <Button
           variant="outline"
           size="sm"
           onClick={() => {
@@ -251,7 +263,7 @@ const handleUpdateStatus = async (id: string) => {
             setIsPaidConfirmOpen(true);
           }}
         >
-          Invoice Paid
+          {row.status == "PAID" ? "Mark as Unpaid" : "Mark as Paid"}
         </Button>
         }
         </div>
@@ -390,7 +402,7 @@ const handleUpdateStatus = async (id: string) => {
       <AlertDialog open={isPaidConfirmOpen} onOpenChange={setIsPaidConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Paid Invoice</AlertDialogTitle>
+            <AlertDialogTitle>Confirm {invoiceForPaidConfirm?.status=="PAID"?"Unpaid":"Paid"} Invoice</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>Are you sure this invoice is paid?</p>
@@ -430,12 +442,12 @@ const handleUpdateStatus = async (id: string) => {
             <AlertDialogAction
               onClick={async () => {
                 if (!invoiceForPaidConfirm?._id) return;
-                await handleUpdateStatus(invoiceForPaidConfirm._id);
+                await handleUpdateStatus(invoiceForPaidConfirm._id,invoiceForPaidConfirm.status=="PAID"?"PENDING":"PAID");
                 setInvoiceForPaidConfirm(null);
                 setIsPaidConfirmOpen(false);
               }}
             >
-              Yes, Mark as Paid
+              Yes, Mark as {invoiceForPaidConfirm?.status=="PAID"?"Unpaid":"Paid"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
