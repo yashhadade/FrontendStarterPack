@@ -74,7 +74,7 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <p className="text-[10px]">From : Name & Address of Office / Factory</p>
             <p className="text-[22px] leading-none font-black tracking-tight">MAHALAXMI ENTERPRISES</p>
             <p>Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
-            <p>9 FLOOR GRD 4 TH KORSEY JIYRAI BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
+            <p>9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
             <p>Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
           </div>
 
@@ -209,10 +209,10 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           <div className="grid grid-cols-2 border-b border-black">
             <div className="border-r border-black p-0.5 text-[9px] leading-tight">
               <p>Our Bankers Details :</p>
-              <p>ABHYUDAYA CO-OPERATIVE BANK</p>
+              <p>STATE BANK OF INDIA</p>
               <p>SEWRI,MUMBAI</p>
-              <p>A/C NO. C.A/010121100006029</p>
-              <p>IFS CODE : ABHY0065011</p>
+              <p>A/C NO. C.A/41829382255</p>
+              <p>IFS CODE : SBIN0061529</p>
             </div>
             <div className="p-0.5 text-center">
               <p className="font-semibold">FOR MAHALAXMI ENTERPRISES</p>
