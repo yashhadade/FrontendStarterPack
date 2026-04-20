@@ -405,7 +405,7 @@ const handleUpdateStatus = async (id: string,status: string) => {
             <AlertDialogTitle>Confirm {invoiceForPaidConfirm?.status=="PAID"?"Unpaid":"Paid"} Invoice</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>Are you sure this invoice is paid?</p>
+                <p>Are you sure this invoice is {invoiceForPaidConfirm?.status=="PAID"?"unpaid":"paid"}?</p>
                 {invoiceForPaidConfirm ? (
                   <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">
                     <p>
