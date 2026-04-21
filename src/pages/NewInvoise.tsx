@@ -142,9 +142,7 @@ const NewInvoise = () => {
         return {
           itemCodeId: invoiceItem.itemCodeId ?? "",
           itemCode: matchedItemCode?.code ?? "",
-          description: matchedItemCode
-            ? `${matchedItemCode.code || ""} ${matchedItemCode.product_name || ""}`.trim()
-            : "",
+          description: `${matchedItemCode?.product_name || ""}`.trim(),
           hsnCode: matchedItemCode?.product_hsn_code ?? "",
           quantity: String(quantity || 0),
           units: invoiceItem.units ?? "NOS",
@@ -182,9 +180,7 @@ const NewInvoise = () => {
               ...item,
               itemCodeId,
               itemCode: selectedItemCode?.code ?? "",
-              description: selectedItemCode
-                ? `${selectedItemCode?.code||""} ${selectedItemCode?.product_name||""}`
-                : "",
+              description: `${selectedItemCode?.product_name||""}`.trim(),
               hsnCode: selectedItemCode?.product_hsn_code ?? "",
               rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : "0",
               buyingRate: selectedItemCode
