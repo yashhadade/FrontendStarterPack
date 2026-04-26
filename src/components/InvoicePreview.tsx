@@ -70,31 +70,31 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <div className="text-center py-1">Original for Buyer</div>
           </div>
 
-          <div className="border-b border-black text-center py-0.5 leading-tight">
-            <p className="text-[10px]">From : Name & Address of Office / Factory</p>
-            <p className="text-[22px] leading-none font-black tracking-tight">MAHALAXMI ENTERPRISES</p>
+          <div className="border-b border-black text-center pt-0.5 pb-2 leading-tight">
+            <p className="text-[10px] mb-0">From : Name & Address of Office / Factory</p>
+            <p className="text-[26px] leading-none font-black tracking-tight mt-0 mb-1">MAHALAXMI ENTERPRISES</p>
             <p>Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
             <p>9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
-            <p>Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
+            <p className="pb-0.5">Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black p-1 leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 leading-tight">
               <span className="font-semibold">GSTIN No. : </span>27APWPM0688K1ZZ
             </div>
-            <div className="p-1 leading-tight">
+            <div className="px-1 pt-1 pb-1.5 leading-tight">
               <span className="font-semibold">Invoice No. : </span>{values.invoiceNumber || "-"} &nbsp;&nbsp;
               <span className="font-semibold">DATE : </span>{values.invoiceDate || "-"}
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black p-1 space-y-1 leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 space-y-1 leading-tight">
               <div><span className="font-semibold">Name of Excisable commodity : </span>{values.nameOfExcisableCommodity || "-"}</div>
               <div><span className="font-semibold">PAN No. : </span>APWPM0688K</div>
               <div><span className="font-semibold">STATE : </span>MAHARASHTRA &nbsp;&nbsp; <span className="font-semibold">CODE : </span>27</div>
             </div>
-            <div className="p-1 space-y-1 leading-tight">
+            <div className="px-1 pt-1 pb-1.5 space-y-1 leading-tight">
               <div className="text-center font-semibold">Details Of Receiver / Consignee</div>
               <div><span className="font-semibold">Party Name </span>: {selectedClient?.name || "-"}</div>
               <div><span className="font-semibold">Address </span>: {selectedClient?.address || "-"}</div>
@@ -102,19 +102,19 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black p-1 space-y-1 leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 space-y-1 leading-tight">
               <div><span className="font-semibold">PLACE OF SUPPLY </span>: {values.placeOfSupply || "-"}</div>
               <div><span className="font-semibold">Transport Name </span>: {values.transportName || "-"}</div>
               <div><span className="font-semibold">Transport GSTIN </span>: {values.transportGstNumber || "-"}</div>
             </div>
-            <div className="p-1 space-y-1 leading-tight">
+            <div className="px-1 pt-1 pb-1.5 space-y-1 leading-tight">
               <div><span className="font-semibold">GSTIN </span>: {selectedClient?.gst_number || "-"}</div>
               <div><span className="font-semibold">STATE </span>: {selectedClient?.state || "-"} &nbsp;&nbsp; <span className="font-semibold">CODE </span>: {selectedClient?.code || "-"}</div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black p-1 space-y-1 min-h-[44px] leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 space-y-1 min-h-[44px] leading-tight">
               <div><span className="font-semibold">No. & Description of Packages </span>: {values.discription || ""}</div>
               <div><span className="font-semibold">L. R. No. </span>: {values.lrNo || ""} &nbsp;&nbsp; <span className="font-semibold">L.r Dt. </span>: {values.lrDt || ""}</div>
               <div><span className="font-semibold">Challan No. </span>: {values.challanNo || ""}</div>
@@ -126,22 +126,22 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           <table className="w-full border-collapse text-[11px] leading-tight">
             <thead>
               <tr className="border-b border-black">
-                <th className="border-r border-black py-1 w-[6%] align-middle">Sr.No.</th>
+                <th className="border-r border-black pt-1 pb-1.5 w-[6%] align-middle">Sr.No.</th>
                 {hasItemCode ? (
-                  <th className="border-r border-black py-1 w-[12%] align-middle">Item Code</th>
+                  <th className="border-r border-black pt-1 pb-1.5 w-[12%] align-middle">Item Code</th>
                 ) : null}
                 <th
-                  className={`border-r border-black py-1 text-left px-1 ${
+                  className={`border-r border-black pt-1 pb-1.5 text-left px-1 ${
                     hasItemCode ? 'w-[42%]' : 'w-[54%]'
                   } align-middle`}
                 >
                   Description and Specification of Goods
                 </th>
-                <th className="border-r border-black py-1 w-[9%] align-middle">HSN CODE</th>
-                <th className="border-r border-black py-1 w-[6%] align-middle">Quantity</th>
-                <th className="border-r border-black py-1 w-[6%] align-middle">UNITS</th>
-                <th className="border-r border-black py-1 w-[7%] align-middle">Rate</th>
-                <th className="py-1 w-[12%] align-middle">Total</th>
+                <th className="border-r border-black pt-1 pb-1.5 w-[9%] align-middle">HSN CODE</th>
+                <th className="border-r border-black pt-1 pb-1.5 w-[6%] align-middle">Quantity</th>
+                <th className="border-r border-black pt-1 pb-1.5 w-[6%] align-middle">UNITS</th>
+                <th className="border-r border-black pt-1 pb-1.5 w-[7%] align-middle">Rate</th>
+                <th className="pt-1 pb-1.5 w-[12%] align-middle">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -149,18 +149,18 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                 const lineTotal = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
                 return (
                   <tr key={`preview-item-${index}`} className="border-b border-black h-[22px]">
-                    <td className="border-r border-black text-center py-1 align-middle">{item.description ? index + 1 : ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.description ? index + 1 : ""}</td>
                     {hasItemCode ? (
-                      <td className="border-r border-black text-center py-1 align-middle">
+                      <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">
                         {item.itemCode || ""}
                       </td>
                     ) : null}
-                    <td className="border-r border-black px-1 py-1 align-middle">{item.description || ""}</td>
-                    <td className="border-r border-black text-center py-1 align-middle">{item.hsnCode || ""}</td>
-                    <td className="border-r border-black text-center py-1 align-middle">{item.quantity || ""}</td>
-                    <td className="border-r border-black text-center py-1 align-middle">{item.units || ""}</td>
-                    <td className="border-r border-black text-right pr-1 py-1 align-middle">{item.rate ? formatIndianAmount(Number(item.rate) || 0) : ""}</td>
-                    <td className="text-right pr-1 py-1 align-middle">{item.description ? formatIndianAmount(Math.ceil(lineTotal)) : ""}</td>
+                    <td className="border-r border-black px-1 pt-0.5 pb-1 align-middle">{item.description || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.hsnCode || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.quantity || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.units || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.rate ? formatIndianAmount(Number(item.rate) || 0) : ""}</td>
+                    <td className="text-center pt-0.5 pb-1 align-middle">{item.description ? formatIndianAmount(Math.ceil(lineTotal)) : ""}</td>
                   </tr>
                 );
               })}
@@ -168,60 +168,60 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           </table>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black p-1 flex justify-between font-semibold leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 flex justify-between font-semibold leading-tight">
               <span>Total Quantity of Goods</span>
               <span>{formatIndianAmount(totalQuantityOfGoods)}</span>
             </div>
             <div className="p-0 leading-tight">
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 py-1 font-semibold">Assessable Value</span>
-                <span className="px-1 py-1 border-l border-black">{formatIndianAmount(totalAmount)}</span>
+                <span className="px-1 pt-1 pb-1.5 font-semibold">Assessable Value</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(totalAmount)}</span>
               </div>
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 py-1">{selectedClient?.i_gst ? "IGST @ 18%" : "CGST @ 9%"}</span>
-                <span className="px-1 py-1 border-l border-black">{formatIndianAmount(cgstAmount)}</span>
+                <span className="px-1 pt-1 pb-1.5">{selectedClient?.i_gst ? "IGST @ 18%" : "CGST @ 9%"}</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(cgstAmount)}</span>
               </div>
               {!selectedClient?.i_gst && <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 py-1">SGST @ 9%</span>
-                <span className="px-1 py-1 border-l border-black">{formatIndianAmount(sgstAmount)}</span>
+                <span className="px-1 pt-1 pb-1.5">SGST @ 9%</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(sgstAmount)}</span>
               </div>}
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 py-1">Other Charges</span>
-                <span className="px-1 py-1 border-l border-black">{formatIndianAmount(otherCharges)}</span>
+                <span className="px-1 pt-1 pb-1.5">Other Charges</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(otherCharges)}</span>
               </div>
               <div className="grid grid-cols-[1fr_auto]">
-                <span className="px-1 py-1 font-bold">Grand Total</span>
-                <span className="px-1 py-1 border-l border-black font-bold">{formatIndianAmount(grandTotal)}</span>
+                <span className="px-1 pt-1 pb-1.5 font-bold">Grand Total</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black font-bold">{formatIndianAmount(grandTotal)}</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black min-h-[64px]">
-            <div className="border-r border-black p-0.5 text-[9px] leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 text-[9px] leading-tight space-y-0.5">
               <p>In Case of overdue interest @18 per annum will be charge.</p>
               <p>In case of Change Return Rs.500/- will be charge.</p>
               <p>Certified that the particulars given above are true and correct and the amount indicated represents the price actually charged and that there is no flow of additional consideration directly or indirectly from the buyer.</p>
-              <p className="text-[10px]"><span className="font-semibold">Payment :</span> 30 DAYS OF INVOICE DATE</p>
+              <p className="text-[10px] pt-0.5"><span className="font-semibold">Payment :</span> 30 DAYS OF INVOICE DATE</p>
             </div>
             <div className="p-0.5" />
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black p-0.5 text-[9px] leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-1.5 text-[9px] leading-tight space-y-0.5">
               <p>Our Bankers Details :</p>
               <p>STATE BANK OF INDIA</p>
               <p>SEWRI,MUMBAI</p>
               <p>A/C NO. C.A/41829382255</p>
               <p>IFS CODE : SBIN0061529</p>
             </div>
-            <div className="p-0.5 text-center">
+            <div className="px-1 pt-1 pb-1.5 text-center">
               <p className="font-semibold">FOR MAHALAXMI ENTERPRISES</p>
               <div className="h-6" />
               <p>Proprietor</p>
             </div>
           </div>
 
-          <div className="text-[9px] p-0.5 text-center">
+          <div className="text-[9px] px-1 pt-0.5 pb-1 text-center">
             software vendor Name & Contact No. : software CREATIONS Mob: 9818018349 - Email Id : sewarcusfils@yahoo.com
           </div>
         </div>

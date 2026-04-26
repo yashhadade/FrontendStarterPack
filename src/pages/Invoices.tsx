@@ -150,31 +150,65 @@ const handleUpdateStatus = async (id: string,status: string) => {
     if (!invoicePreviewRef.current || !selectedInvoice) return;
     try {
       setIsDownloadingPdf(true);
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
-      const canvas = await html2canvas(invoicePreviewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-      const imageData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imageWidth = pageWidth - 10;
-      const imageHeight = (canvas.height * imageWidth) / canvas.width;
 
-      if (imageHeight <= pageHeight - 10) {
-        pdf.addImage(imageData, "PNG", 5, 5, imageWidth, imageHeight);
-      } else {
-        let position = 0;
-        let heightLeft = imageHeight;
-        while (heightLeft > 0) {
-          pdf.addImage(imageData, "PNG", 5, 5 - position, imageWidth, imageHeight);
-          heightLeft -= pageHeight - 10;
-          position += pageHeight - 10;
-          if (heightLeft > 0) pdf.addPage();
-        }
-      }
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
+      const element = invoicePreviewRef.current;
+
+      const canvas = await html2canvas(element, {
+        scale: 4,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        imageTimeout: 0,
+        removeContainer: true,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        windowWidth: element.offsetWidth,
+        windowHeight: element.offsetHeight,
+        onclone: (clonedDoc, clonedElement) => {
+          const target = clonedElement as HTMLElement;
+          target.style.overflow = "visible";
+          target.querySelectorAll<HTMLElement>(".overflow-hidden").forEach((node) => {
+            node.style.overflow = "visible";
+          });
+          const body = clonedDoc.body as HTMLElement;
+          body.style.setProperty("-webkit-font-smoothing", "antialiased");
+          body.style.setProperty("-moz-osx-font-smoothing", "grayscale");
+          body.style.setProperty("text-rendering", "geometricPrecision");
+        },
+      });
+
+      const imageData = canvas.toDataURL("image/png", 1.0);
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        compress: false,
+        putOnlyUsedFonts: true,
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();   // 210mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+
+      // Small safe-zone margin so the invoice's outer border isn't clipped
+      // by PDF viewers / printers (most have a ~2mm non-printable edge).
+      const safeMargin = 2;
+      pdf.addImage(
+        imageData,
+        "PNG",
+        safeMargin,
+        safeMargin,
+        pageWidth - safeMargin * 2,
+        pageHeight - safeMargin * 2,
+        undefined,
+        "FAST"
+      );
+
       const previewValues = getPreviewValues(selectedInvoice);
       pdf.save(`invoice-${previewValues.invoiceNumber || "draft"}.pdf`);
     } finally {
@@ -234,93 +268,96 @@ const handleUpdateStatus = async (id: string,status: string) => {
       key: 'action',
       header: 'Action',
       render: (row) => (
-        <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setSelectedInvoice(row);
-            setIsPreviewOpen(true);
-          }}
-        >
-          View
-        </Button>
-        {row.status !== "PAID" && <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setSelectedInvoice(row);
-            navigate(`/invoices/${row._id}`);
-          }}
-        >
-          Edit
-        </Button>}
-        {(row.status !== "PAID" || isWithin24Hours((row as any).paidDate)) && <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setInvoiceForPaidConfirm(row);
-            setIsPaidConfirmOpen(true);
-          }}
-        >
-          {row.status == "PAID" ? "Mark as Unpaid" : "Mark as Paid"}
-        </Button>
-        }
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedInvoice(row);
+              setIsPreviewOpen(true);
+            }}
+          >
+            View
+          </Button>
+          {row.status !== "PAID" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedInvoice(row);
+                navigate(`/invoices/${row._id}`);
+              }}
+            >
+              Edit
+            </Button>
+          )}
+          {(row.status !== "PAID" || isWithin24Hours((row as any).paidDate)) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setInvoiceForPaidConfirm(row);
+                setIsPaidConfirmOpen(true);
+              }}
+            >
+              {row.status == "PAID" ? "Mark as Unpaid" : "Mark as Paid"}
+            </Button>
+          )}
         </div>
       ),
     },
   ];
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
-      <div className="flex items-start justify-between gap-4">
+    <div className="p-3 sm:p-5 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Invoices" description="Manage and review all invoices" />
-        <Button onClick={() => navigate('/invoices/new')} className="gap-2">
+        <Button onClick={() => navigate('/invoices/new')} className="gap-2 shrink-0">
           <PlusCircle className="w-4 h-4" />
           New Invoice
         </Button>
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-              <ReceiptText className="w-5 h-5" />
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+              <ReceiptText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
                 Total Invoices
               </p>
-              <p className="text-xl font-semibold text-foreground">
+              <p className="text-lg sm:text-xl font-semibold text-foreground">
                 {invoiceDashboard?.totalInvoices || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-yellow-500/15 text-yellow-500 flex items-center justify-center">
-              <FileText className="w-5 h-5" />
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-yellow-500/15 text-yellow-500 flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
                 Unpaid Invoices
               </p>
-              <p className="text-xl font-semibold text-foreground">
+              <p className="text-lg sm:text-xl font-semibold text-foreground">
                 {invoiceDashboard?.pendingInvoices || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500/15 text-green-500 flex items-center justify-center">
-              <ReceiptText className="w-5 h-5" />
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-500/15 text-green-500 flex items-center justify-center shrink-0">
+              <ReceiptText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Paid Invoices</p>
-              <p className="text-xl font-semibold text-foreground">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">Paid Invoices</p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground">
                 {invoiceDashboard?.paidInvoices || 0}
               </p>
             </div>

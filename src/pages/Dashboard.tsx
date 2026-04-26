@@ -96,97 +96,97 @@ const Dashboard = () => {
     : 'Current Month';
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
+    <div className="p-3 sm:p-5 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
       <PageHeader title="Dashboard" description="Custodian control overview" />
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="glass-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-                <CalendarRange className="w-5 h-5" />
+      <section className="grid grid-cols-1 2xl:grid-cols-2 gap-3 sm:gap-4">
+        <div className="glass-card p-3 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                <CalendarRange className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">
                   Financial Year
                 </p>
-                <p className="text-base font-semibold text-foreground">{fyLabel}</p>
+                <p className="text-sm sm:text-base font-semibold text-foreground truncate">{fyLabel}</p>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground">{fyRangeLabel}</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground">{fyRangeLabel}</span>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <IndianRupee className="w-4 h-4" />
-                <p className="text-xs uppercase tracking-wide">Total Sales</p>
+                <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total Sales</p>
               </div>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : `₹ ${formatIndianNumber(fyTotals.selling)}`}
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-blue-600">
-                <Percent className="w-4 h-4" />
-                <p className="text-xs uppercase tracking-wide">Total GST</p>
+                <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total GST</p>
               </div>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : `₹ ${formatIndianNumber(fyTotals.gst)}`}
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-green-600">
-                <TrendingUp className="w-4 h-4" />
-                <p className="text-xs uppercase tracking-wide">Total Profit</p>
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total Profit</p>
               </div>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : `₹ ${formatIndianNumber(fyTotals.profit)}`}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="glass-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-yellow-500/15 text-yellow-600 flex items-center justify-center">
-                <Wallet className="w-5 h-5" />
+        <div className="glass-card p-3 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-yellow-500/15 text-yellow-600 flex items-center justify-center shrink-0">
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">
                   Current Month
                 </p>
-                <p className="text-base font-semibold text-foreground">
+                <p className="text-sm sm:text-base font-semibold text-foreground truncate">
                   {currentMonthLabel}
                 </p>
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <IndianRupee className="w-4 h-4" />
-                <p className="text-xs uppercase tracking-wide">Sales</p>
+                <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Sales</p>
               </div>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : `₹ ${formatIndianNumber(currentMonthTotals.selling)}`}
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-blue-600">
-                <Percent className="w-4 h-4" />
-                <p className="text-xs uppercase tracking-wide">GST</p>
+                <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST</p>
               </div>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : `₹ ${formatIndianNumber(currentMonthTotals.gst)}`}
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
+            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-green-600">
-                <TrendingUp className="w-4 h-4" />
-                <p className="text-xs uppercase tracking-wide">Profit</p>
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Profit</p>
               </div>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : `₹ ${formatIndianNumber(currentMonthTotals.profit)}`}
               </p>
             </div>
@@ -194,26 +194,31 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section className="glass-card p-6 space-y-4">
+      <section className="glass-card p-3 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Monthly Breakdown</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">Monthly Breakdown</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Sales and profit for each month of {fyLabel}
             </p>
           </div>
         </div>
-        <div className="h-[320px] w-full">
+        <div className="h-[240px] sm:h-[280px] lg:h-[320px] w-full">
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 10 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  interval={0}
+                />
                 <YAxis
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                   stroke="hsl(var(--muted-foreground))"
                   tickFormatter={(value) => formatIndianNumber(Number(value))}
-                  width={80}
+                  width={60}
                 />
                 <Tooltip
                   formatter={(value) => `₹ ${formatIndianNumber(Number(value))}`}
@@ -238,22 +243,22 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section className="glass-card p-6 space-y-4">
+      <section className="glass-card p-3 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Monthly Details</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">Monthly Details</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Month-wise sales, buying, GST and profit for {fyLabel}
           </p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="-mx-3 sm:mx-0 overflow-x-auto">
+          <table className="w-full min-w-[560px] text-xs sm:text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="py-2 pr-4">Month</th>
-                <th className="py-2 pr-4 text-right">Sales</th>
-                <th className="py-2 pr-4 text-right">Buying</th>
-                <th className="py-2 pr-4 text-right">GST</th>
-                <th className="py-2 pr-4 text-right">Profit</th>
+              <tr className="border-b border-border text-left text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">
+                <th className="py-2 px-3 sm:px-4">Month</th>
+                <th className="py-2 px-3 sm:px-4 text-right">Sales</th>
+                <th className="py-2 px-3 sm:px-4 text-right">Buying</th>
+                <th className="py-2 px-3 sm:px-4 text-right">GST</th>
+                <th className="py-2 px-3 sm:px-4 text-right">Profit</th>
               </tr>
             </thead>
             <tbody>
@@ -269,7 +274,7 @@ const Dashboard = () => {
                       isCurrent ? 'bg-primary/5' : ''
                     }`}
                   >
-                    <td className="py-2 pr-4 font-medium text-foreground">
+                    <td className="py-2 px-3 sm:px-4 font-medium text-foreground whitespace-nowrap">
                       {m.month} {m.year}
                       {isCurrent ? (
                         <span className="ml-2 inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
@@ -277,17 +282,17 @@ const Dashboard = () => {
                         </span>
                       ) : null}
                     </td>
-                    <td className="py-2 pr-4 text-right text-foreground">
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
                       ₹ {formatIndianNumber(m.selling_Amount ?? 0)}
                     </td>
-                    <td className="py-2 pr-4 text-right text-foreground">
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
                       ₹ {formatIndianNumber(m.buying_Amount ?? 0)}
                     </td>
-                    <td className="py-2 pr-4 text-right text-foreground">
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
                       ₹ {formatIndianNumber(m.gst_amount ?? 0)}
                     </td>
                     <td
-                      className={`py-2 pr-4 text-right font-medium ${
+                      className={`py-2 px-3 sm:px-4 text-right font-medium whitespace-nowrap ${
                         profit >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
@@ -298,18 +303,18 @@ const Dashboard = () => {
               })}
               {financialYearSummary?.monthlyData?.length ? (
                 <tr className="bg-muted/30">
-                  <td className="py-2 pr-4 font-semibold text-foreground">Total</td>
-                  <td className="py-2 pr-4 text-right font-semibold text-foreground">
+                  <td className="py-2 px-3 sm:px-4 font-semibold text-foreground whitespace-nowrap">Total</td>
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
                     ₹ {formatIndianNumber(fyTotals.selling)}
                   </td>
-                  <td className="py-2 pr-4 text-right font-semibold text-foreground">
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
                     ₹ {formatIndianNumber(fyTotals.buying)}
                   </td>
-                  <td className="py-2 pr-4 text-right font-semibold text-foreground">
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
                     ₹ {formatIndianNumber(fyTotals.gst)}
                   </td>
                   <td
-                    className={`py-2 pr-4 text-right font-semibold ${
+                    className={`py-2 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${
                       fyTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}
                   >

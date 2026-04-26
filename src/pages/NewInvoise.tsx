@@ -390,35 +390,72 @@ const NewInvoise = () => {
     if (!invoicePreviewRef.current) return;
     try {
       setIsDownloadingPdf(true);
-      // Wait for React to paint latest invoice number before screenshot.
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
-      const canvas = await html2canvas(invoicePreviewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-      const imageData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imageWidth = pageWidth - 10;
-      const imageHeight = (canvas.height * imageWidth) / canvas.width;
 
-      if (imageHeight <= pageHeight - 10) {
-        pdf.addImage(imageData, "PNG", 5, 5, imageWidth, imageHeight);
-      } else {
-        let position = 0;
-        let heightLeft = imageHeight;
-        while (heightLeft > 0) {
-          pdf.addImage(imageData, "PNG", 5, 5 - position, imageWidth, imageHeight);
-          heightLeft -= pageHeight - 10;
-          position += pageHeight - 10;
-          if (heightLeft > 0) pdf.addPage();
-        }
-      }
+      // Wait for React to paint latest invoice number before screenshot.
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
+      const element = invoicePreviewRef.current;
+
+      // The preview is already laid out at exact A4 size (210mm x 297mm).
+      // High scale + font-rendering hints keep text crisp in the PDF.
+      const canvas = await html2canvas(element, {
+        scale: 4,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        imageTimeout: 0,
+        removeContainer: true,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        windowWidth: element.offsetWidth,
+        windowHeight: element.offsetHeight,
+        onclone: (clonedDoc, clonedElement) => {
+          const target = clonedElement as HTMLElement;
+          target.style.overflow = "visible";
+          target.querySelectorAll<HTMLElement>(".overflow-hidden").forEach((node) => {
+            node.style.overflow = "visible";
+          });
+          const body = clonedDoc.body as HTMLElement;
+          body.style.setProperty("-webkit-font-smoothing", "antialiased");
+          body.style.setProperty("-moz-osx-font-smoothing", "grayscale");
+          body.style.setProperty("text-rendering", "geometricPrecision");
+        },
+      });
+
+      const imageData = canvas.toDataURL("image/png", 1.0);
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        compress: false,
+        putOnlyUsedFonts: true,
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();   // 210mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+
+      // Small safe-zone margin so the invoice's outer border isn't clipped
+      // by PDF viewers / printers (most have a ~2mm non-printable edge).
+      const safeMargin = 2;
+      pdf.addImage(
+        imageData,
+        "PNG",
+        safeMargin,
+        safeMargin,
+        pageWidth - safeMargin * 2,
+        pageHeight - safeMargin * 2,
+        undefined,
+        "FAST"
+      );
 
       pdf.save(`invoice-${invoiceNumberForFile || formik.values.invoiceNumber || "draft"}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
     } finally {
       setIsDownloadingPdf(false);
     }

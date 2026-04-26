@@ -300,8 +300,9 @@ function DataTable<T extends Record<string, unknown>>({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-visible">
-        <table className="w-full text-sm">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted/80 backdrop-blur-sm">
             <tr className="border-b border-border/50">
               {columns.map((col) => {
@@ -310,7 +311,7 @@ function DataTable<T extends Record<string, unknown>>({
                   <th
                     key={String(col.key)}
                     onClick={() => handleHeaderClick(col)}
-                    className={`py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground ${
+                    className={`py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap ${
                       col.align === 'right' ? 'text-right' : 'text-left'
                     } ${col.sortable === false ? '' : 'cursor-pointer select-none'} ${col.className ?? ''}`}
                   >
@@ -352,7 +353,7 @@ function DataTable<T extends Record<string, unknown>>({
                     {columns.map((col) => (
                       <td
                         key={String(col.key)}
-                        className={`py-3 px-4 ${
+                        className={`py-3 px-4 whitespace-nowrap ${
                           col.align === 'right' ? 'text-right' : 'text-left'
                         } ${col.className ?? ''}`}
                       >
@@ -367,6 +368,7 @@ function DataTable<T extends Record<string, unknown>>({
             )}
           </tbody>
         </table>
+        </div>
 
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
