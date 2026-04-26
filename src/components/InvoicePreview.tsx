@@ -73,7 +73,7 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           <div className="border-b border-black text-center pt-0.5 pb-2 leading-tight">
             <p className="text-[10px] mb-0">From : Name & Address of Office / Factory</p>
             <p className="font-serif text-[26px] leading-none font-black tracking-tight mt-0 mb-1 [word-spacing:15px] pb-1">MAHALAXMI ENTERPRISES</p>
-            <p className="pb-0.5 text-black/70">Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
+            <p className="pb-0.5 text-black/70 text-[13px]">Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
             <p className="pb-1 text-black/70">9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
             <p className="pb-0.5 text-black/70">Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
           </div>
@@ -158,7 +158,7 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                   <tr key={`preview-item-${index}`} className="border-b border-black h-[22px]">
                     <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.description ? index + 1 : ""}</td>
                     {hasItemCode ? (
-                      <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">
+                      <td className="border-r border-black text-center px-2 pt-0.5 pb-1 align-middle">
                         {item.itemCode || ""}
                       </td>
                     ) : null}
