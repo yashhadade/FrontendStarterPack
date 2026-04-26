@@ -66,25 +66,29 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           className="mx-auto w-[210mm] h-[297mm] border border-black bg-white overflow-hidden"
         >
           <div className="grid grid-cols-[2fr_1fr] border-b border-black">
-            <div className="text-center border-r border-black py-1 font-semibold tracking-wide">TAX INVOICE</div>
+            <div className="text-center border-r border-black py-1 font-semibold tracking-wide font-bold">TAX INVOICE</div>
             <div className="text-center py-1">Original for Buyer</div>
           </div>
 
           <div className="border-b border-black text-center pt-0.5 pb-2 leading-tight">
             <p className="text-[10px] mb-0">From : Name & Address of Office / Factory</p>
-            <p className="text-[26px] leading-none font-black tracking-tight mt-0 mb-1">MAHALAXMI ENTERPRISES</p>
-            <p>Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
-            <p>9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
-            <p className="pb-0.5">Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
+            <p className="font-serif text-[26px] leading-none font-black tracking-tight mt-0 mb-1 [word-spacing:15px] pb-1">MAHALAXMI ENTERPRISES</p>
+            <p className="pb-0.5 text-black/70">Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
+            <p className="pb-1 text-black/70">9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
+            <p className="pb-0.5 text-black/70">Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black px-1 pt-1 pb-1.5 leading-tight">
-              <span className="font-semibold">GSTIN No. : </span>27APWPM0688K1ZZ
+            <div className="border-r border-black px-1 pt-1 pb-1.5 leading-tight font-bold">
+              GSTIN No. : 27APWPM0688K1ZZ
             </div>
-            <div className="px-1 pt-1 pb-1.5 leading-tight">
-              <span className="font-semibold">Invoice No. : </span>{values.invoiceNumber || "-"} &nbsp;&nbsp;
-              <span className="font-semibold">DATE : </span>{values.invoiceDate || "-"}
+            <div className="px-1 pt-1 pb-1.5 leading-tight flex items-center justify-between gap-3">
+              <span className="font-bold">
+                Invoice No. : {values.invoiceNumber || "-"}
+              </span>
+              <span>
+                <span className="font-semibold">DATE : </span>{values.invoiceDate || "-"}
+              </span>
             </div>
           </div>
 
@@ -96,13 +100,16 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             </div>
             <div className="px-1 pt-1 pb-1.5 space-y-1 leading-tight">
               <div className="text-center font-semibold">Details Of Receiver / Consignee</div>
-              <div><span className="font-semibold">Party Name </span>: {selectedClient?.name || "-"}</div>
-              <div><span className="font-semibold">Address </span>: {selectedClient?.address || "-"}</div>
+              <div className="font-bold">Party Name : {selectedClient?.name || "-"}</div>
+              <div className="flex gap-1">
+                <span className="font-semibold whitespace-nowrap">Address :</span>
+                <span className="flex-1">{selectedClient?.address || "-"}</span>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
-            <div className="border-r border-black px-1 pt-1 pb-1.5 space-y-1 leading-tight">
+            <div className="border-r border-black px-1 pt-1 pb-2.5 space-y-1 leading-tight">
               <div><span className="font-semibold">PLACE OF SUPPLY </span>: {values.placeOfSupply || "-"}</div>
               <div><span className="font-semibold">Transport Name </span>: {values.transportName || "-"}</div>
               <div><span className="font-semibold">Transport GSTIN </span>: {values.transportGstNumber || "-"}</div>
@@ -137,11 +144,11 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                 >
                   Description and Specification of Goods
                 </th>
-                <th className="border-r border-black pt-1 pb-1.5 w-[9%] align-middle">HSN CODE</th>
-                <th className="border-r border-black pt-1 pb-1.5 w-[6%] align-middle">Quantity</th>
-                <th className="border-r border-black pt-1 pb-1.5 w-[6%] align-middle">UNITS</th>
-                <th className="border-r border-black pt-1 pb-1.5 w-[7%] align-middle">Rate</th>
-                <th className="pt-1 pb-1.5 w-[12%] align-middle">Total</th>
+                <th className="border-r border-black pt-1 pb-2 w-[9%] align-middle">HSN CODE</th>
+                <th className="border-r border-black pt-1 pb-2 w-[6%] align-middle">Quantity</th>
+                <th className="border-r border-black pt-1 pb-2 w-[6%] align-middle">UNITS</th>
+                <th className="border-r border-black pt-1 pb-2 w-[7%] align-middle">Rate</th>
+                <th className="pt-1 pb-2 w-[12%] align-middle">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -155,12 +162,12 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                         {item.itemCode || ""}
                       </td>
                     ) : null}
-                    <td className="border-r border-black px-1 pt-0.5 pb-1 align-middle">{item.description || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.hsnCode || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.quantity || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.units || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.rate ? formatIndianAmount(Number(item.rate) || 0) : ""}</td>
-                    <td className="text-center pt-0.5 pb-1 align-middle">{item.description ? formatIndianAmount(Math.ceil(lineTotal)) : ""}</td>
+                    <td className="border-r border-black px-1 pt-0.5 pb-2 align-middle">{item.description || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.hsnCode || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.quantity || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.units || ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.rate ? formatIndianAmount(Number(item.rate) || 0) : ""}</td>
+                    <td className="text-center pt-0.5 pb-2 align-middle">{item.description ? formatIndianAmount(Math.ceil(lineTotal)) : ""}</td>
                   </tr>
                 );
               })}
