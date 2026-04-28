@@ -109,6 +109,11 @@ const Client = () => {
       render: (row) => row.i_gst ? "Yes" : "No",
     },
     {
+      key: "items_code",
+      header: 'Items Code',
+      render: (row) => row.items_code ? "Yes" : "No",
+    },
+    {
       key: "action",
       header: "Action",
       render: (row) => (
