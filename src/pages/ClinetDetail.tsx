@@ -66,6 +66,7 @@ const ClientDetail = () => {
     { label: "GST Number", value: client?.gst_number },
     { label: "State", value: client?.state },
     { label: "Code", value: client?.code },
+    { label: "IGST", value: client?.i_gst ? "Yes" : "No" },
   ];
 
   const contactDetails = [
@@ -90,6 +91,7 @@ const ClientDetail = () => {
         contact_Person_name: client.contact_Person_name ?? "",
         contact_Person_email: client.contact_Person_email ?? "",
         contact_Person_number: client.contact_Person_number ?? "",
+        i_gst: client.i_gst ?? false,
       }
     : undefined;
 
