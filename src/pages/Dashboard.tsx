@@ -1,7 +1,15 @@
 import PageHeader from '@/components/PageHeader';
 import invoiceServices from '@/services/invoiceServices';
 import { formatIndianNumber } from '@/utils/numberFormat';
-import { CalendarRange, IndianRupee, Percent, TrendingUp, Wallet } from 'lucide-react';
+import {
+  CalendarRange,
+  Eye,
+  EyeOff,
+  IndianRupee,
+  Percent,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Bar,
@@ -40,6 +48,11 @@ const Dashboard = () => {
   const [financialYearSummary, setFinancialYearSummary] =
     useState<FinancialYearSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showValues, setShowValues] = useState(false);
+
+  const maskedValue = '••••••';
+  const displayAmount = (value: number) =>
+    showValues ? `₹ ${formatIndianNumber(value)}` : maskedValue;
 
   useEffect(() => {
     const getFinancialYearSummary = async () => {
@@ -97,7 +110,22 @@ const Dashboard = () => {
 
   return (
     <div className="p-3 sm:p-5 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
-      <PageHeader title="Dashboard" description="Custodian control overview" />
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader title="Dashboard" description="Custodian control overview" />
+        <button
+          type="button"
+          onClick={() => setShowValues((prev) => !prev)}
+          aria-label={showValues ? 'Hide values' : 'Show values'}
+          title={showValues ? 'Hide values' : 'Show values'}
+          className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg border border-border bg-muted/20 text-foreground hover:bg-muted/40 transition-colors shrink-0"
+        >
+          {showValues ? (
+            <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+          ) : (
+            <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
+          )}
+        </button>
+      </div>
 
       <section className="grid grid-cols-1 2xl:grid-cols-2 gap-3 sm:gap-4">
         <div className="glass-card p-3 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
@@ -122,7 +150,7 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total Sales</p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : `₹ ${formatIndianNumber(fyTotals.selling)}`}
+                {isLoading ? '—' : displayAmount(fyTotals.selling)}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
@@ -131,7 +159,7 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total GST</p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : `₹ ${formatIndianNumber(fyTotals.gst)}`}
+                {isLoading ? '—' : displayAmount(fyTotals.gst)}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
@@ -140,7 +168,7 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total Profit</p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : `₹ ${formatIndianNumber(fyTotals.profit)}`}
+                {isLoading ? '—' : displayAmount(fyTotals.profit)}
               </p>
             </div>
           </div>
@@ -169,7 +197,7 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Sales</p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : `₹ ${formatIndianNumber(currentMonthTotals.selling)}`}
+                {isLoading ? '—' : displayAmount(currentMonthTotals.selling)}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
@@ -178,7 +206,7 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST</p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : `₹ ${formatIndianNumber(currentMonthTotals.gst)}`}
+                {isLoading ? '—' : displayAmount(currentMonthTotals.gst)}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
@@ -187,7 +215,7 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Profit</p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : `₹ ${formatIndianNumber(currentMonthTotals.profit)}`}
+                {isLoading ? '—' : displayAmount(currentMonthTotals.profit)}
               </p>
             </div>
           </div>
@@ -217,11 +245,15 @@ const Dashboard = () => {
                 <YAxis
                   tick={{ fontSize: 10 }}
                   stroke="hsl(var(--muted-foreground))"
-                  tickFormatter={(value) => formatIndianNumber(Number(value))}
+                  tickFormatter={(value) =>
+                    showValues ? formatIndianNumber(Number(value)) : ''
+                  }
                   width={60}
                 />
                 <Tooltip
-                  formatter={(value) => `₹ ${formatIndianNumber(Number(value))}`}
+                  formatter={(value) =>
+                    showValues ? `₹ ${formatIndianNumber(Number(value))}` : maskedValue
+                  }
                   contentStyle={{
                     background: 'hsl(var(--background))',
                     border: '1px solid hsl(var(--border))',
@@ -283,20 +315,20 @@ const Dashboard = () => {
                       ) : null}
                     </td>
                     <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
-                      ₹ {formatIndianNumber(m.selling_Amount ?? 0)}
+                      {displayAmount(m.selling_Amount ?? 0)}
                     </td>
                     <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
-                      ₹ {formatIndianNumber(m.buying_Amount ?? 0)}
+                      {displayAmount(m.buying_Amount ?? 0)}
                     </td>
                     <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
-                      ₹ {formatIndianNumber(m.gst_amount ?? 0)}
+                      {displayAmount(m.gst_amount ?? 0)}
                     </td>
                     <td
                       className={`py-2 px-3 sm:px-4 text-right font-medium whitespace-nowrap ${
                         profit >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
-                      ₹ {formatIndianNumber(profit)}
+                      {displayAmount(profit)}
                     </td>
                   </tr>
                 );
@@ -305,20 +337,20 @@ const Dashboard = () => {
                 <tr className="bg-muted/30">
                   <td className="py-2 px-3 sm:px-4 font-semibold text-foreground whitespace-nowrap">Total</td>
                   <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
-                    ₹ {formatIndianNumber(fyTotals.selling)}
+                    {displayAmount(fyTotals.selling)}
                   </td>
                   <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
-                    ₹ {formatIndianNumber(fyTotals.buying)}
+                    {displayAmount(fyTotals.buying)}
                   </td>
                   <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
-                    ₹ {formatIndianNumber(fyTotals.gst)}
+                    {displayAmount(fyTotals.gst)}
                   </td>
                   <td
                     className={`py-2 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${
                       fyTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
-                    ₹ {formatIndianNumber(fyTotals.profit)}
+                    {displayAmount(fyTotals.profit)}
                   </td>
                 </tr>
               ) : null}
