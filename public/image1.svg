@@ -1,9 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
   <title>ME — Mahalaxmi Enterprise</title>
-  <desc>Logo mark: M in dark charcoal serif, E in coral overlapping M's right leg, no background block</desc>
-
-  <!-- White background -->
-  <rect width="320" height="200" fill="#ffffff"/>
+  <desc>Logo mark: M in dark charcoal serif, E in coral overlapping M's right leg, transparent background</desc>
 
   <!-- M — dark charcoal, serif -->
   <text
@@ -15,7 +12,7 @@
     fill="#1C1C1C"
   >M</text>
 
-  <!-- E — coral red, overlapping M's right leg, no background block -->
+  <!-- E — coral red, overlapping M's right leg -->
   <text
     x="112"
     y="152"
