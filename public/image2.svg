@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 230" width="320" height="230">
+  <title>ME — Mahalaxmi Enterprise</title>
+  <desc>Logo mark with slogan: Fueling Projects with Trusted Hardware</desc>
+
+  <!-- M — dark charcoal, serif -->
+  <text
+    x="14"
+    y="152"
+    font-family="Georgia, 'Times New Roman', Times, serif"
+    font-size="140"
+    font-weight="700"
+    fill="#1C1C1C"
+  >M</text>
+
+  <!-- E — coral red, overlapping M's right leg -->
+  <text
+    x="112"
+    y="152"
+    font-family="Georgia, 'Times New Roman', Times, serif"
+    font-size="140"
+    font-weight="700"
+    fill="#D94A2B"
+  >E</text>
+
+  <!-- Underline — only from start of M to end of E -->
+  <line x1="14" y1="168" x2="226" y2="168" stroke="#D94A2B" stroke-width="2.5"/>
+
+  <!-- Dot at end of underline -->
+  <circle cx="238" cy="168" r="6" fill="#D94A2B"/>
+
+  <!-- Slogan — textLength forces it to fit exactly from x=14 to x=226 -->
+  <text
+    x="14"
+    y="190"
+    font-family="Georgia, 'Times New Roman', Times, serif"
+    font-size="10"
+    font-weight="400"
+    fill="#1C1C1C"
+    textLength="212"
+    lengthAdjust="spacing"
+    letter-spacing="0.5"
+  >Fueling Projects with Trusted Hardware</text>
+
+</svg>

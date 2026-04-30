@@ -70,7 +70,12 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <div className="text-center py-1">Original for Buyer</div>
           </div>
 
-          <div className="border-b border-black text-center pt-0.5 pb-2 leading-tight">
+          <div className="relative border-b border-black text-center pt-0.5 pb-2 leading-tight">
+            <img
+              src="/image2.svg"
+              alt="Mahalaxmi Enterprises Logo"
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-24 w-auto"
+            />
             <p className="text-[10px] mb-0">From : Name & Address of Office / Factory</p>
             <p className="font-serif text-[26px] leading-none font-black tracking-tight mt-0 mb-1 [word-spacing:15px] pb-1">MAHALAXMI ENTERPRISES</p>
             <p className="pb-0.5 text-black/70 text-[13px]">Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
