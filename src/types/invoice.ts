@@ -30,6 +30,8 @@ export type Invoice = {
     _id: string;
     invoice_number: string;
     invoice_date: string;
+    paid_date?: string | null;
+    paidDate?: string | null;
     buying_Amount: number;
     selling_Amount: number;
     gst_amount: number;

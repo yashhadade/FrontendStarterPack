@@ -40,7 +40,7 @@ const createInvoice = (data: CreateInvoiceInterface) => {
       return err.response.data;
     });
   }
-  const updateStatus = ( data: { id: string,status: string }) => {
+  const updateStatus = ( data: { id: string; status: string; paid_date?: Date | null }) => {
     return server.post(`/invoices/updateStatus`, data)
     .then((res) => {
       return res.data;

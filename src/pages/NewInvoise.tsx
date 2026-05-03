@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormik } from "formik";
-import { Check, ChevronsUpDown, Download, FileText, Plus, Save, Trash2 } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, Download, FileText, Plus, Save, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import clientServices from "@/services/clientServices";
 import type { Client as ClientData } from "@/types/client";
@@ -74,6 +75,13 @@ const NewInvoise = () => {
     return `${day}/${month}/${year}`;
   };
   const getTodayDate = () => formatDateAsDDMMYYYY(new Date());
+  const parseDDMMYYYY = (value?: string): Date | undefined => {
+    if (!value) return undefined;
+    const [day, month, year] = value.split("/").map((part) => Number(part));
+    if (!day || !month || !year) return undefined;
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  };
 
   const [clients, setClients] = useState<ClientData[]>([]);
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -230,11 +238,7 @@ const NewInvoise = () => {
         0
       );
       const gstAmount = selectedClient?.i_gst ? Math.ceil(sellingAmount * 0.18) : Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
-      const todayDate = getTodayDate();
-      const invoiceDateForPayload = id ? values.invoiceDate : todayDate;
-      if (!id) {
-        formik.setFieldValue("invoiceDate", todayDate);
-      }
+      const invoiceDateForPayload = parseDDMMYYYY(values.invoiceDate) ?? new Date();
 
       const invoicePayload = {
         clientId: values.clientId,
@@ -335,7 +339,11 @@ const NewInvoise = () => {
         if (Number(initialInvoice.other_charges ?? 0) !== Number(invoicePayload.other_charges ?? 0)) {
           updatedPayload.other_charges = invoicePayload.other_charges;
         }
-        if (normalizeDateString(initialInvoice.invoice_date) !== (invoicePayload.invoice_date ?? "")) {
+        const newInvoiceDateString =
+          invoicePayload.invoice_date instanceof Date
+            ? formatDateAsDDMMYYYY(invoicePayload.invoice_date)
+            : "";
+        if (normalizeDateString(initialInvoice.invoice_date) !== newInvoiceDateString) {
           updatedPayload.invoice_date = invoicePayload.invoice_date;
         }
 
@@ -542,12 +550,34 @@ const NewInvoise = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoiceDate">Invoice Date</Label>
-              <Input
-                id="invoiceDate"
-                name="invoiceDate"
-                value={formik.values.invoiceDate}
-                readOnly
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="invoiceDate"
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start font-normal",
+                      !formik.values.invoiceDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formik.values.invoiceDate || "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={parseDDMMYYYY(formik.values.invoiceDate)}
+                    onSelect={(date) => {
+                      if (date) {
+                        formik.setFieldValue("invoiceDate", formatDateAsDDMMYYYY(date));
+                      }
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 

@@ -11,7 +11,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download, FileText, PlusCircle, ReceiptText } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Download, FileText, PlusCircle, ReceiptText } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Invoice as InvoiceData } from "@/types/invoice";
@@ -28,6 +32,7 @@ const Invoices = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPaidConfirmOpen, setIsPaidConfirmOpen] = useState(false);
   const [invoiceForPaidConfirm, setInvoiceForPaidConfirm] = useState<InvoiceData | null>(null);
+  const [paidDateValue, setPaidDateValue] = useState<Date>(new Date());
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [invoiceDashboard, setInvoiceDashboard] = useState<any>(null);
   const [tablePage, setTablePage] = useState(0);
@@ -101,9 +106,13 @@ const Invoices = () => {
     getAllInvoices();
   }, [getAllInvoices]);
 
-const handleUpdateStatus = async (id: string,status: string) => {
+const handleUpdateStatus = async (
+  id: string,
+  status: string,
+  paid_date?: Date | null
+) => {
   try {
-    const res = await invoiceServices.updateStatus({ id,status });
+    const res = await invoiceServices.updateStatus({ id, status, paid_date });
     if (res && res?.data) {
       toast.success("Status updated successfully");
       getAllInvoices();
@@ -115,6 +124,14 @@ const handleUpdateStatus = async (id: string,status: string) => {
     toast.error(error?.message || "Failed to update status");
   }
 };
+const formatDateForDisplay = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+const toUtcMidnight = (date: Date) =>
+  new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const getPreviewValues = (invoice: InvoiceData) => {
     const data = invoice as any;
     return {
@@ -291,12 +308,23 @@ const handleUpdateStatus = async (id: string,status: string) => {
               Edit
             </Button>
           )}
-          {(row.status !== "PAID" || isWithin24Hours((row as any).paidDate)) && (
+          {(row.status !== "PAID" ||
+            isWithin24Hours(
+              (row as any).updatedAt ||
+                (row as any).updated_at ||
+                (row as any).paidDate ||
+                (row as any).paid_date
+            )) && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
                 setInvoiceForPaidConfirm(row);
+                const existing = (row as any).paidDate || (row as any).paid_date;
+                const seedDate = existing ? new Date(existing) : new Date();
+                setPaidDateValue(
+                  Number.isNaN(seedDate.getTime()) ? new Date() : seedDate
+                );
                 setIsPaidConfirmOpen(true);
               }}
             >
@@ -465,6 +493,37 @@ const handleUpdateStatus = async (id: string,status: string) => {
                     </p>
                   </div>
                 ) : null}
+                {invoiceForPaidConfirm?.status !== "PAID" ? (
+                  <div className="space-y-2 pt-1">
+                    <Label htmlFor="paidDate">Paid Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="paidDate"
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start font-normal",
+                            !paidDateValue && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {paidDateValue ? formatDateForDisplay(paidDateValue) : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={paidDateValue}
+                          onSelect={(date) => {
+                            if (date) setPaidDateValue(date);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                ) : null}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -479,7 +538,12 @@ const handleUpdateStatus = async (id: string,status: string) => {
             <AlertDialogAction
               onClick={async () => {
                 if (!invoiceForPaidConfirm?._id) return;
-                await handleUpdateStatus(invoiceForPaidConfirm._id,invoiceForPaidConfirm.status=="PAID"?"PENDING":"PAID");
+                const isMarkingPaid = invoiceForPaidConfirm.status !== "PAID";
+                await handleUpdateStatus(
+                  invoiceForPaidConfirm._id,
+                  isMarkingPaid ? "PAID" : "PENDING",
+                  isMarkingPaid ? toUtcMidnight(paidDateValue) : null
+                );
                 setInvoiceForPaidConfirm(null);
                 setIsPaidConfirmOpen(false);
               }}
