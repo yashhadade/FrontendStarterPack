@@ -185,18 +185,17 @@ function DataTable<T extends Record<string, unknown>>({
     return sortedData.slice(start, start + pageSize);
   }, [sortedData, page, pageSize, serverPagination]);
 
-  const activePageSize = serverPagination ? currentPageSize ?? pageSize : pageSize;
-  const activePage = serverPagination ? currentPage ?? 0 : page;
+  const activePageSize = serverPagination ? (currentPageSize ?? pageSize) : pageSize;
+  const activePage = serverPagination ? (currentPage ?? 0) : page;
 
   const pageSizeSelectOptions = useMemo(() => {
-    const base =
-      pageSizes && pageSizes.length > 0 ? [...pageSizes] : [...DEFAULT_PAGE_SIZES];
+    const base = pageSizes && pageSizes.length > 0 ? [...pageSizes] : [...DEFAULT_PAGE_SIZES];
     const size = activePageSize;
     const merged = size > 0 && !base.includes(size) ? [...base, size] : base;
     return [...new Set(merged)].sort((a, b) => a - b);
   }, [pageSizes, activePageSize]);
 
-  const total = serverPagination ? totalRows ?? 0 : sortedData.length;
+  const total = serverPagination ? (totalRows ?? 0) : sortedData.length;
   const from = total === 0 ? 0 : activePage * activePageSize + 1;
   const to = Math.min(total, activePage * activePageSize + paginatedData.length);
 
@@ -302,72 +301,74 @@ function DataTable<T extends Record<string, unknown>>({
 
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-muted/80 backdrop-blur-sm">
-            <tr className="border-b border-border/50">
-              {columns.map((col) => {
-                const isSorted = sortKey === String(col.key);
-                return (
-                  <th
-                    key={String(col.key)}
-                    onClick={() => handleHeaderClick(col)}
-                    className={`py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap ${
-                      col.align === 'right' ? 'text-right' : 'text-left'
-                    } ${col.sortable === false ? '' : 'cursor-pointer select-none'} ${col.className ?? ''}`}
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {col.header}
-                      {col.sortable === false ? null : (
-                        <span className="text-[10px] text-muted-foreground/70">
-                          {isSorted ? (sortDirection === 'asc' ? '▲' : '▼') : '▾'}
-                        </span>
-                      )}
-                    </span>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="py-12 text-center text-muted-foreground text-sm"
-                >
-                  No records found.
-                </td>
+          <table className="w-full min-w-[640px] text-sm">
+            <thead className="bg-muted/80 backdrop-blur-sm">
+              <tr className="border-b border-border/50">
+                {columns.map((col) => {
+                  const isSorted = sortKey === String(col.key);
+                  return (
+                    <th
+                      key={String(col.key)}
+                      onClick={() => handleHeaderClick(col)}
+                      className={`py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap ${
+                        col.align === 'right' ? 'text-right' : 'text-left'
+                      } ${col.sortable === false ? '' : 'cursor-pointer select-none'} ${col.className ?? ''}`}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {col.header}
+                        {col.sortable === false ? null : (
+                          <span className="text-[10px] text-muted-foreground/70">
+                            {isSorted ? (sortDirection === 'asc' ? '▲' : '▼') : '▾'}
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                  );
+                })}
               </tr>
-            ) : (
-              paginatedData.map((row) => {
-                const id = getRowId(row);
-                const isSelected = selectedRowId != null && id === selectedRowId;
-                return (
-                  <tr
-                    key={id}
-                    className={`border-b border-border/30 transition-colors ${
-                      isSelected ? 'bg-primary/10 border-l-2 border-l-primary' : 'hover:bg-muted/30'
-                    } ${onRowClick ? 'cursor-pointer' : ''}`}
-                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="py-12 text-center text-muted-foreground text-sm"
                   >
-                    {columns.map((col) => (
-                      <td
-                        key={String(col.key)}
-                        className={`py-3 px-4 whitespace-nowrap ${
-                          col.align === 'right' ? 'text-right' : 'text-left'
-                        } ${col.className ?? ''}`}
-                      >
-                        {col.render
-                          ? col.render(row)
-                          : String((row as Record<string, unknown>)[col.key as string])}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                    No records found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((row) => {
+                  const id = getRowId(row);
+                  const isSelected = selectedRowId != null && id === selectedRowId;
+                  return (
+                    <tr
+                      key={id}
+                      className={`border-b border-border/30 transition-colors ${
+                        isSelected
+                          ? 'bg-primary/10 border-l-2 border-l-primary'
+                          : 'hover:bg-muted/30'
+                      } ${onRowClick ? 'cursor-pointer' : ''}`}
+                      onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    >
+                      {columns.map((col) => (
+                        <td
+                          key={String(col.key)}
+                          className={`py-3 px-4 whitespace-nowrap ${
+                            col.align === 'right' ? 'text-right' : 'text-left'
+                          } ${col.className ?? ''}`}
+                        >
+                          {col.render
+                            ? col.render(row)
+                            : String((row as Record<string, unknown>)[col.key as string])}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">

@@ -1,10 +1,10 @@
-import { Eye } from "lucide-react";
-import type { RefObject } from "react";
-import type { Client as ClientData } from "@/types/client";
+import { Eye } from 'lucide-react';
+import type { RefObject } from 'react';
+import type { Client as ClientData } from '@/types/client';
 
 type InvoiceItem = {
   description: string;
-  itemCode:string;
+  itemCode: string;
   hsnCode: string;
   quantity: string;
   units: string;
@@ -35,7 +35,13 @@ type InvoicePreviewProps = {
   invoiceRef?: RefObject<HTMLDivElement>;
 };
 
-const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef }: InvoicePreviewProps) => {
+const InvoicePreview = ({
+  values,
+  items,
+  selectedClient,
+  totalAmount,
+  invoiceRef,
+}: InvoicePreviewProps) => {
   const totalQuantityOfGoods = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   selectedClient?.i_gst;
   const cgstRate = selectedClient?.i_gst ? 0.18 : 0.09;
@@ -44,14 +50,23 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
   const sgstAmount = Math.ceil(totalAmount * sgstRate);
   const otherCharges = Number(values.other_charges) || 0;
   const grandTotal = totalAmount + cgstAmount + sgstAmount + otherCharges;
-  const hasItemCode = items.some((item) => (item.itemCode || "").trim() !== "");
+  const hasItemCode = items.some((item) => (item.itemCode || '').trim() !== '');
   const fixedRows = 18;
   const tableRows = [...items];
   while (tableRows.length < fixedRows) {
-    tableRows.push({ description: "", itemCode: "", hsnCode: "", quantity: "", units: "", rate: "" });
+    tableRows.push({
+      description: '',
+      itemCode: '',
+      hsnCode: '',
+      quantity: '',
+      units: '',
+      rate: '',
+    });
   }
   const formatIndianAmount = (value: number) =>
-    new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+    new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+      value
+    );
 
   return (
     <section className="glass-card p-6 space-y-5">
@@ -66,7 +81,9 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           className="mx-auto w-[210mm] h-[297mm] border border-black bg-white overflow-hidden"
         >
           <div className="grid grid-cols-[2fr_1fr] border-b border-black">
-            <div className="text-center border-r border-black py-1 font-semibold tracking-wide font-bold">TAX INVOICE</div>
+            <div className="text-center border-r border-black py-1 font-semibold tracking-wide font-bold">
+              TAX INVOICE
+            </div>
             <div className="text-center py-1">Original for Buyer</div>
           </div>
 
@@ -77,10 +94,19 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
               className="absolute left-2 top-1/2 -translate-y-1/2 h-24 w-auto"
             />
             <p className="text-[10px] mb-0">From : Name & Address of Office / Factory</p>
-            <p className="font-serif text-[26px] leading-none font-black tracking-tight mt-0 mb-1 [word-spacing:15px] pb-1">MAHALAXMI ENTERPRISES</p>
-            <p className="pb-0.5 text-black/70 text-[13px]">Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware Material</p>
-            <p className="pb-1 text-black/70">9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015</p>
-            <p className="pb-0.5 text-black/70">Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com</p>
+            <p className="font-serif text-[26px] leading-none font-black tracking-tight mt-0 mb-1 [word-spacing:15px] pb-1">
+              MAHALAXMI ENTERPRISES
+            </p>
+            <p className="pb-0.5 text-black/70 text-[13px]">
+              Supplier in : Electric Item, PVC item, M.S. Steel & All Electric Accessories, Hardware
+              Material
+            </p>
+            <p className="pb-1 text-black/70">
+              9 FLOOR GRD 4 THOKERSEY JIVRAJ BLDG DATTA MANDIR MARG T.J.ROAD SEWRI-400015
+            </p>
+            <p className="pb-0.5 text-black/70">
+              Tel. No. : +91-9867058673 &nbsp;&nbsp;&nbsp; Email Id : rajesh.malap@gmail.com
+            </p>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
@@ -88,49 +114,81 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
               GSTIN No. : 27APWPM0688K1ZZ
             </div>
             <div className="px-1 pt-1 pb-1.5 leading-tight flex items-center justify-between gap-3">
-              <span className="font-bold">
-                Invoice No. : {values.invoiceNumber || "-"}
-              </span>
+              <span className="font-bold">Invoice No. : {values.invoiceNumber || '-'}</span>
               <span>
-                <span className="font-semibold">DATE : </span>{values.invoiceDate || "-"}
+                <span className="font-semibold">DATE : </span>
+                {values.invoiceDate || '-'}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
             <div className="border-r border-black px-1 pt-1 pb-1.5 space-y-1 leading-tight">
-              <div><span className="font-semibold">Name of Excisable commodity : </span>{values.nameOfExcisableCommodity || "-"}</div>
-              <div><span className="font-semibold">PAN No. : </span>APWPM0688K</div>
-              <div><span className="font-semibold">STATE : </span>MAHARASHTRA &nbsp;&nbsp; <span className="font-semibold">CODE : </span>27</div>
+              <div>
+                <span className="font-semibold">Name of Excisable commodity : </span>
+                {values.nameOfExcisableCommodity || '-'}
+              </div>
+              <div>
+                <span className="font-semibold">PAN No. : </span>APWPM0688K
+              </div>
+              <div>
+                <span className="font-semibold">STATE : </span>MAHARASHTRA &nbsp;&nbsp;{' '}
+                <span className="font-semibold">CODE : </span>27
+              </div>
             </div>
             <div className="px-1 pt-1 pb-1.5 space-y-1 leading-tight">
               <div className="text-center font-semibold">Details Of Receiver / Consignee</div>
-              <div className="font-bold">Party Name : {selectedClient?.name || "-"}</div>
+              <div className="font-bold">Party Name : {selectedClient?.name || '-'}</div>
               <div className="flex gap-1">
                 <span className="font-semibold whitespace-nowrap">Address :</span>
-                <span className="flex-1">{selectedClient?.address || "-"}</span>
+                <span className="flex-1">{selectedClient?.address || '-'}</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
             <div className="border-r border-black px-1 pt-1 pb-2.5 space-y-1 leading-tight">
-              <div><span className="font-semibold">PLACE OF SUPPLY </span>: {values.placeOfSupply || "-"}</div>
-              <div><span className="font-semibold">Transport Name </span>: {values.transportName || "-"}</div>
-              <div><span className="font-semibold">Transport GSTIN </span>: {values.transportGstNumber || "-"}</div>
+              <div>
+                <span className="font-semibold">PLACE OF SUPPLY </span>:{' '}
+                {values.placeOfSupply || '-'}
+              </div>
+              <div>
+                <span className="font-semibold">Transport Name </span>:{' '}
+                {values.transportName || '-'}
+              </div>
+              <div>
+                <span className="font-semibold">Transport GSTIN </span>:{' '}
+                {values.transportGstNumber || '-'}
+              </div>
             </div>
             <div className="px-1 pt-1 pb-1.5 space-y-1 leading-tight">
-              <div><span className="font-semibold">GSTIN </span>: {selectedClient?.gst_number || "-"}</div>
-              <div><span className="font-semibold">STATE </span>: {selectedClient?.state || "-"} &nbsp;&nbsp; <span className="font-semibold">CODE </span>: {selectedClient?.code || "-"}</div>
+              <div>
+                <span className="font-semibold">GSTIN </span>: {selectedClient?.gst_number || '-'}
+              </div>
+              <div>
+                <span className="font-semibold">STATE </span>: {selectedClient?.state || '-'}{' '}
+                &nbsp;&nbsp; <span className="font-semibold">CODE </span>:{' '}
+                {selectedClient?.code || '-'}
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 border-b border-black">
             <div className="border-r border-black px-1 pt-1 pb-1.5 space-y-1 min-h-[44px] leading-tight">
-              <div><span className="font-semibold">No. & Description of Packages </span>: {values.discription || ""}</div>
-              <div><span className="font-semibold">L. R. No. </span>: {values.lrNo || ""} &nbsp;&nbsp; <span className="font-semibold">L.r Dt. </span>: {values.lrDt || ""}</div>
-              <div><span className="font-semibold">Challan No. </span>: {values.challanNo || ""}</div>
-              <div><span className="font-semibold">P.O. No. </span>: {values.poNo || ""}</div>
+              <div>
+                <span className="font-semibold">No. & Description of Packages </span>:{' '}
+                {values.discription || ''}
+              </div>
+              <div>
+                <span className="font-semibold">L. R. No. </span>: {values.lrNo || ''} &nbsp;&nbsp;{' '}
+                <span className="font-semibold">L.r Dt. </span>: {values.lrDt || ''}
+              </div>
+              <div>
+                <span className="font-semibold">Challan No. </span>: {values.challanNo || ''}
+              </div>
+              <div>
+                <span className="font-semibold">P.O. No. </span>: {values.poNo || ''}
+              </div>
             </div>
             <div />
           </div>
@@ -140,7 +198,9 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
               <tr className="border-b border-black">
                 <th className="border-r border-black pt-1 pb-1.5 w-[6%] align-middle">Sr.No.</th>
                 {hasItemCode ? (
-                  <th className="border-r border-black pt-1 pb-1.5 w-[12%] align-middle">Item Code</th>
+                  <th className="border-r border-black pt-1 pb-1.5 w-[12%] align-middle">
+                    Item Code
+                  </th>
                 ) : null}
                 <th
                   className={`border-r border-black pt-1 pb-1.5 text-left px-1 ${
@@ -161,18 +221,32 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
                 const lineTotal = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
                 return (
                   <tr key={`preview-item-${index}`} className="border-b border-black h-[22px]">
-                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">{item.description ? index + 1 : ""}</td>
+                    <td className="border-r border-black text-center pt-0.5 pb-1 align-middle">
+                      {item.description ? index + 1 : ''}
+                    </td>
                     {hasItemCode ? (
                       <td className="border-r border-black text-center px-2 pt-0.5 pb-1 align-middle">
-                        {item.itemCode || ""}
+                        {item.itemCode || ''}
                       </td>
                     ) : null}
-                    <td className="border-r border-black px-1 pt-0.5 pb-2 align-middle">{item.description || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.hsnCode || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.quantity || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.units || ""}</td>
-                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">{item.rate ? formatIndianAmount(Number(item.rate) || 0) : ""}</td>
-                    <td className="text-center pt-0.5 pb-2 align-middle">{item.description ? formatIndianAmount(Math.ceil(lineTotal)) : ""}</td>
+                    <td className="border-r border-black px-1 pt-0.5 pb-2 align-middle">
+                      {item.description || ''}
+                    </td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">
+                      {item.hsnCode || ''}
+                    </td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">
+                      {item.quantity || ''}
+                    </td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">
+                      {item.units || ''}
+                    </td>
+                    <td className="border-r border-black text-center pt-0.5 pb-2 align-middle">
+                      {item.rate ? formatIndianAmount(Number(item.rate) || 0) : ''}
+                    </td>
+                    <td className="text-center pt-0.5 pb-2 align-middle">
+                      {item.description ? formatIndianAmount(Math.ceil(lineTotal)) : ''}
+                    </td>
                   </tr>
                 );
               })}
@@ -187,23 +261,37 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <div className="p-0 leading-tight">
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
                 <span className="px-1 pt-1 pb-1.5 font-semibold">Assessable Value</span>
-                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(totalAmount)}</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">
+                  {formatIndianAmount(totalAmount)}
+                </span>
               </div>
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 pt-1 pb-1.5">{selectedClient?.i_gst ? "IGST @ 18%" : "CGST @ 9%"}</span>
-                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(cgstAmount)}</span>
+                <span className="px-1 pt-1 pb-1.5">
+                  {selectedClient?.i_gst ? 'IGST @ 18%' : 'CGST @ 9%'}
+                </span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">
+                  {formatIndianAmount(cgstAmount)}
+                </span>
               </div>
-              {!selectedClient?.i_gst && <div className="grid grid-cols-[1fr_auto] border-b border-black">
-                <span className="px-1 pt-1 pb-1.5">SGST @ 9%</span>
-                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(sgstAmount)}</span>
-              </div>}
+              {!selectedClient?.i_gst && (
+                <div className="grid grid-cols-[1fr_auto] border-b border-black">
+                  <span className="px-1 pt-1 pb-1.5">SGST @ 9%</span>
+                  <span className="px-1 pt-1 pb-1.5 border-l border-black">
+                    {formatIndianAmount(sgstAmount)}
+                  </span>
+                </div>
+              )}
               <div className="grid grid-cols-[1fr_auto] border-b border-black">
                 <span className="px-1 pt-1 pb-1.5">Other Charges</span>
-                <span className="px-1 pt-1 pb-1.5 border-l border-black">{formatIndianAmount(otherCharges)}</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black">
+                  {formatIndianAmount(otherCharges)}
+                </span>
               </div>
               <div className="grid grid-cols-[1fr_auto]">
                 <span className="px-1 pt-1 pb-1.5 font-bold">Grand Total</span>
-                <span className="px-1 pt-1 pb-1.5 border-l border-black font-bold">{formatIndianAmount(grandTotal)}</span>
+                <span className="px-1 pt-1 pb-1.5 border-l border-black font-bold">
+                  {formatIndianAmount(grandTotal)}
+                </span>
               </div>
             </div>
           </div>
@@ -212,8 +300,14 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
             <div className="border-r border-black px-1 pt-1 pb-1.5 text-[9px] leading-tight space-y-0.5">
               <p>In Case of overdue interest @18 per annum will be charge.</p>
               <p>In case of Change Return Rs.500/- will be charge.</p>
-              <p>Certified that the particulars given above are true and correct and the amount indicated represents the price actually charged and that there is no flow of additional consideration directly or indirectly from the buyer.</p>
-              <p className="text-[10px] pt-0.5"><span className="font-semibold">Payment :</span> 30 DAYS OF INVOICE DATE</p>
+              <p>
+                Certified that the particulars given above are true and correct and the amount
+                indicated represents the price actually charged and that there is no flow of
+                additional consideration directly or indirectly from the buyer.
+              </p>
+              <p className="text-[10px] pt-0.5">
+                <span className="font-semibold">Payment :</span> 30 DAYS OF INVOICE DATE
+              </p>
             </div>
             <div className="p-0.5" />
           </div>
@@ -234,7 +328,8 @@ const InvoicePreview = ({ values, items, selectedClient, totalAmount, invoiceRef
           </div>
 
           <div className="text-[9px] px-1 pt-0.5 pb-1 text-center">
-            software vendor Name & Contact No. : software CREATIONS Mob: 9818018349 - Email Id : sewarcusfils@yahoo.com
+            software vendor Name & Contact No. : software CREATIONS Mob: 9818018349 - Email Id :
+            sewarcusfils@yahoo.com
           </div>
         </div>
       </div>

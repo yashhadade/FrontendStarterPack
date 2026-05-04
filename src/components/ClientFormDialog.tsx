@@ -1,10 +1,10 @@
-import { useFormik } from "formik";
-import { Building2, Receipt, UserRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useFormik } from 'formik';
+import { Building2, Receipt, UserRound } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { CreateClientInterface, UpdateClientInterface } from "@/types/client";
+} from '@/components/ui/dialog';
+import { CreateClientInterface, UpdateClientInterface } from '@/types/client';
 
 type ClientFormValues = {
   name: string;
@@ -29,7 +29,7 @@ type ClientFormValues = {
 };
 
 type ClientFormDialogProps = {
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialValues?: ClientFormValues;
@@ -37,15 +37,15 @@ type ClientFormDialogProps = {
 };
 
 const defaultValues: ClientFormValues = {
-  name: "",
-  address: "",
-  gst_number: "",
-  state: "",
-  code: "",
+  name: '',
+  address: '',
+  gst_number: '',
+  state: '',
+  code: '',
   items_code: false,
-  contact_Person_number: "",
-  contact_Person_email: "",
-  contact_Person_name: "",
+  contact_Person_number: '',
+  contact_Person_email: '',
+  contact_Person_name: '',
   i_gst: false,
 };
 
@@ -77,9 +77,7 @@ const Section = ({ icon, title, description, children }: SectionProps) => (
       </div>
       <div>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        {description ? (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        ) : null}
+        {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
       </div>
     </div>
     <div className="space-y-4">{children}</div>
@@ -103,17 +101,17 @@ const ClientFormDialog = ({
     validate: (values) => {
       const errors: Partial<Record<keyof ClientFormValues, string>> = {};
 
-      if (!values.name.trim()) errors.name = "Name is required";
-      if (!values.address.trim()) errors.address = "Address is required";
-      if (!values.gst_number.trim()) errors.gst_number = "GST number is required";
-      if (!values.state.trim()) errors.state = "State is required";
-      if (!values.code.trim()) errors.code = "Code is required";
+      if (!values.name.trim()) errors.name = 'Name is required';
+      if (!values.address.trim()) errors.address = 'Address is required';
+      if (!values.gst_number.trim()) errors.gst_number = 'GST number is required';
+      if (!values.state.trim()) errors.state = 'State is required';
+      if (!values.code.trim()) errors.code = 'Code is required';
       return errors;
     },
     onSubmit: async (values, helpers) => {
       const normalized = normalizeValues(values);
 
-      if (mode === "create") {
+      if (mode === 'create') {
         await onSubmit(normalized);
         helpers.resetForm();
         return;
@@ -129,7 +127,8 @@ const ClientFormDialog = ({
       }
       if (normalized.state !== initialNormalized.state) payload.state = normalized.state;
       if (normalized.code !== initialNormalized.code) payload.code = normalized.code;
-      if (normalized.items_code !== initialNormalized.items_code) payload.items_code = normalized.items_code;
+      if (normalized.items_code !== initialNormalized.items_code)
+        payload.items_code = normalized.items_code;
       if (normalized.contact_Person_number !== initialNormalized.contact_Person_number) {
         payload.contact_Person_number = normalized.contact_Person_number;
       }
@@ -162,11 +161,11 @@ const ClientFormDialog = ({
     >
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Add New Client" : "Edit Client"}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Add New Client' : 'Edit Client'}</DialogTitle>
           <DialogDescription>
-            {mode === "create"
-              ? "Fill in the details below to add a new client to your directory."
-              : "Update the fields you want to change. Unchanged fields will be left as-is."}
+            {mode === 'create'
+              ? 'Fill in the details below to add a new client to your directory.'
+              : 'Update the fields you want to change. Unchanged fields will be left as-is.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -279,7 +278,7 @@ const ClientFormDialog = ({
                 id="client-i-gst"
                 checked={formik.values.i_gst}
                 onCheckedChange={(checked) => {
-                  formik.setFieldValue("i_gst", checked === true);
+                  formik.setFieldValue('i_gst', checked === true);
                 }}
                 className="mt-0.5"
               />
@@ -347,7 +346,7 @@ const ClientFormDialog = ({
               id="client-items-code"
               checked={formik.values.items_code}
               onCheckedChange={(checked) => {
-                formik.setFieldValue("items_code", checked === true);
+                formik.setFieldValue('items_code', checked === true);
               }}
               className="mt-0.5"
             />
@@ -366,10 +365,10 @@ const ClientFormDialog = ({
             </Button>
             <Button type="submit" disabled={formik.isSubmitting || !formik.isValid}>
               {formik.isSubmitting
-                ? "Saving..."
-                : mode === "create"
-                  ? "Create Client"
-                  : "Update Client"}
+                ? 'Saving...'
+                : mode === 'create'
+                  ? 'Create Client'
+                  : 'Update Client'}
             </Button>
           </DialogFooter>
         </form>

@@ -1,15 +1,7 @@
 import PageHeader from '@/components/PageHeader';
 import invoiceServices from '@/services/invoiceServices';
 import { formatIndianNumber } from '@/utils/numberFormat';
-import {
-  CalendarRange,
-  Eye,
-  EyeOff,
-  IndianRupee,
-  Percent,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react';
+import { CalendarRange, Eye, EyeOff, IndianRupee, Percent, TrendingUp, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Bar,
@@ -45,8 +37,9 @@ type FinancialYearSummary = {
 };
 
 const Dashboard = () => {
-  const [financialYearSummary, setFinancialYearSummary] =
-    useState<FinancialYearSummary | null>(null);
+  const [financialYearSummary, setFinancialYearSummary] = useState<FinancialYearSummary | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [showValues, setShowValues] = useState(false);
 
@@ -138,7 +131,9 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">
                   Financial Year
                 </p>
-                <p className="text-sm sm:text-base font-semibold text-foreground truncate">{fyLabel}</p>
+                <p className="text-sm sm:text-base font-semibold text-foreground truncate">
+                  {fyLabel}
+                </p>
               </div>
             </div>
             <span className="text-[10px] sm:text-xs text-muted-foreground">{fyRangeLabel}</span>
@@ -147,7 +142,9 @@ const Dashboard = () => {
             <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total Sales</p>
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                  Total Sales
+                </p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : displayAmount(fyTotals.selling)}
@@ -165,7 +162,9 @@ const Dashboard = () => {
             <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
               <div className="flex items-center gap-2 text-green-600">
                 <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total Profit</p>
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                  Total Profit
+                </p>
               </div>
               <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                 {isLoading ? '—' : displayAmount(fyTotals.profit)}
@@ -225,7 +224,9 @@ const Dashboard = () => {
       <section className="glass-card p-3 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">Monthly Breakdown</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">
+              Monthly Breakdown
+            </h2>
             <p className="text-xs sm:text-sm text-muted-foreground">
               Sales and profit for each month of {fyLabel}
             </p>
@@ -245,9 +246,7 @@ const Dashboard = () => {
                 <YAxis
                   tick={{ fontSize: 10 }}
                   stroke="hsl(var(--muted-foreground))"
-                  tickFormatter={(value) =>
-                    showValues ? formatIndianNumber(Number(value)) : ''
-                  }
+                  tickFormatter={(value) => (showValues ? formatIndianNumber(Number(value)) : '')}
                   width={60}
                 />
                 <Tooltip
@@ -302,9 +301,7 @@ const Dashboard = () => {
                 return (
                   <tr
                     key={`${m.year}-${m.monthNumber}`}
-                    className={`border-b border-border/60 ${
-                      isCurrent ? 'bg-primary/5' : ''
-                    }`}
+                    className={`border-b border-border/60 ${isCurrent ? 'bg-primary/5' : ''}`}
                   >
                     <td className="py-2 px-3 sm:px-4 font-medium text-foreground whitespace-nowrap">
                       {m.month} {m.year}
@@ -335,7 +332,9 @@ const Dashboard = () => {
               })}
               {financialYearSummary?.monthlyData?.length ? (
                 <tr className="bg-muted/30">
-                  <td className="py-2 px-3 sm:px-4 font-semibold text-foreground whitespace-nowrap">Total</td>
+                  <td className="py-2 px-3 sm:px-4 font-semibold text-foreground whitespace-nowrap">
+                    Total
+                  </td>
                   <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
                     {displayAmount(fyTotals.selling)}
                   </td>

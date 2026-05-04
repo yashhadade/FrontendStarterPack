@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, FileText, LayoutDashboard, LogOut, Package, Users } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Users,
+} from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
 import {
@@ -38,7 +46,6 @@ const AppSidebar = () => {
       className={`h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
-      
     >
       {/* Logo */}
       <div

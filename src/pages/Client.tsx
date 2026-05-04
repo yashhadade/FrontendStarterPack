@@ -1,13 +1,17 @@
-import PageHeader from "@/components/PageHeader";
-import { useEffect, useState } from "react";
-import clientServices from "@/services/clientServices";
-import type { Client as ClientData, CreateClientInterface, UpdateClientInterface } from "@/types/client";
-import DataTable from "@/components/DataTable";
-import { DataTableColumn } from "@/components/DataTable";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import ClientFormDialog, { ClientFormValues } from "@/components/ClientFormDialog";
-import { useNavigate } from "react-router-dom";
+import PageHeader from '@/components/PageHeader';
+import { useEffect, useState } from 'react';
+import clientServices from '@/services/clientServices';
+import type {
+  Client as ClientData,
+  CreateClientInterface,
+  UpdateClientInterface,
+} from '@/types/client';
+import DataTable from '@/components/DataTable';
+import { DataTableColumn } from '@/components/DataTable';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import ClientFormDialog, { ClientFormValues } from '@/components/ClientFormDialog';
+import { useNavigate } from 'react-router-dom';
 
 const Client = () => {
   const [clients, setClients] = useState<ClientData[]>([]);
@@ -37,18 +41,18 @@ const Client = () => {
       if (res && res?.data) {
         await getAllClients();
         setIsCreateOpen(false);
-        toast.success("Client created successfully");
+        toast.success('Client created successfully');
       } else {
-        toast.error(res?.error || "Failed to create client");
+        toast.error(res?.error || 'Failed to create client');
       }
     } catch (error) {
-      toast.error(error?.message || "Failed to create client");
+      toast.error(error?.message || 'Failed to create client');
     }
   };
 
   const handleEditClient = async (payload: CreateClientInterface | UpdateClientInterface) => {
     if (!selectedClient?._id) {
-      toast.error("Client id missing");
+      toast.error('Client id missing');
       return;
     }
     if (Object.keys(payload).length === 0) {
@@ -57,31 +61,34 @@ const Client = () => {
     }
 
     try {
-      const res = await clientServices.updateClient(selectedClient._id, payload as UpdateClientInterface);
+      const res = await clientServices.updateClient(
+        selectedClient._id,
+        payload as UpdateClientInterface
+      );
       if (res && res?.data) {
         await getAllClients();
         setIsEditOpen(false);
         setSelectedClient(null);
-        toast.success("Client updated successfully");
+        toast.success('Client updated successfully');
       } else {
-        toast.error(res?.error || "Failed to update client");
+        toast.error(res?.error || 'Failed to update client');
       }
     } catch (error) {
-      toast.error(error?.message || "Failed to update client");
+      toast.error(error?.message || 'Failed to update client');
     }
   };
 
   const editInitialValues: ClientFormValues | undefined = selectedClient
     ? {
-        name: selectedClient.name ?? "",
-        address: selectedClient.address ?? "",
-        gst_number: selectedClient.gst_number ?? "",
-        state: selectedClient.state ?? "",
-        code: selectedClient.code ?? "",
+        name: selectedClient.name ?? '',
+        address: selectedClient.address ?? '',
+        gst_number: selectedClient.gst_number ?? '',
+        state: selectedClient.state ?? '',
+        code: selectedClient.code ?? '',
         items_code: selectedClient.items_code ?? false,
-        contact_Person_name: selectedClient.contact_Person_name ?? "",
-        contact_Person_email: selectedClient.contact_Person_email ?? "",
-        contact_Person_number: selectedClient.contact_Person_number ?? "",
+        contact_Person_name: selectedClient.contact_Person_name ?? '',
+        contact_Person_email: selectedClient.contact_Person_email ?? '',
+        contact_Person_number: selectedClient.contact_Person_number ?? '',
         i_gst: selectedClient.i_gst ?? false,
       }
     : undefined;
@@ -100,22 +107,22 @@ const Client = () => {
       header: 'State',
     },
     {
-      key: "code",
+      key: 'code',
       header: 'Code',
     },
     {
-      key: "i_gst",
+      key: 'i_gst',
       header: 'IGST',
-      render: (row) => row.i_gst ? "Yes" : "No",
+      render: (row) => (row.i_gst ? 'Yes' : 'No'),
     },
     {
-      key: "items_code",
+      key: 'items_code',
       header: 'Items Code',
-      render: (row) => row.items_code ? "Yes" : "No",
+      render: (row) => (row.items_code ? 'Yes' : 'No'),
     },
     {
-      key: "action",
-      header: "Action",
+      key: 'action',
+      header: 'Action',
       render: (row) => (
         <Button
           variant="outline"
