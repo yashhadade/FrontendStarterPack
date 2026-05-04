@@ -1,12 +1,12 @@
-import productServices from "@/services/productServices";
-import PageHeader from "@/components/PageHeader";
-import { CreateProductInterface, Product } from "@/types/products";
-import { useEffect, useState } from "react";
-import DataTable from "@/components/DataTable";
-import { DataTableColumn } from "@/components/DataTable";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import ProductFormDialog, { ProductFormValues } from "@/components/ProductFormDialog";
+import productServices from '@/services/productServices';
+import PageHeader from '@/components/PageHeader';
+import { CreateProductInterface, Product } from '@/types/products';
+import { useEffect, useState } from 'react';
+import DataTable from '@/components/DataTable';
+import { DataTableColumn } from '@/components/DataTable';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import ProductFormDialog, { ProductFormValues } from '@/components/ProductFormDialog';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -31,22 +31,26 @@ const Products = () => {
     getAllProducts();
   }, []);
 
-  const handleCreateProduct = async (payload: CreateProductInterface | Partial<CreateProductInterface>) => {
+  const handleCreateProduct = async (
+    payload: CreateProductInterface | Partial<CreateProductInterface>
+  ) => {
     try {
       const res = await productServices.createProduct(payload as CreateProductInterface);
       if (res && res?.data) {
         await getAllProducts();
         setIsCreateOpen(false);
-        toast.success("Product created successfully");
+        toast.success('Product created successfully');
       } else {
-        toast.error(res?.error || "Failed to create product");
+        toast.error(res?.error || 'Failed to create product');
       }
     } catch (error) {
-      toast.error(error?.message || "Failed to create product");
+      toast.error(error?.message || 'Failed to create product');
     }
   };
 
-  const handleEditProduct = async (payload: CreateProductInterface | Partial<CreateProductInterface>) => {
+  const handleEditProduct = async (
+    payload: CreateProductInterface | Partial<CreateProductInterface>
+  ) => {
     if (!selectedProduct?._id) return;
     if (Object.keys(payload).length === 0) {
       setIsEditOpen(false);
@@ -58,21 +62,21 @@ const Products = () => {
         await getAllProducts();
         setIsEditOpen(false);
         setSelectedProduct(null);
-        toast.success("Product updated successfully");
+        toast.success('Product updated successfully');
       } else {
-        toast.error(res?.error || "Failed to update product");
+        toast.error(res?.error || 'Failed to update product');
       }
     } catch (error) {
-      toast.error(error?.message || "Failed to update product");
+      toast.error(error?.message || 'Failed to update product');
     }
   };
 
   const editInitialValues: ProductFormValues | undefined = selectedProduct
     ? {
-        name: selectedProduct.name ?? "",
-        selling_price: String(selectedProduct.selling_price ?? ""),
-        buying_price: String(selectedProduct.buying_price ?? ""),
-        hsn_code: selectedProduct.hsn_code ?? "",
+        name: selectedProduct.name ?? '',
+        selling_price: String(selectedProduct.selling_price ?? ''),
+        buying_price: String(selectedProduct.buying_price ?? ''),
+        hsn_code: selectedProduct.hsn_code ?? '',
       }
     : undefined;
 
@@ -98,7 +102,7 @@ const Products = () => {
       header: 'HSN Code',
     },
     {
-      key: "action",
+      key: 'action',
       header: 'Action',
       render: (row) => (
         <Button
@@ -112,8 +116,8 @@ const Products = () => {
         >
           Edit
         </Button>
-      )
-    }
+      ),
+    },
   ];
   return (
     <div className="p-8 space-y-8 animate-fade-in">

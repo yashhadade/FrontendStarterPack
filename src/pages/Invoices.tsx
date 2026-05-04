@@ -1,5 +1,5 @@
-import PageHeader from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import PageHeader from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,21 +9,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download, FileText, PlusCircle, ReceiptText } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Invoice as InvoiceData } from "@/types/invoice";
-import invoiceServices from "@/services/invoiceServices";
-import DataTable, { DataTableColumn } from "@/components/DataTable";
-import InvoicePreview from "@/components/InvoicePreview";
-import { formatIndianNumber } from "@/utils/numberFormat";
-import { toast } from "sonner";
+} from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Download, FileText, PlusCircle, ReceiptText } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Invoice as InvoiceData } from '@/types/invoice';
+import invoiceServices from '@/services/invoiceServices';
+import DataTable, { DataTableColumn } from '@/components/DataTable';
+import InvoicePreview from '@/components/InvoicePreview';
+import { formatIndianNumber } from '@/utils/numberFormat';
+import { toast } from 'sonner';
 
 const Invoices = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const Invoices = () => {
   const [tablePage, setTablePage] = useState(0);
   const [tablePageSize, setTablePageSize] = useState(10);
   const [invoiceListTotal, setInvoiceListTotal] = useState(0);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const invoicePreviewRef = useRef<HTMLDivElement | null>(null);
   const isWithin24Hours = (dateValue?: string) => {
     if (!dateValue) return false;
@@ -48,11 +48,11 @@ const Invoices = () => {
     return diffMs >= 0 && diffMs <= 24 * 60 * 60 * 1000;
   };
   const formatInvoiceDate = (dateValue?: string) => {
-    if (!dateValue) return "-";
+    if (!dateValue) return '-';
     const parsedDate = new Date(dateValue);
-    if (Number.isNaN(parsedDate.getTime())) return "-";
-    const day = String(parsedDate.getUTCDate()).padStart(2, "0");
-    const month = String(parsedDate.getUTCMonth() + 1).padStart(2, "0");
+    if (Number.isNaN(parsedDate.getTime())) return '-';
+    const day = String(parsedDate.getUTCDate()).padStart(2, '0');
+    const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
     const year = parsedDate.getUTCFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -92,7 +92,7 @@ const Invoices = () => {
       if (res && res?.data) {
         setInvoiceDashboard(res.data);
       } else {
-       console.error(res?.error || "Failed to fetch invoice dashboard");
+        console.error(res?.error || 'Failed to fetch invoice dashboard');
       }
     } catch (error) {
       console.error(error);
@@ -106,46 +106,43 @@ const Invoices = () => {
     getAllInvoices();
   }, [getAllInvoices]);
 
-const handleUpdateStatus = async (
-  id: string,
-  status: string,
-  paid_date?: Date | null
-) => {
-  try {
-    const res = await invoiceServices.updateStatus({ id, status, paid_date });
-    if (res && res?.data) {
-      toast.success("Status updated successfully");
-      getAllInvoices();
-    } else {
-      toast.error(res?.error || "Failed to update status");
+  const handleUpdateStatus = async (id: string, status: string, paid_date?: Date | null) => {
+    try {
+      const res = await invoiceServices.updateStatus({ id, status, paid_date });
+      if (res && res?.data) {
+        toast.success('Status updated successfully');
+        getAllInvoices();
+      } else {
+        toast.error(res?.error || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.message || 'Failed to update status');
     }
-  } catch (error) {
-    console.error(error);
-    toast.error(error?.message || "Failed to update status");
-  }
-};
-const formatDateForDisplay = (date: Date) => {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
-const toUtcMidnight = (date: Date) =>
-  new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  };
+  const formatDateForDisplay = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  const toUtcMidnight = (date: Date) =>
+    new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const getPreviewValues = (invoice: InvoiceData) => {
     const data = invoice as any;
     return {
-      clientId: data.clientId || data.client_id || "",
-      nameOfExcisableCommodity: data.nameOfExcisableCommodity || data.name_of_excisable_commodity || "",
-      placeOfSupply: data.placeOfSupply || data.place_of_supply || "",
-      transportName: data.transportName || data.transport_name || "",
-      transportGstNumber: data.transportGstNumber || data.transport_gst_number || "",
-      invoiceNumber: data.invoice_number || data.invoiceNumber || data.invoice_no || "",
-      discription: data.discription || "",
-      lrNo: data.lrNo || data.lr_no || "",
-      lrDt: data.lrDt || data.lr_dt || "",
-      challanNo: data.challanNo || data.challan_no || "",
-      poNo: data.poNo || data.po_no || "",
+      clientId: data.clientId || data.client_id || '',
+      nameOfExcisableCommodity:
+        data.nameOfExcisableCommodity || data.name_of_excisable_commodity || '',
+      placeOfSupply: data.placeOfSupply || data.place_of_supply || '',
+      transportName: data.transportName || data.transport_name || '',
+      transportGstNumber: data.transportGstNumber || data.transport_gst_number || '',
+      invoiceNumber: data.invoice_number || data.invoiceNumber || data.invoice_no || '',
+      discription: data.discription || '',
+      lrNo: data.lrNo || data.lr_no || '',
+      lrDt: data.lrDt || data.lr_dt || '',
+      challanNo: data.challanNo || data.challan_no || '',
+      poNo: data.poNo || data.po_no || '',
       invoiceDate: formatInvoiceDate(data.invoiceDate || data.invoice_date),
       other_charges: Number(data.other_charges ?? data.other_Charges ?? 0),
     };
@@ -155,11 +152,11 @@ const toUtcMidnight = (date: Date) =>
     const data = invoice as any;
     const rawItems = data.itemDetails || data.item_details || [];
     return rawItems.map((item: any) => ({
-      description: item.description || item.product_name || "",
-      itemCode:  item.code ||"",
-      hsnCode: item.hsnCode || item.hsn_code || "",
-      quantity: String(item.quantity ?? "0"),
-      units: item.units || "",
+      description: item.description || item.product_name || '',
+      itemCode: item.code || '',
+      hsnCode: item.hsnCode || item.hsn_code || '',
+      quantity: String(item.quantity ?? '0'),
+      units: item.units || '',
       rate: String(item.rate ?? item.selling_price ?? item.selling_Amount ?? 0),
     }));
   };
@@ -171,8 +168,8 @@ const toUtcMidnight = (date: Date) =>
       await new Promise((resolve) => setTimeout(resolve, 150));
 
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
+        import('html2canvas'),
+        import('jspdf'),
       ]);
 
       const element = invoicePreviewRef.current;
@@ -181,7 +178,7 @@ const toUtcMidnight = (date: Date) =>
         scale: 4,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff",
+        backgroundColor: '#ffffff',
         imageTimeout: 0,
         removeContainer: true,
         width: element.offsetWidth,
@@ -190,26 +187,26 @@ const toUtcMidnight = (date: Date) =>
         windowHeight: element.offsetHeight,
         onclone: (clonedDoc, clonedElement) => {
           const target = clonedElement as HTMLElement;
-          target.style.overflow = "visible";
-          target.querySelectorAll<HTMLElement>(".overflow-hidden").forEach((node) => {
-            node.style.overflow = "visible";
+          target.style.overflow = 'visible';
+          target.querySelectorAll<HTMLElement>('.overflow-hidden').forEach((node) => {
+            node.style.overflow = 'visible';
           });
           const body = clonedDoc.body as HTMLElement;
-          body.style.setProperty("-webkit-font-smoothing", "antialiased");
-          body.style.setProperty("-moz-osx-font-smoothing", "grayscale");
-          body.style.setProperty("text-rendering", "geometricPrecision");
+          body.style.setProperty('-webkit-font-smoothing', 'antialiased');
+          body.style.setProperty('-moz-osx-font-smoothing', 'grayscale');
+          body.style.setProperty('text-rendering', 'geometricPrecision');
         },
       });
 
-      const imageData = canvas.toDataURL("image/png", 1.0);
+      const imageData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
-        orientation: "p",
-        unit: "mm",
-        format: "a4",
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
         compress: false,
         putOnlyUsedFonts: true,
       });
-      const pageWidth = pdf.internal.pageSize.getWidth();   // 210mm
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
       // Small safe-zone margin so the invoice's outer border isn't clipped
@@ -217,17 +214,17 @@ const toUtcMidnight = (date: Date) =>
       const safeMargin = 2;
       pdf.addImage(
         imageData,
-        "PNG",
+        'PNG',
         safeMargin,
         safeMargin,
         pageWidth - safeMargin * 2,
         pageHeight - safeMargin * 2,
         undefined,
-        "FAST"
+        'FAST'
       );
 
       const previewValues = getPreviewValues(selectedInvoice);
-      pdf.save(`invoice-${previewValues.invoiceNumber || "draft"}.pdf`);
+      pdf.save(`invoice-${previewValues.invoiceNumber || 'draft'}.pdf`);
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -256,27 +253,30 @@ const toUtcMidnight = (date: Date) =>
     {
       key: 'Total Amount',
       header: 'Total Amount',
-      render: (row) => formatIndianNumber(Number(row.selling_Amount+row.gst_amount+row.other_charges)),
+      render: (row) =>
+        formatIndianNumber(Number(row.selling_Amount + row.gst_amount + row.other_charges)),
     },
     {
-      key:'Profit',
+      key: 'Profit',
       header: 'Profit',
-      render: (row) => formatIndianNumber(Number(row.selling_Amount-row.buying_Amount)),
+      render: (row) => formatIndianNumber(Number(row.selling_Amount - row.buying_Amount)),
     },
     {
       key: 'status',
       header: 'Status',
       render: (row) => {
-        const status = String(row.status || "").toUpperCase();
+        const status = String(row.status || '').toUpperCase();
         const statusClasses =
-          status === "PAID"
-            ? "bg-green-100 text-green-700 border-green-200"
-            : status === "PENDING"
-              ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-              : "bg-muted text-muted-foreground border-border";
+          status === 'PAID'
+            ? 'bg-green-100 text-green-700 border-green-200'
+            : status === 'PENDING'
+              ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+              : 'bg-muted text-muted-foreground border-border';
         return (
-          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusClasses}`}>
-            {status || "-"}
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusClasses}`}
+          >
+            {status || '-'}
           </span>
         );
       },
@@ -296,7 +296,7 @@ const toUtcMidnight = (date: Date) =>
           >
             View
           </Button>
-          {row.status !== "PAID" && (
+          {row.status !== 'PAID' && (
             <Button
               variant="outline"
               size="sm"
@@ -308,7 +308,7 @@ const toUtcMidnight = (date: Date) =>
               Edit
             </Button>
           )}
-          {(row.status !== "PAID" ||
+          {(row.status !== 'PAID' ||
             isWithin24Hours(
               (row as any).updatedAt ||
                 (row as any).updated_at ||
@@ -322,13 +322,11 @@ const toUtcMidnight = (date: Date) =>
                 setInvoiceForPaidConfirm(row);
                 const existing = (row as any).paidDate || (row as any).paid_date;
                 const seedDate = existing ? new Date(existing) : new Date();
-                setPaidDateValue(
-                  Number.isNaN(seedDate.getTime()) ? new Date() : seedDate
-                );
+                setPaidDateValue(Number.isNaN(seedDate.getTime()) ? new Date() : seedDate);
                 setIsPaidConfirmOpen(true);
               }}
             >
-              {row.status == "PAID" ? "Mark as Unpaid" : "Mark as Paid"}
+              {row.status == 'PAID' ? 'Mark as Unpaid' : 'Mark as Paid'}
             </Button>
           )}
         </div>
@@ -384,7 +382,9 @@ const toUtcMidnight = (date: Date) =>
               <ReceiptText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">Paid Invoices</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
+                Paid Invoices
+              </p>
               <p className="text-lg sm:text-xl font-semibold text-foreground">
                 {invoiceDashboard?.paidInvoices || 0}
               </p>
@@ -393,7 +393,7 @@ const toUtcMidnight = (date: Date) =>
         </div>
       </section>
 
-      {invoices.length > 0 || search.trim() !== "" ? (
+      {invoices.length > 0 || search.trim() !== '' ? (
         <DataTable
           search={search}
           onSearchChange={setSearch}
@@ -467,10 +467,15 @@ const toUtcMidnight = (date: Date) =>
       <AlertDialog open={isPaidConfirmOpen} onOpenChange={setIsPaidConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm {invoiceForPaidConfirm?.status=="PAID"?"Unpaid":"Paid"} Invoice</AlertDialogTitle>
+            <AlertDialogTitle>
+              Confirm {invoiceForPaidConfirm?.status == 'PAID' ? 'Unpaid' : 'Paid'} Invoice
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>Are you sure this invoice is {invoiceForPaidConfirm?.status=="PAID"?"unpaid":"paid"}?</p>
+                <p>
+                  Are you sure this invoice is{' '}
+                  {invoiceForPaidConfirm?.status == 'PAID' ? 'unpaid' : 'paid'}?
+                </p>
                 {invoiceForPaidConfirm ? (
                   <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">
                     <p>
@@ -493,7 +498,7 @@ const toUtcMidnight = (date: Date) =>
                     </p>
                   </div>
                 ) : null}
-                {invoiceForPaidConfirm?.status !== "PAID" ? (
+                {invoiceForPaidConfirm?.status !== 'PAID' ? (
                   <div className="space-y-2 pt-1">
                     <Label htmlFor="paidDate">Paid Date</Label>
                     <Popover>
@@ -503,12 +508,12 @@ const toUtcMidnight = (date: Date) =>
                           type="button"
                           variant="outline"
                           className={cn(
-                            "w-full justify-start font-normal",
-                            !paidDateValue && "text-muted-foreground"
+                            'w-full justify-start font-normal',
+                            !paidDateValue && 'text-muted-foreground'
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {paidDateValue ? formatDateForDisplay(paidDateValue) : "Pick a date"}
+                          {paidDateValue ? formatDateForDisplay(paidDateValue) : 'Pick a date'}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -538,17 +543,17 @@ const toUtcMidnight = (date: Date) =>
             <AlertDialogAction
               onClick={async () => {
                 if (!invoiceForPaidConfirm?._id) return;
-                const isMarkingPaid = invoiceForPaidConfirm.status !== "PAID";
+                const isMarkingPaid = invoiceForPaidConfirm.status !== 'PAID';
                 await handleUpdateStatus(
                   invoiceForPaidConfirm._id,
-                  isMarkingPaid ? "PAID" : "PENDING",
+                  isMarkingPaid ? 'PAID' : 'PENDING',
                   isMarkingPaid ? toUtcMidnight(paidDateValue) : null
                 );
                 setInvoiceForPaidConfirm(null);
                 setIsPaidConfirmOpen(false);
               }}
             >
-              Yes, Mark as {invoiceForPaidConfirm?.status=="PAID"?"Unpaid":"Paid"}
+              Yes, Mark as {invoiceForPaidConfirm?.status == 'PAID' ? 'Unpaid' : 'Paid'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,25 +1,46 @@
-import PageHeader from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFormik } from "formik";
-import { CalendarIcon, Check, ChevronsUpDown, Download, FileText, Plus, Save, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import clientServices from "@/services/clientServices";
-import type { Client as ClientData } from "@/types/client";
-import InvoicePreview from "@/components/InvoicePreview";
-import itemCodeServices from "@/services/itemCodeServices";
-import { ItemCode } from "@/types/itemCode";
-import invoiceServices from "@/services/invoiceServices";
-import { CreateInvoiceInterface, Invoice } from "@/types/invoice";
-import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router-dom";
+import PageHeader from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Download,
+  FileText,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import clientServices from '@/services/clientServices';
+import type { Client as ClientData } from '@/types/client';
+import InvoicePreview from '@/components/InvoicePreview';
+import itemCodeServices from '@/services/itemCodeServices';
+import { ItemCode } from '@/types/itemCode';
+import invoiceServices from '@/services/invoiceServices';
+import { CreateInvoiceInterface, Invoice } from '@/types/invoice';
+import { toast } from 'sonner';
+import { useNavigate, useParams } from 'react-router-dom';
 type InvoiceItem = {
   itemCodeId: string;
   itemCode: string;
@@ -53,11 +74,11 @@ const NewInvoise = () => {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const getInvoiceById = async () => {
     try {
-      const res = await invoiceServices.getInvoiceById(id || "");
+      const res = await invoiceServices.getInvoiceById(id || '');
       if (res && res?.data) {
         setInvoice(res.data);
       } else {
-        console.error(res?.error || "Failed to fetch invoice");
+        console.error(res?.error || 'Failed to fetch invoice');
       }
     } catch (error) {
       console.error(error);
@@ -69,15 +90,15 @@ const NewInvoise = () => {
     }
   }, [id]);
   const formatDateAsDDMMYYYY = (date: Date) => {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
   const getTodayDate = () => formatDateAsDDMMYYYY(new Date());
   const parseDDMMYYYY = (value?: string): Date | undefined => {
     if (!value) return undefined;
-    const [day, month, year] = value.split("/").map((part) => Number(part));
+    const [day, month, year] = value.split('/').map((part) => Number(part));
     if (!day || !month || !year) return undefined;
     const parsed = new Date(Date.UTC(year, month - 1, day));
     return Number.isNaN(parsed.getTime()) ? undefined : parsed;
@@ -85,8 +106,18 @@ const NewInvoise = () => {
 
   const [clients, setClients] = useState<ClientData[]>([]);
   const [items, setItems] = useState<InvoiceItem[]>([
-    { itemCodeId: "", itemCode: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
-  ]);console.log("items",items);
+    {
+      itemCodeId: '',
+      itemCode: '',
+      description: '',
+      hsnCode: '',
+      quantity: '1',
+      units: 'NOS',
+      rate: '0',
+      buyingRate: '0',
+    },
+  ]);
+  console.log('items', items);
   const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
   const [openItemPicker, setOpenItemPicker] = useState<number | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -119,50 +150,63 @@ const NewInvoise = () => {
     };
 
     const normalizeDate = (dateValue?: string | null) => {
-      if (!dateValue) return "";
-      if (dateValue.includes("/")) return dateValue;
+      if (!dateValue) return '';
+      if (dateValue.includes('/')) return dateValue;
       const parsedDate = new Date(dateValue);
-      return Number.isNaN(parsedDate.getTime()) ? "" : formatDateAsDDMMYYYY(parsedDate);
+      return Number.isNaN(parsedDate.getTime()) ? '' : formatDateAsDDMMYYYY(parsedDate);
     };
 
     formik.setValues({
-      clientId: invoiceData.clientId ?? "",
-      nameOfExcisableCommodity: invoiceData.name_of_excisable_commodity ?? "",
-      placeOfSupply: invoiceData.place_of_supply ?? "",
-      transportName: invoiceData.transport_name ?? "",
-      transportGstNumber: invoiceData.transport_gst_number ?? "",
-      invoiceNumber: invoiceData.invoice_number ?? "",
-      discription: invoiceData.discription ?? "",
-      lrNo: invoiceData.lr_no ?? "",
+      clientId: invoiceData.clientId ?? '',
+      nameOfExcisableCommodity: invoiceData.name_of_excisable_commodity ?? '',
+      placeOfSupply: invoiceData.place_of_supply ?? '',
+      transportName: invoiceData.transport_name ?? '',
+      transportGstNumber: invoiceData.transport_gst_number ?? '',
+      invoiceNumber: invoiceData.invoice_number ?? '',
+      discription: invoiceData.discription ?? '',
+      lrNo: invoiceData.lr_no ?? '',
       lrDt: normalizeDate(invoiceData.lr_dt),
-      challanNo: invoiceData.challan_no ?? "",
-      poNo: invoiceData.po_no ?? "",
+      challanNo: invoiceData.challan_no ?? '',
+      poNo: invoiceData.po_no ?? '',
       other_charges: Number(invoiceData.other_charges ?? 0),
       invoiceDate: normalizeDate(invoiceData.invoice_date) || getTodayDate(),
     });
 
     const mappedItems =
       invoiceData.item_details?.map((invoiceItem) => {
-        const matchedItemCode = itemCodes.find((code) => code._id === (invoiceItem.itemCodeId ?? ""));
+        const matchedItemCode = itemCodes.find(
+          (code) => code._id === (invoiceItem.itemCodeId ?? '')
+        );
         const quantity = Number(invoiceItem.quantity ?? 0);
         const itemBuyingPrice = Number(invoiceItem.buying_price ?? 0);
 
         return {
-          itemCodeId: invoiceItem.itemCodeId ?? "",
-          itemCode: matchedItemCode?.code ?? "",
-          description: `${matchedItemCode?.product_name || ""}`.trim(),
-          hsnCode: matchedItemCode?.product_hsn_code ?? "",
+          itemCodeId: invoiceItem.itemCodeId ?? '',
+          itemCode: matchedItemCode?.code ?? '',
+          description: `${matchedItemCode?.product_name || ''}`.trim(),
+          hsnCode: matchedItemCode?.product_hsn_code ?? '',
           quantity: String(quantity || 0),
-          units: invoiceItem.units ?? "NOS",
+          units: invoiceItem.units ?? 'NOS',
           rate: String(Number(invoiceItem.rate ?? 0)),
-          buyingRate: quantity > 0 ? String(itemBuyingPrice / quantity) : "0",
+          buyingRate: quantity > 0 ? String(itemBuyingPrice / quantity) : '0',
         };
       }) ?? [];
 
     setItems(
       mappedItems.length
         ? mappedItems
-        : [{ itemCodeId: "", itemCode: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" }]
+        : [
+            {
+              itemCodeId: '',
+              itemCode: '',
+              description: '',
+              hsnCode: '',
+              quantity: '1',
+              units: 'NOS',
+              rate: '0',
+              buyingRate: '0',
+            },
+          ]
     );
   }, [invoice, itemCodes]);
   const updateItem = (index: number, key: keyof InvoiceItem, value: string) => {
@@ -172,7 +216,16 @@ const NewInvoise = () => {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { itemCodeId: "", itemCode: "", description: "", hsnCode: "", quantity: "1", units: "NOS", rate: "0", buyingRate: "0" },
+      {
+        itemCodeId: '',
+        itemCode: '',
+        description: '',
+        hsnCode: '',
+        quantity: '1',
+        units: 'NOS',
+        rate: '0',
+        buyingRate: '0',
+      },
     ]);
   };
 
@@ -187,13 +240,15 @@ const NewInvoise = () => {
           ? {
               ...item,
               itemCodeId,
-              itemCode: selectedItemCode?.code ?? "",
-              description: `${selectedItemCode?.product_name||""}`.trim(),
-              hsnCode: selectedItemCode?.product_hsn_code ?? "",
-              rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : "0",
+              itemCode: selectedItemCode?.code ?? '',
+              description: `${selectedItemCode?.product_name || ''}`.trim(),
+              hsnCode: selectedItemCode?.product_hsn_code ?? '',
+              rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : '0',
               buyingRate: selectedItemCode
-                ? String(selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price)
-                : "0",
+                ? String(
+                    selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price
+                  )
+                : '0',
             }
           : item
       )
@@ -202,17 +257,17 @@ const NewInvoise = () => {
 
   const formik = useFormik<InvoiceFormValues>({
     initialValues: {
-      clientId: "",
-      nameOfExcisableCommodity: "",
-      placeOfSupply: "",
-      transportName: "",
-      transportGstNumber: "",
-      invoiceNumber: "",
-      discription: "",
-      lrNo: "",
-      lrDt: "",
-      challanNo: "",
-      poNo: "",
+      clientId: '',
+      nameOfExcisableCommodity: '',
+      placeOfSupply: '',
+      transportName: '',
+      transportGstNumber: '',
+      invoiceNumber: '',
+      discription: '',
+      lrNo: '',
+      lrDt: '',
+      challanNo: '',
+      poNo: '',
       other_charges: 0,
       invoiceDate: getTodayDate(),
     },
@@ -220,11 +275,11 @@ const NewInvoise = () => {
       const errors: Partial<Record<keyof InvoiceFormValues, string>> = {};
 
       // Validate key fields first.
-      if (!values.clientId.trim()) errors.clientId = "Client ID is required";
+      if (!values.clientId.trim()) errors.clientId = 'Client ID is required';
       if (!values.nameOfExcisableCommodity.trim()) {
-        errors.nameOfExcisableCommodity = "Please select commodity";
+        errors.nameOfExcisableCommodity = 'Please select commodity';
       }
-      if (!values.placeOfSupply.trim()) errors.placeOfSupply = "Place of supply is required";
+      if (!values.placeOfSupply.trim()) errors.placeOfSupply = 'Place of supply is required';
 
       return errors;
     },
@@ -237,7 +292,9 @@ const NewInvoise = () => {
         (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
         0
       );
-      const gstAmount = selectedClient?.i_gst ? Math.ceil(sellingAmount * 0.18) : Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
+      const gstAmount = selectedClient?.i_gst
+        ? Math.ceil(sellingAmount * 0.18)
+        : Math.ceil(sellingAmount * 0.09) + Math.ceil(sellingAmount * 0.09);
       const invoiceDateForPayload = parseDDMMYYYY(values.invoiceDate) ?? new Date();
 
       const invoicePayload = {
@@ -291,63 +348,74 @@ const NewInvoise = () => {
         };
 
         const normalizeDateString = (dateValue?: string | null) => {
-          if (!dateValue) return "";
-          if (dateValue.includes("/")) return dateValue;
+          if (!dateValue) return '';
+          if (dateValue.includes('/')) return dateValue;
           const parsedDate = new Date(dateValue);
-          return Number.isNaN(parsedDate.getTime()) ? "" : formatDateAsDDMMYYYY(parsedDate);
+          return Number.isNaN(parsedDate.getTime()) ? '' : formatDateAsDDMMYYYY(parsedDate);
         };
 
         const currentItemDetails = invoicePayload.item_details.map((item) => ({
           itemCodeId: item.itemCodeId,
           quantity: Number(item.quantity) || 0,
           rate: Number(item.rate) || 0,
-          units: item.units || "NOS",
+          units: item.units || 'NOS',
           selling_price: Number(item.selling_price) || 0,
           buying_price: Number(item.buying_price) || 0,
         }));
 
         const initialItemDetails = (initialInvoice.item_details ?? []).map((item) => ({
-          itemCodeId: item.itemCodeId ?? "",
+          itemCodeId: item.itemCodeId ?? '',
           quantity: Number(item.quantity) || 0,
           rate: Number(item.rate) || 0,
-          units: item.units || "NOS",
+          units: item.units || 'NOS',
           selling_price: Number(item.selling_price) || 0,
           buying_price: Number(item.buying_price) || 0,
         }));
 
         const updatedPayload: Record<string, unknown> = {};
-        if ((initialInvoice.clientId ?? "") !== invoicePayload.clientId) updatedPayload.clientId = invoicePayload.clientId;
-        if ((initialInvoice.name_of_excisable_commodity ?? "") !== invoicePayload.name_of_excisable_commodity) {
+        if ((initialInvoice.clientId ?? '') !== invoicePayload.clientId)
+          updatedPayload.clientId = invoicePayload.clientId;
+        if (
+          (initialInvoice.name_of_excisable_commodity ?? '') !==
+          invoicePayload.name_of_excisable_commodity
+        ) {
           updatedPayload.name_of_excisable_commodity = invoicePayload.name_of_excisable_commodity;
         }
-        if ((initialInvoice.place_of_supply ?? "") !== invoicePayload.place_of_supply) {
+        if ((initialInvoice.place_of_supply ?? '') !== invoicePayload.place_of_supply) {
           updatedPayload.place_of_supply = invoicePayload.place_of_supply;
         }
-        if ((initialInvoice.transport_name ?? "") !== invoicePayload.transport_name) {
+        if ((initialInvoice.transport_name ?? '') !== invoicePayload.transport_name) {
           updatedPayload.transport_name = invoicePayload.transport_name;
         }
-        if ((initialInvoice.transport_gst_number ?? "") !== invoicePayload.transport_gst_number) {
+        if ((initialInvoice.transport_gst_number ?? '') !== invoicePayload.transport_gst_number) {
           updatedPayload.transport_gst_number = invoicePayload.transport_gst_number;
         }
-        if ((initialInvoice.discription ?? "") !== invoicePayload.discription) {
+        if ((initialInvoice.discription ?? '') !== invoicePayload.discription) {
           updatedPayload.discription = invoicePayload.discription;
         }
-        if ((initialInvoice.lr_no ?? "") !== invoicePayload.lr_no) updatedPayload.lr_no = invoicePayload.lr_no;
-        if (normalizeDateString(initialInvoice.lr_dt) !== (invoicePayload.lr_dt ?? "")) updatedPayload.lr_dt = invoicePayload.lr_dt;
-        if ((initialInvoice.challan_no ?? "") !== invoicePayload.challan_no) updatedPayload.challan_no = invoicePayload.challan_no;
-        if ((initialInvoice.po_no ?? "") !== invoicePayload.po_no) updatedPayload.po_no = invoicePayload.po_no;
-        if (Number(initialInvoice.other_charges ?? 0) !== Number(invoicePayload.other_charges ?? 0)) {
+        if ((initialInvoice.lr_no ?? '') !== invoicePayload.lr_no)
+          updatedPayload.lr_no = invoicePayload.lr_no;
+        if (normalizeDateString(initialInvoice.lr_dt) !== (invoicePayload.lr_dt ?? ''))
+          updatedPayload.lr_dt = invoicePayload.lr_dt;
+        if ((initialInvoice.challan_no ?? '') !== invoicePayload.challan_no)
+          updatedPayload.challan_no = invoicePayload.challan_no;
+        if ((initialInvoice.po_no ?? '') !== invoicePayload.po_no)
+          updatedPayload.po_no = invoicePayload.po_no;
+        if (
+          Number(initialInvoice.other_charges ?? 0) !== Number(invoicePayload.other_charges ?? 0)
+        ) {
           updatedPayload.other_charges = invoicePayload.other_charges;
         }
         const newInvoiceDateString =
           invoicePayload.invoice_date instanceof Date
             ? formatDateAsDDMMYYYY(invoicePayload.invoice_date)
-            : "";
+            : '';
         if (normalizeDateString(initialInvoice.invoice_date) !== newInvoiceDateString) {
           updatedPayload.invoice_date = invoicePayload.invoice_date;
         }
 
-        const itemsChanged = JSON.stringify(initialItemDetails) !== JSON.stringify(currentItemDetails);
+        const itemsChanged =
+          JSON.stringify(initialItemDetails) !== JSON.stringify(currentItemDetails);
         if (itemsChanged) {
           updatedPayload.item_details = currentItemDetails;
           updatedPayload.selling_Amount = sellingAmount;
@@ -356,32 +424,34 @@ const NewInvoise = () => {
         }
 
         if (Object.keys(updatedPayload).length === 0) {
-          toast.info("No changes to update");
+          toast.info('No changes to update');
           return;
         }
 
         const updateRes = await invoiceServices.updateInvoice(id, updatedPayload);
         if (updateRes && updateRes?.data) {
-          toast.success("Invoice updated successfully");
-          navigate("/invoices");
+          toast.success('Invoice updated successfully');
+          navigate('/invoices');
         } else {
-          toast.error(updateRes?.error || "Failed to update invoice");
+          toast.error(updateRes?.error || 'Failed to update invoice');
         }
         return;
       }
 
-      const res = await invoiceServices.createInvoice(invoicePayload as unknown as CreateInvoiceInterface);
+      const res = await invoiceServices.createInvoice(
+        invoicePayload as unknown as CreateInvoiceInterface
+      );
       if (res && res?.data) {
         const createdInvoice = res.data;
-        const generatedInvoiceNumber = createdInvoice?.invoice_number ?? "";
+        const generatedInvoiceNumber = createdInvoice?.invoice_number ?? '';
         if (generatedInvoiceNumber) {
-          await formik.setFieldValue("invoiceNumber", String(generatedInvoiceNumber));
+          await formik.setFieldValue('invoiceNumber', String(generatedInvoiceNumber));
         }
-        toast.success("Invoice created successfully");
-        await handleDownloadPdf(String(generatedInvoiceNumber || "draft"));
-        navigate("/invoices");
+        toast.success('Invoice created successfully');
+        await handleDownloadPdf(String(generatedInvoiceNumber || 'draft'));
+        navigate('/invoices');
       } else {
-        toast.error(res?.error || "Failed to create invoice");
+        toast.error(res?.error || 'Failed to create invoice');
       }
     },
   });
@@ -403,8 +473,8 @@ const NewInvoise = () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
 
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
+        import('html2canvas'),
+        import('jspdf'),
       ]);
 
       const element = invoicePreviewRef.current;
@@ -415,7 +485,7 @@ const NewInvoise = () => {
         scale: 4,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff",
+        backgroundColor: '#ffffff',
         imageTimeout: 0,
         removeContainer: true,
         width: element.offsetWidth,
@@ -424,26 +494,26 @@ const NewInvoise = () => {
         windowHeight: element.offsetHeight,
         onclone: (clonedDoc, clonedElement) => {
           const target = clonedElement as HTMLElement;
-          target.style.overflow = "visible";
-          target.querySelectorAll<HTMLElement>(".overflow-hidden").forEach((node) => {
-            node.style.overflow = "visible";
+          target.style.overflow = 'visible';
+          target.querySelectorAll<HTMLElement>('.overflow-hidden').forEach((node) => {
+            node.style.overflow = 'visible';
           });
           const body = clonedDoc.body as HTMLElement;
-          body.style.setProperty("-webkit-font-smoothing", "antialiased");
-          body.style.setProperty("-moz-osx-font-smoothing", "grayscale");
-          body.style.setProperty("text-rendering", "geometricPrecision");
+          body.style.setProperty('-webkit-font-smoothing', 'antialiased');
+          body.style.setProperty('-moz-osx-font-smoothing', 'grayscale');
+          body.style.setProperty('text-rendering', 'geometricPrecision');
         },
       });
 
-      const imageData = canvas.toDataURL("image/png", 1.0);
+      const imageData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
-        orientation: "p",
-        unit: "mm",
-        format: "a4",
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
         compress: false,
         putOnlyUsedFonts: true,
       });
-      const pageWidth = pdf.internal.pageSize.getWidth();   // 210mm
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
       // Small safe-zone margin so the invoice's outer border isn't clipped
@@ -451,19 +521,19 @@ const NewInvoise = () => {
       const safeMargin = 2;
       pdf.addImage(
         imageData,
-        "PNG",
+        'PNG',
         safeMargin,
         safeMargin,
         pageWidth - safeMargin * 2,
         pageHeight - safeMargin * 2,
         undefined,
-        "FAST"
+        'FAST'
       );
 
-      pdf.save(`invoice-${invoiceNumberForFile || formik.values.invoiceNumber || "draft"}.pdf`);
+      pdf.save(`invoice-${invoiceNumberForFile || formik.values.invoiceNumber || 'draft'}.pdf`);
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -473,7 +543,7 @@ const NewInvoise = () => {
     () => clients.find((client) => client._id === formik.values.clientId),
     [clients, formik.values.clientId]
   );
-  
+
   async function getAllClients() {
     try {
       const res = await clientServices.getAllClients();
@@ -496,7 +566,7 @@ const NewInvoise = () => {
       if (res && res?.data) {
         setItemCodes(res.data);
       } else {
-        console.error(res?.error || "Failed to fetch item codes");
+        console.error(res?.error || 'Failed to fetch item codes');
       }
     } catch (error) {
       console.error(error);
@@ -513,7 +583,10 @@ const NewInvoise = () => {
     <div className="p-8 space-y-8 animate-fade-in">
       <PageHeader title="New Invoice" description="Create a new invoice" />
 
-      <form className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:items-start" onSubmit={formik.handleSubmit}>
+      <form
+        className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:items-start"
+        onSubmit={formik.handleSubmit}
+      >
         <section className="glass-card p-6 space-y-5 xl:max-h-[calc(100vh-10rem)] xl:overflow-y-auto">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Invoice Form</h2>
@@ -525,13 +598,18 @@ const NewInvoise = () => {
               <Label htmlFor="clientId">
                 Client Name <span className="text-destructive">*</span>
               </Label>
-              <Select value={formik.values.clientId} onValueChange={(value) => formik.setFieldValue("clientId", value)}>
+              <Select
+                value={formik.values.clientId}
+                onValueChange={(value) => formik.setFieldValue('clientId', value)}
+              >
                 <SelectTrigger id="clientId">
                   <SelectValue placeholder="Select client" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client._id} value={client._id}>{client.name}</SelectItem>
+                    <SelectItem key={client._id} value={client._id}>
+                      {client.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -539,12 +617,12 @@ const NewInvoise = () => {
                 <p className="text-xs text-destructive">{formik.errors.clientId}</p>
               ) : null}
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="invoiceNumber">Invoice Number</Label>
               <Input
                 id="invoiceNumber"
                 name="invoiceNumber"
-                value={formik.values.invoiceNumber || "Will be generated after save"}
+                value={formik.values.invoiceNumber || 'Will be generated after save'}
                 readOnly
               />
             </div>
@@ -557,12 +635,12 @@ const NewInvoise = () => {
                     type="button"
                     variant="outline"
                     className={cn(
-                      "w-full justify-start font-normal",
-                      !formik.values.invoiceDate && "text-muted-foreground"
+                      'w-full justify-start font-normal',
+                      !formik.values.invoiceDate && 'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formik.values.invoiceDate || "Pick a date"}
+                    {formik.values.invoiceDate || 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -571,7 +649,7 @@ const NewInvoise = () => {
                     selected={parseDDMMYYYY(formik.values.invoiceDate)}
                     onSelect={(date) => {
                       if (date) {
-                        formik.setFieldValue("invoiceDate", formatDateAsDDMMYYYY(date));
+                        formik.setFieldValue('invoiceDate', formatDateAsDDMMYYYY(date));
                       }
                     }}
                     initialFocus
@@ -587,7 +665,7 @@ const NewInvoise = () => {
             </Label>
             <Select
               value={formik.values.nameOfExcisableCommodity}
-              onValueChange={(value) => formik.setFieldValue("nameOfExcisableCommodity", value)}
+              onValueChange={(value) => formik.setFieldValue('nameOfExcisableCommodity', value)}
             >
               <SelectTrigger id="nameOfExcisableCommodity">
                 <SelectValue placeholder="Select commodity" />
@@ -658,11 +736,23 @@ const NewInvoise = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="lrNo">LR No</Label>
-              <Input id="lrNo" name="lrNo" value={formik.values.lrNo} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              <Input
+                id="lrNo"
+                name="lrNo"
+                value={formik.values.lrNo}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lrDt">LR Date</Label>
-              <Input id="lrDt" name="lrDt"  value={formik.values.lrDt} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              <Input
+                id="lrDt"
+                name="lrDt"
+                value={formik.values.lrDt}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="challanNo">Challan No</Label>
@@ -676,7 +766,13 @@ const NewInvoise = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="poNo">PO No</Label>
-              <Input id="poNo" name="poNo" value={formik.values.poNo} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              <Input
+                id="poNo"
+                name="poNo"
+                value={formik.values.poNo}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="other_charges">Other Charges</Label>
@@ -686,7 +782,7 @@ const NewInvoise = () => {
                 value={String(formik.values.other_charges ?? 0)}
                 onChange={(e) => {
                   const value = e.target.value.trim();
-                  formik.setFieldValue("other_charges", value === "" ? 0 : Number(value));
+                  formik.setFieldValue('other_charges', value === '' ? 0 : Number(value));
                 }}
                 onBlur={formik.handleBlur}
               />
@@ -696,13 +792,15 @@ const NewInvoise = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Invoice Items</h3>
-              
             </div>
 
             {items.map((item, index) => {
               const itemTotal = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
               return (
-                <div key={`invoice-item-${index}`} className="rounded-md border border-border p-4 space-y-3">
+                <div
+                  key={`invoice-item-${index}`}
+                  className="rounded-md border border-border p-4 space-y-3"
+                >
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-muted-foreground">Item {index + 1}</p>
                     {items.length > 1 ? (
@@ -734,12 +832,14 @@ const NewInvoise = () => {
                           >
                             {item.itemCodeId
                               ? (() => {
-                                  const selected = itemCodes.find((code) => code._id === item.itemCodeId);
+                                  const selected = itemCodes.find(
+                                    (code) => code._id === item.itemCodeId
+                                  );
                                   return selected
-                                    ? `${selected?.code||""} ${selected?.product_name||""}`
-                                    : "Select item code";
+                                    ? `${selected?.code || ''} ${selected?.product_name || ''}`
+                                    : 'Select item code';
                                 })()
-                              : "Select item code"}
+                              : 'Select item code'}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
@@ -751,19 +851,19 @@ const NewInvoise = () => {
                               {itemCodes.map((itemCode) => (
                                 <CommandItem
                                   key={itemCode._id}
-                                  value={`${itemCode?.code||""} ${itemCode?.product_name||""}`}
+                                  value={`${itemCode?.code || ''} ${itemCode?.product_name || ''}`}
                                   onSelect={() => {
-                                    handleSelectItemCode(index, itemCode?._id||"");
+                                    handleSelectItemCode(index, itemCode?._id || '');
                                     setOpenItemPicker(null);
                                   }}
                                 >
                                   <Check
                                     className={cn(
-                                      "mr-2 h-4 w-4",
-                                      item.itemCodeId === itemCode._id ? "opacity-100" : "opacity-0"
+                                      'mr-2 h-4 w-4',
+                                      item.itemCodeId === itemCode._id ? 'opacity-100' : 'opacity-0'
                                     )}
                                   />
-                                  {itemCode?.code||""} {itemCode?.product_name||""}
+                                  {itemCode?.code || ''} {itemCode?.product_name || ''}
                                 </CommandItem>
                               ))}
                             </CommandList>
@@ -772,25 +872,34 @@ const NewInvoise = () => {
                       </Popover>
                     </div>
                     <div className="space-y-2">
-                      <Label>HSN Code <span className="text-destructive">*</span></Label>
+                      <Label>
+                        HSN Code <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         disabled
                         placeholder="Enter HSN code"
                         value={item.hsnCode}
-                        onChange={(e) => updateItem(index, "hsnCode", e.target.value)}
+                        onChange={(e) => updateItem(index, 'hsnCode', e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Quantity <span className="text-destructive">*</span></Label>
+                      <Label>
+                        Quantity <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         type="text"
                         value={item.quantity}
-                        onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Units <span className="text-destructive">*</span></Label>
-                      <Select value={item.units} onValueChange={(value) => updateItem(index, "units", value)}>
+                      <Label>
+                        Units <span className="text-destructive">*</span>
+                      </Label>
+                      <Select
+                        value={item.units}
+                        onValueChange={(value) => updateItem(index, 'units', value)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select units" />
                         </SelectTrigger>
@@ -798,15 +907,18 @@ const NewInvoise = () => {
                           <SelectItem value="NOS">NOS</SelectItem>
                           <SelectItem value="SET">SET</SelectItem>
                           <SelectItem value="KIT">KIT</SelectItem>
+                          <SelectItem value="METER">METER</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Rate <span className="text-destructive">*</span></Label>
+                      <Label>
+                        Rate <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         type="text"
                         value={item.rate}
-                        onChange={(e) => updateItem(index, "rate", e.target.value)}
+                        onChange={(e) => updateItem(index, 'rate', e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -835,7 +947,7 @@ const NewInvoise = () => {
           <div className="flex items-center gap-3">
             <Button type="submit" className="gap-2">
               <Save className="w-4 h-4" />
-              {id ? "Update Invoice" : "Save Invoice"}
+              {id ? 'Update Invoice' : 'Save Invoice'}
             </Button>
             <Button
               type="button"
@@ -847,7 +959,7 @@ const NewInvoise = () => {
               disabled={isDownloadingPdf}
             >
               <Download className="w-4 h-4" />
-              {isDownloadingPdf ? "Generating PDF..." : "Download PDF"}
+              {isDownloadingPdf ? 'Generating PDF...' : 'Download PDF'}
             </Button>
             <Button type="button" variant="outline" onClick={() => formik.resetForm()}>
               Cancel
