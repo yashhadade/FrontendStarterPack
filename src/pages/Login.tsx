@@ -37,7 +37,7 @@ const Login = () => {
           setStorageItem('user', JSON.stringify(res.data?.admin));
         }
 
-        navigate('/dashboard');
+        navigate(res.data?.admin?.role === 'ADMIN' ? '/dashboard' : '/buyer');
       } else {
         toast.error(res?.error || 'Login failed. Please try again.', { position: 'top-right' });
       }

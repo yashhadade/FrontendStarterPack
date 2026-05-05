@@ -8,6 +8,7 @@ import {
   LogOut,
   Package,
   Users,
+  type LucideIcon,
 } from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
@@ -22,13 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const navItems = [
-  // { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { title: 'Products', path: '/products', icon: Package },
-  { title: 'Clients', path: '/clients', icon: Users },
-  { title: 'Invoices', path: '/invoices', icon: FileText },
-];
+type NavItem = { title: string; path: string; icon: LucideIcon };
 
 const AppSidebar = () => {
   const location = useLocation();
@@ -36,6 +31,20 @@ const AppSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
+  const user = JSON.parse(getStorageItem('user') || '{}');
+  const userRole = user?.role;
+
+  const navItems: NavItem[] = [
+    userRole === 'ADMIN' && { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    userRole === 'ADMIN' && { title: 'Products', path: '/products', icon: Package },
+    userRole === 'ADMIN' && { title: 'Clients', path: '/clients', icon: Users },
+    userRole === 'ADMIN' && { title: 'Invoices', path: '/invoices', icon: FileText },
+    (userRole === 'SUB_ADMIN' || userRole === 'ADMIN') && {
+      title: 'Buyer',
+      path: '/buyer',
+      icon: Users,
+    },
+  ].filter(Boolean) as NavItem[];
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -97,7 +106,7 @@ const AppSidebar = () => {
               }`}
             >
               <item.icon className="w-4 h-4" />
-              {!isCollapsed ? item.title : null}
+              {!isCollapsed ? item?.title : null}
             </NavLink>
           );
         })}
@@ -109,9 +118,7 @@ const AppSidebar = () => {
           <div className="glass-card p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Admin</span>
-              <span className="text-xs font-medium text-foreground">
-                {JSON.parse(getStorageItem('user'))?.name}
-              </span>
+              <span className="text-xs font-medium text-foreground">{user?.name}</span>
             </div>
           </div>
         ) : null}
