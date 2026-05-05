@@ -14,7 +14,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Download, FileText, PlusCircle, ReceiptText } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  CalendarIcon,
+  CheckCircle2,
+  Download,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  PlusCircle,
+  ReceiptText,
+  RotateCcw,
+  XCircle,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +51,8 @@ const Invoices = () => {
   const [isPaidConfirmOpen, setIsPaidConfirmOpen] = useState(false);
   const [invoiceForPaidConfirm, setInvoiceForPaidConfirm] = useState<InvoiceData | null>(null);
   const [paidDateValue, setPaidDateValue] = useState<Date>(new Date());
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+  const [invoiceForCancelConfirm, setInvoiceForCancelConfirm] = useState<InvoiceData | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [invoiceDashboard, setInvoiceDashboard] = useState<any>(null);
   const [tablePage, setTablePage] = useState(0);
@@ -271,7 +291,9 @@ const Invoices = () => {
             ? 'bg-green-100 text-green-700 border-green-200'
             : status === 'PENDING'
               ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-              : 'bg-muted text-muted-foreground border-border';
+              : status === 'CANCELLED'
+                ? 'bg-red-100 text-red-700 border-red-200'
+                : 'bg-muted text-muted-foreground border-border';
         return (
           <span
             className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusClasses}`}
@@ -284,53 +306,97 @@ const Invoices = () => {
     {
       key: 'action',
       header: 'Action',
-      render: (row) => (
-        <div className="flex items-center gap-2 whitespace-nowrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSelectedInvoice(row);
-              setIsPreviewOpen(true);
-            }}
-          >
-            View
-          </Button>
-          {row.status !== 'PAID' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedInvoice(row);
-                navigate(`/invoices/${row._id}`);
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          {(row.status !== 'PAID' ||
+      render: (row) => {
+        const isPaid = row.status === 'PAID';
+        const isCancelled = row.status === 'CANCELLED';
+        const canMarkPaidToggle =
+          !isCancelled &&
+          (!isPaid ||
             isWithin24Hours(
               (row as any).updatedAt ||
                 (row as any).updated_at ||
                 (row as any).paidDate ||
                 (row as any).paid_date
-            )) && (
+            ));
+        const canEdit = !isPaid && !isCancelled;
+        const canCancel = !isPaid && !isCancelled;
+        const hasMenuActions = canEdit || canMarkPaidToggle || canCancel;
+
+        return (
+          <div className="flex items-center gap-1 whitespace-nowrap">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                setInvoiceForPaidConfirm(row);
-                const existing = (row as any).paidDate || (row as any).paid_date;
-                const seedDate = existing ? new Date(existing) : new Date();
-                setPaidDateValue(Number.isNaN(seedDate.getTime()) ? new Date() : seedDate);
-                setIsPaidConfirmOpen(true);
+                setSelectedInvoice(row);
+                setIsPreviewOpen(true);
               }}
             >
-              {row.status == 'PAID' ? 'Mark as Unpaid' : 'Mark as Paid'}
+              View
             </Button>
-          )}
-        </div>
-      ),
+            {hasMenuActions && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    aria-label="More actions"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  {canEdit && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedInvoice(row);
+                        navigate(`/invoices/${row._id}`);
+                      }}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {canMarkPaidToggle && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setInvoiceForPaidConfirm(row);
+                        const existing = (row as any).paidDate || (row as any).paid_date;
+                        const seedDate = existing ? new Date(existing) : new Date();
+                        setPaidDateValue(
+                          Number.isNaN(seedDate.getTime()) ? new Date() : seedDate
+                        );
+                        setIsPaidConfirmOpen(true);
+                      }}
+                    >
+                      {isPaid ? (
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                      ) : (
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                      )}
+                      {isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
+                    </DropdownMenuItem>
+                  )}
+                  {canCancel && (canEdit || canMarkPaidToggle) && <DropdownMenuSeparator />}
+                  {canCancel && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setInvoiceForCancelConfirm(row);
+                        setIsCancelConfirmOpen(true);
+                      }}
+                      className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancel Invoice
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        );
+      },
     },
   ];
   return (
@@ -343,7 +409,7 @@ const Invoices = () => {
         </Button>
       </div>
 
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="glass-card p-3 sm:p-5">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
@@ -387,6 +453,22 @@ const Invoices = () => {
               </p>
               <p className="text-lg sm:text-xl font-semibold text-foreground">
                 {invoiceDashboard?.paidInvoices || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-red-500/15 text-red-500 flex items-center justify-center shrink-0">
+              <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
+                Cancelled Invoices
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground">
+                {invoiceDashboard?.cancelledInvoices || 0}
               </p>
             </div>
           </div>
@@ -549,11 +631,71 @@ const Invoices = () => {
                   isMarkingPaid ? 'PAID' : 'PENDING',
                   isMarkingPaid ? toUtcMidnight(paidDateValue) : null
                 );
+                getInvoiceDashboard();
                 setInvoiceForPaidConfirm(null);
                 setIsPaidConfirmOpen(false);
               }}
             >
               Yes, Mark as {invoiceForPaidConfirm?.status == 'PAID' ? 'Unpaid' : 'Paid'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isCancelConfirmOpen} onOpenChange={setIsCancelConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Invoice</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Are you sure you want to cancel this invoice? This action will mark the invoice
+                  as <span className="font-medium text-red-600">CANCELLED</span>.
+                </p>
+                {invoiceForCancelConfirm ? (
+                  <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">
+                    <p>
+                      <span className="font-medium">Name:</span>{' '}
+                      {invoiceForCancelConfirm?.selectedClient?.name || '-'}
+                    </p>
+                    <p>
+                      <span className="font-medium">Invoice Number:</span>{' '}
+                      {invoiceForCancelConfirm?.invoice_number || '-'}
+                    </p>
+                    <p>
+                      <span className="font-medium">Amount:</span>{' '}
+                      {formatIndianNumber(
+                        Number(
+                          (invoiceForCancelConfirm?.selling_Amount ?? 0) +
+                            (invoiceForCancelConfirm?.gst_amount ?? 0) +
+                            (invoiceForCancelConfirm?.other_charges ?? 0)
+                        )
+                      )}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setInvoiceForCancelConfirm(null);
+              }}
+            >
+              No, Keep Invoice
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!invoiceForCancelConfirm?._id) return;
+                await handleUpdateStatus(invoiceForCancelConfirm._id, 'CANCELLED');
+                getInvoiceDashboard();
+                setInvoiceForCancelConfirm(null);
+                setIsCancelConfirmOpen(false);
+              }}
+              className="bg-red-600 hover:bg-red-700 focus-visible:ring-red-600"
+            >
+              Yes, Cancel Invoice
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
