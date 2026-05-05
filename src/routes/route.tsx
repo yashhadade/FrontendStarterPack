@@ -13,6 +13,7 @@ import Invoices from '@/pages/Invoices';
 import NewInvoise from '@/pages/NewInvoise';
 import { getStorageItem } from '@/utils/storageUtils';
 import Buyer from '@/pages/Buyer';
+import BuyerDetails from '@/pages/BuyerDetails';
 
 const AppRoutes = () => {
   const userInfo = getStorageItem('user');
@@ -39,6 +40,7 @@ const AppRoutes = () => {
       {(userRole === 'SUB_ADMIN' || userRole === 'ADMIN') && <Route path="/" element={<AppLayout />}>
         <Route index element={<Index />} />
         <Route path="buyer" element={<Buyer />} />
+        <Route path="buyer/:id" element={<BuyerDetails />} />
       </Route>}
     </Route>
     <Route path="*" element={<NotFound />} />
