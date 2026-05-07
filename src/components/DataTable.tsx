@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type SortDirection = 'asc' | 'desc';
 
 export type DataTableColumn<T> = {
   key: keyof T | string;
   header: string;
-  align?: 'left' | 'right';
+  align?: 'left' | 'right' | 'center';
+  /**
+   * Applied to both `<th>` and `<td>`. Prefer `headerClassName` / `cellClassName` for width control.
+   */
   className?: string;
+  /** Extra classes for `<th>` only (e.g. `min-w-[14rem]`). */
+  headerClassName?: string;
+  /** Extra classes for `<td>` only (e.g. `min-w-[12rem] max-w-md`). */
+  cellClassName?: string;
+  /** When true, body cells wrap text instead of staying on one line. */
+  wrap?: boolean;
   /**
    * Custom cell renderer. If not provided, the value at `key` will be rendered.
    */
@@ -103,6 +113,16 @@ type DataTableProps<T> = {
    * If the current page size is not in this list (e.g. from the API), it is added automatically.
    */
   pageSizes?: number[];
+  /** Omit search row (e.g. compact table inside a card). */
+  hideSearch?: boolean;
+  /** Omit pagination footer and list all rows. */
+  hidePagination?: boolean;
+  /** Omit outer `glass-card` wrapper when nesting inside another surface. */
+  bare?: boolean;
+  /** Extra classes on the root wrapper. */
+  className?: string;
+  /** Classes for the `<table>` (default is wide `min-w` for full-page tables). */
+  tableClassName?: string;
 };
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50] as const;
@@ -129,6 +149,11 @@ function DataTable<T extends Record<string, unknown>>({
   onPageChange,
   onPageSizeChange,
   pageSizes,
+  hideSearch = false,
+  hidePagination = false,
+  bare = false,
+  className: rootClassName,
+  tableClassName,
 }: DataTableProps<T>) {
   const [internalSearch, setInternalSearch] = useState('');
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -181,9 +206,10 @@ function DataTable<T extends Record<string, unknown>>({
 
   const paginatedData = useMemo(() => {
     if (serverPagination) return sortedData;
+    if (hidePagination) return sortedData;
     const start = page * pageSize;
     return sortedData.slice(start, start + pageSize);
-  }, [sortedData, page, pageSize, serverPagination]);
+  }, [sortedData, page, pageSize, serverPagination, hidePagination]);
 
   const activePageSize = serverPagination ? (currentPageSize ?? pageSize) : pageSize;
   const activePage = serverPagination ? (currentPage ?? 0) : page;
@@ -201,6 +227,7 @@ function DataTable<T extends Record<string, unknown>>({
 
   const handleHeaderClick = (col: DataTableColumn<T>) => {
     if (col.sortable === false) return;
+    setPage(0);
     const key = String(col.key);
     if (sortKey === key) {
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -224,6 +251,17 @@ function DataTable<T extends Record<string, unknown>>({
 
   const canPreviousPage = activePage > 0;
   const canNextPage = (activePage + 1) * activePageSize < total;
+
+  /** After search/filter/sort, avoid sitting on an empty page (shows “No records” while rows exist on page 1). */
+  useEffect(() => {
+    if (serverPagination || hidePagination) return;
+    if (sortedData.length === 0) {
+      if (page !== 0) setPage(0);
+      return;
+    }
+    const lastPageIndex = Math.max(0, Math.ceil(sortedData.length / activePageSize) - 1);
+    if (page > lastPageIndex) setPage(lastPageIndex);
+  }, [sortedData.length, activePageSize, page, serverPagination, hidePagination]);
 
   const flushSearchDebounce = () => {
     if (searchDebounceRef.current) {
@@ -282,26 +320,35 @@ function DataTable<T extends Record<string, unknown>>({
     setPage((p) => p + 1);
   };
 
+  const showToolbar = Boolean(title) || !hideSearch;
+  const tableClasses = tableClassName ?? 'w-full min-w-[640px] text-sm';
+
   return (
-    <div className="glass-card p-5 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-sm font-medium text-foreground">{title}</div>
-        <div className="relative w-full max-w-xs">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              handleSearchInputChange(e.target.value);
-            }}
-            placeholder={searchPlaceholder}
-            className="w-full rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
+    <div
+      className={`${bare ? 'space-y-3' : 'glass-card p-5 space-y-4'}${rootClassName ? ` ${rootClassName}` : ''}`}
+    >
+      {showToolbar ? (
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-medium text-foreground">{title}</div>
+          {!hideSearch ? (
+            <div className="relative w-full max-w-xs">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  handleSearchInputChange(e.target.value);
+                }}
+                placeholder={searchPlaceholder}
+                className="w-full rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              />
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className={tableClasses}>
             <thead className="bg-muted/80 backdrop-blur-sm">
               <tr className="border-b border-border/50">
                 {columns.map((col) => {
@@ -310,9 +357,13 @@ function DataTable<T extends Record<string, unknown>>({
                     <th
                       key={String(col.key)}
                       onClick={() => handleHeaderClick(col)}
-                      className={`py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap ${
-                        col.align === 'right' ? 'text-right' : 'text-left'
-                      } ${col.sortable === false ? '' : 'cursor-pointer select-none'} ${col.className ?? ''}`}
+                      className={cn(
+                        'py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap',
+                        col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                        col.sortable === false ? '' : 'cursor-pointer select-none',
+                        col.className,
+                        col.headerClassName
+                      )}
                     >
                       <span className="inline-flex items-center gap-1">
                         {col.header}
@@ -338,12 +389,17 @@ function DataTable<T extends Record<string, unknown>>({
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((row) => {
-                  const id = getRowId(row);
-                  const isSelected = selectedRowId != null && id === selectedRowId;
+                paginatedData.map((row, rowIndex) => {
+                  const rawId = getRowId(row);
+                  const idPrefix =
+                    rawId !== null && rawId !== undefined && String(rawId) !== ''
+                      ? String(rawId)
+                      : 'row';
+                  const displayKey = `${idPrefix}-${activePage * activePageSize + rowIndex}`;
+                  const isSelected = selectedRowId != null && rawId === selectedRowId;
                   return (
                     <tr
-                      key={id}
+                      key={displayKey}
                       className={`border-b border-border/30 transition-colors ${
                         isSelected
                           ? 'bg-primary/10 border-l-2 border-l-primary'
@@ -354,9 +410,19 @@ function DataTable<T extends Record<string, unknown>>({
                       {columns.map((col) => (
                         <td
                           key={String(col.key)}
-                          className={`py-3 px-4 whitespace-nowrap ${
-                            col.align === 'right' ? 'text-right' : 'text-left'
-                          } ${col.className ?? ''}`}
+                          className={cn(
+                            'py-3 px-4',
+                            col.wrap
+                              ? 'whitespace-normal break-words align-top'
+                              : 'whitespace-nowrap',
+                            col.align === 'right'
+                              ? 'text-right'
+                              : col.align === 'center'
+                                ? 'text-center'
+                                : 'text-left',
+                            col.className,
+                            col.cellClassName
+                          )}
                         >
                           {col.render
                             ? col.render(row)
@@ -371,43 +437,45 @@ function DataTable<T extends Record<string, unknown>>({
           </table>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Rows per page:</span>
-            <select
-              className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground"
-              value={activePageSize}
-              onChange={(e) => handlePageSizeChange(e.target.value)}
-            >
-              {pageSizeSelectOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground">
-              {from}–{to} of {total}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                className="px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handlePreviousPage}
-                disabled={!canPreviousPage}
+        {!hidePagination ? (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Rows per page:</span>
+              <select
+                className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground"
+                value={activePageSize}
+                onChange={(e) => handlePageSizeChange(e.target.value)}
               >
-                Prev
-              </button>
-              <button
-                className="px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleNextPage}
-                disabled={!canNextPage}
-              >
-                Next
-              </button>
+                {pageSizeSelectOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-muted-foreground">
+                {from}–{to} of {total}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  className="px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handlePreviousPage}
+                  disabled={!canPreviousPage}
+                >
+                  Prev
+                </button>
+                <button
+                  className="px-2 py-1 text-xs rounded border border-border text-muted-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleNextPage}
+                  disabled={!canNextPage}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );

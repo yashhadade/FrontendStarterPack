@@ -98,6 +98,11 @@ const Products = () => {
       header: 'Selling Price',
     },
     {
+      key: 'unit',
+      header: 'Unit',
+      render: (row) => row.unit ? row.unit : 0,
+    },
+    {
       key: 'hsn_code',
       header: 'HSN Code',
     },

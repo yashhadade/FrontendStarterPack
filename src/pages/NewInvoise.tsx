@@ -41,6 +41,49 @@ import invoiceServices from '@/services/invoiceServices';
 import { CreateInvoiceInterface, Invoice } from '@/types/invoice';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
+
+function getAvailableStock(itemCode: ItemCode | undefined): number | undefined {
+  if (!itemCode) return undefined;
+
+  const row = itemCode as ItemCode & Record<string, unknown>;
+
+  const toNum = (v: unknown): number | undefined => {
+    if (v === undefined || v === null || v === '') return undefined;
+    const n = typeof v === 'string' ? Number(v.trim()) : Number(v);
+    if (Number.isNaN(n) || !Number.isFinite(n)) return undefined;
+    return Math.max(0, n);
+  };
+
+  const keys = [
+    'available_quantity',
+    'availableQuantity',
+    'stock',
+    'stock_quantity',
+    'remaining_quantity',
+    'total_available',
+    'inventory_count',
+    'quantity_on_hand',
+    'qty_available',
+    'quantity',
+  ] as const;
+
+  for (const key of keys) {
+    const n = toNum(row[key]);
+    if (n !== undefined) return n;
+  }
+
+  return toNum(itemCode.available_quantity);
+}
+
+/** Parse quantity string to a finite number; empty / invalid → undefined (don't treat as 0 for stock tests). */
+function toInvoiceQtyNumber(value: string): number | undefined {
+  const t = String(value).trim();
+  if (t === '') return undefined;
+  const n = Number(t);
+  if (!Number.isFinite(n)) return undefined;
+  return n;
+}
+
 type InvoiceItem = {
   itemCodeId: string;
   itemCode: string;
@@ -50,6 +93,7 @@ type InvoiceItem = {
   units: string;
   rate: string;
   buyingRate: string;
+  unit: number;
 };
 
 type InvoiceFormValues = {
@@ -115,9 +159,9 @@ const NewInvoise = () => {
       units: 'NOS',
       rate: '0',
       buyingRate: '0',
+      unit: 1,
     },
   ]);
-  console.log('items', items);
   const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
   const [openItemPicker, setOpenItemPicker] = useState<number | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -187,6 +231,7 @@ const NewInvoise = () => {
           hsnCode: matchedItemCode?.product_hsn_code ?? '',
           quantity: String(quantity || 0),
           units: invoiceItem.units ?? 'NOS',
+          unit: matchedItemCode?.unit??0,
           rate: String(Number(invoiceItem.rate ?? 0)),
           buyingRate: quantity > 0 ? String(itemBuyingPrice / quantity) : '0',
         };
@@ -205,6 +250,7 @@ const NewInvoise = () => {
               units: 'NOS',
               rate: '0',
               buyingRate: '0',
+              unit: 1,
             },
           ]
     );
@@ -225,6 +271,7 @@ const NewInvoise = () => {
         units: 'NOS',
         rate: '0',
         buyingRate: '0',
+        unit: 1,
       },
     ]);
   };
@@ -234,24 +281,28 @@ const NewInvoise = () => {
   };
   const handleSelectItemCode = (index: number, itemCodeId: string) => {
     const selectedItemCode = itemCodes.find((code) => code._id === itemCodeId);
+    const maxQ = getAvailableStock(selectedItemCode);
     setItems((prev) =>
-      prev.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              itemCodeId,
-              itemCode: selectedItemCode?.code ?? '',
-              description: `${selectedItemCode?.product_name || ''}`.trim(),
-              hsnCode: selectedItemCode?.product_hsn_code ?? '',
-              rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : '0',
-              buyingRate: selectedItemCode
-                ? String(
-                    selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price
-                  )
-                : '0',
-            }
-          : item
-      )
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const parsedQty = Math.max(0, Number(item.quantity) || 0);
+        const defaultQty = parsedQty > 0 ? parsedQty : 1;
+        const quantityStr =
+          maxQ === undefined
+            ? String(defaultQty)
+            : String(Math.min(defaultQty, maxQ));
+        return {
+          ...item,
+          itemCodeId,
+          itemCode: selectedItemCode?.code ?? '',
+          description: `${selectedItemCode?.product_name || ''}`.trim(),
+          hsnCode: selectedItemCode?.product_hsn_code ?? '',
+          unit: selectedItemCode?.unit ?? 0,
+          rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : '0',
+          buyingRate: selectedItemCode ? String(selectedItemCode.product_buying_price ?? 0) : '0',
+          quantity: quantityStr,
+        };
+      })
     );
   };
 
@@ -284,6 +335,21 @@ const NewInvoise = () => {
       return errors;
     },
     onSubmit: async (values) => {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (!item.itemCodeId?.trim()) continue;
+        const code = itemCodes.find((c) => c._id === item.itemCodeId);
+        const max = getAvailableStock(code);
+        if (max === undefined) continue;
+        const q = toInvoiceQtyNumber(item.quantity) ?? 0;
+        if (q > max) {
+          toast.error(
+            `${code?.product_name ?? `Line ${i + 1}`}: you can sell at most ${max} (available stock).`
+          );
+          return;
+        }
+      }
+
       const sellingAmount = items.reduce(
         (sum, item) => sum + Math.ceil((Number(item.quantity) || 0) * (Number(item.rate) || 0)),
         0
@@ -796,6 +862,13 @@ const NewInvoise = () => {
 
             {items.map((item, index) => {
               const itemTotal = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
+              const rowItemCode = itemCodes.find((c) => c._id === item.itemCodeId);
+              const maxAvailable = getAvailableStock(rowItemCode);
+              const qtyNum = toInvoiceQtyNumber(item.quantity);
+              const qtyExceedsStock =
+                maxAvailable !== undefined &&
+                qtyNum !== undefined &&
+                qtyNum > maxAvailable;
               return (
                 <div
                   key={`invoice-item-${index}`}
@@ -848,24 +921,37 @@ const NewInvoise = () => {
                             <CommandInput placeholder="Search by code or product..." />
                             <CommandList>
                               <CommandEmpty>No item found.</CommandEmpty>
-                              {itemCodes.map((itemCode) => (
+                              {itemCodes.map((itemCode) => {
+                                const stock = getAvailableStock(itemCode);
+                                return (
                                 <CommandItem
                                   key={itemCode._id}
+                                  className="justify-between gap-2"
                                   value={`${itemCode?.code || ''} ${itemCode?.product_name || ''}`}
                                   onSelect={() => {
                                     handleSelectItemCode(index, itemCode?._id || '');
                                     setOpenItemPicker(null);
                                   }}
                                 >
+                                  <span className="flex items-center min-w-0">
                                   <Check
                                     className={cn(
-                                      'mr-2 h-4 w-4',
+                                      'mr-2 h-4 w-4 shrink-0',
                                       item.itemCodeId === itemCode._id ? 'opacity-100' : 'opacity-0'
                                     )}
                                   />
-                                  {itemCode?.code || ''} {itemCode?.product_name || ''}
+                                  <span className="truncate">
+                                    {itemCode?.code || ''} {itemCode?.product_name || ''}
+                                  </span>
+                                  </span>
+                                  {stock !== undefined ? (
+                                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                                      Avail: {stock}
+                                    </span>
+                                  ) : null}
                                 </CommandItem>
-                              ))}
+                              );
+                              })}
                             </CommandList>
                           </Command>
                         </PopoverContent>
@@ -883,13 +969,67 @@ const NewInvoise = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>
-                        Quantity <span className="text-destructive">*</span>
+                      <Label htmlFor={`qty-${index}`}>
+                        Quantity{' '}
+                        {item.unit != null && item.unit !== 0 ? (
+                          <span className="text-muted-foreground font-normal">({item.unit})</span>
+                        ) : null}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
+                      {maxAvailable !== undefined ? (
+                        <p className="text-xs text-muted-foreground">
+                          Available to sell:{' '}
+                          <span className="font-medium text-foreground tabular-nums">
+                            {maxAvailable}
+                          </span>
+                          {qtyExceedsStock ? (
+                            <span className="text-destructive ml-1 font-medium">
+                              — over stock limit
+                            </span>
+                          ) : null}
+                        </p>
+                      ) : null}
+                      {qtyExceedsStock && maxAvailable !== undefined ? (
+                        <p className="text-sm font-medium text-destructive" role="alert">
+                          You can sell at most {maxAvailable}. Lower the quantity to continue.
+                        </p>
+                      ) : null}
                       <Input
+                        id={`qty-${index}`}
                         type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
                         value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          updateItem(index, 'quantity', raw);
+                          if (maxAvailable === undefined) return;
+                          const n = toInvoiceQtyNumber(raw);
+                          if (n !== undefined && n > maxAvailable) {
+                            toast.error(`Only ${maxAvailable} available in stock.`);
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const raw = e.target.value;
+                          const n = toInvoiceQtyNumber(raw);
+                          if (maxAvailable === undefined) {
+                            if (raw.trim() === '' || n === undefined) {
+                              updateItem(index, 'quantity', '0');
+                            } else {
+                              updateItem(index, 'quantity', String(n));
+                            }
+                            return;
+                          }
+                          const qty = n ?? 0;
+                          if (qty > maxAvailable) {
+                            updateItem(index, 'quantity', String(maxAvailable));
+                            toast.message(`Quantity set to ${maxAvailable} (available stock).`);
+                          } else {
+                            updateItem(index, 'quantity', String(qty));
+                          }
+                        }}
+                        className={cn(qtyExceedsStock && 'border-destructive')}
+                        aria-invalid={qtyExceedsStock}
                       />
                     </div>
                     <div className="space-y-2">

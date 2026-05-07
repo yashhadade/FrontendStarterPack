@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import custodianServices from '@/services/adminServices';
 import { setStorageItem } from '@/utils/storageUtils';
+import { normalizeRoleString } from '@/utils/userRole';
 import { toast } from 'sonner';
 
 const Login = () => {
@@ -37,7 +38,8 @@ const Login = () => {
           setStorageItem('user', JSON.stringify(res.data?.admin));
         }
 
-        navigate(res.data?.admin?.role === 'ADMIN' ? '/dashboard' : '/buyer');
+        const role = normalizeRoleString(res.data?.admin?.role);
+        navigate(role === 'ADMIN' ? '/dashboard' : '/buyer');
       } else {
         toast.error(res?.error || 'Login failed. Please try again.', { position: 'top-right' });
       }

@@ -7,11 +7,13 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  ShoppingCart,
   Users,
   type LucideIcon,
 } from 'lucide-react';
 import { logout } from '@/utils/logout';
 import { getStorageItem } from '@/utils/storageUtils';
+import { getNormalizedUserRole } from '@/utils/userRole';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +27,12 @@ import {
 
 type NavItem = { title: string; path: string; icon: LucideIcon };
 
+/** Highlight sidebar links for nested routes (e.g. /buyer/abc, /purchases/create). */
+function isNavActive(currentPath: string, navPath: string): boolean {
+  if (navPath === '/') return currentPath === '/';
+  return currentPath === navPath || currentPath.startsWith(`${navPath}/`);
+}
+
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,7 +40,7 @@ const AppSidebar = () => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   const user = JSON.parse(getStorageItem('user') || '{}');
-  const userRole = user?.role;
+  const userRole = getNormalizedUserRole();
 
   const navItems: NavItem[] = [
     userRole === 'ADMIN' && { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -43,6 +51,11 @@ const AppSidebar = () => {
       title: 'Buyer',
       path: '/buyer',
       icon: Users,
+    },
+    (userRole === 'SUB_ADMIN' || userRole === 'ADMIN') && {
+      title: 'Purchases',
+      path: '/purchases',
+      icon: ShoppingCart,
     },
   ].filter(Boolean) as NavItem[];
   const handleLogout = () => {
@@ -91,7 +104,7 @@ const AppSidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = isNavActive(location.pathname, item.path);
           return (
             <NavLink
               key={item.path}

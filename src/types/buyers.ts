@@ -19,3 +19,9 @@ export type UpdateBuyerInterface = {
   contact_Person_email?: string;
   contact_Person_name?: string;
 };
+
+export type BuyerDetails={
+  name: string;
+  address: string;
+  gst_number: string;
+}
