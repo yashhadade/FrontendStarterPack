@@ -904,6 +904,7 @@ const NewInvoise = () => {
                           <SelectItem value="KIT">KIT</SelectItem>
                           <SelectItem value="METER">METER</SelectItem>
                           <SelectItem value="KG">KG</SelectItem>
+                          <SelectItem value="SQFT">SQFT</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
