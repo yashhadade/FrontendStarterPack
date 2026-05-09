@@ -310,11 +310,11 @@ const NewInvoise = () => {
         invoice_date: invoiceDateForPayload,
         item_details: items.map((item) => ({
           itemCodeId: item.itemCodeId,
-          quantity: item.quantity || 0,
-          rate: item.rate || 0,
+          quantity: Number(item.quantity) || 0,
+          rate: Number(item.rate) || 0,
           units: item.units,
-          selling_price: (item.quantity || 0) * (item.rate || 0),
-          buying_price: (item.quantity || 0) * (item.buyingRate || 0),
+          selling_price: Number((item.quantity || 0) * (item.rate || 0)),
+          buying_price: Number((item.quantity || 0) * (item.buyingRate || 0)),
         })),
       };
 
