@@ -6,9 +6,9 @@ type InvoiceItem = {
   description: string;
   itemCode: string;
   hsnCode: string;
-  quantity: string;
+  quantity: number;
   units: string;
-  rate: string;
+  rate: number;
 };
 
 type InvoicePreviewValues = {
@@ -58,9 +58,9 @@ const InvoicePreview = ({
       description: '',
       itemCode: '',
       hsnCode: '',
-      quantity: '',
+      quantity: 0,
       units: '',
-      rate: '',
+      rate: 0,
     });
   }
   const formatIndianAmount = (value: number) =>

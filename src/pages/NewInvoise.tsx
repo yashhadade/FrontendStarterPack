@@ -46,10 +46,10 @@ type InvoiceItem = {
   itemCode: string;
   description: string;
   hsnCode: string;
-  quantity: string;
+  quantity: number;
   units: string;
-  rate: string;
-  buyingRate: string;
+  rate: number;
+  buyingRate: number;
 };
 
 type InvoiceFormValues = {
@@ -111,13 +111,12 @@ const NewInvoise = () => {
       itemCode: '',
       description: '',
       hsnCode: '',
-      quantity: '1',
+      quantity: 1,
       units: 'NOS',
-      rate: '0',
-      buyingRate: '0',
+      rate: 0,
+      buyingRate: 0,
     },
   ]);
-  console.log('items', items);
   const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
   const [openItemPicker, setOpenItemPicker] = useState<number | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -178,20 +177,18 @@ const NewInvoise = () => {
           (code) => code._id === (invoiceItem.itemCodeId ?? '')
         );
         const quantity = Number(invoiceItem.quantity ?? 0);
-        const itemBuyingPrice = Number(invoiceItem.buying_price ?? 0);
-
+        const itemBuyingPrice = Number(invoiceItem.buying_price ||matchedItemCode?.product_buying_price*quantity|| 0);
         return {
           itemCodeId: invoiceItem.itemCodeId ?? '',
           itemCode: matchedItemCode?.code ?? '',
           description: `${matchedItemCode?.product_name || ''}`.trim(),
           hsnCode: matchedItemCode?.product_hsn_code ?? '',
-          quantity: String(quantity || 0),
+          quantity: quantity || 0,
           units: invoiceItem.units ?? 'NOS',
-          rate: String(Number(invoiceItem.rate ?? 0)),
-          buyingRate: quantity > 0 ? String(itemBuyingPrice / quantity) : '0',
+          rate: Number(invoiceItem.rate ?? 0),
+          buyingRate: quantity > 0 ? Number((itemBuyingPrice / quantity).toFixed(2)) : 0,
         };
       }) ?? [];
-
     setItems(
       mappedItems.length
         ? mappedItems
@@ -201,10 +198,10 @@ const NewInvoise = () => {
               itemCode: '',
               description: '',
               hsnCode: '',
-              quantity: '1',
+              quantity: 1,
               units: 'NOS',
-              rate: '0',
-              buyingRate: '0',
+              rate: 0,
+              buyingRate: 0,
             },
           ]
     );
@@ -221,10 +218,10 @@ const NewInvoise = () => {
         itemCode: '',
         description: '',
         hsnCode: '',
-        quantity: '1',
+        quantity: 1,
         units: 'NOS',
-        rate: '0',
-        buyingRate: '0',
+        rate: 0,
+        buyingRate: 0,
       },
     ]);
   };
@@ -243,12 +240,10 @@ const NewInvoise = () => {
               itemCode: selectedItemCode?.code ?? '',
               description: `${selectedItemCode?.product_name || ''}`.trim(),
               hsnCode: selectedItemCode?.product_hsn_code ?? '',
-              rate: selectedItemCode ? String(selectedItemCode.product_selling_price) : '0',
+              rate: selectedItemCode ? selectedItemCode.product_selling_price : 0,
               buyingRate: selectedItemCode
-                ? String(
-                    selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price
-                  )
-                : '0',
+                ? selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price
+                : 0,
             }
           : item
       )
@@ -285,11 +280,11 @@ const NewInvoise = () => {
     },
     onSubmit: async (values) => {
       const sellingAmount = items.reduce(
-        (sum, item) => sum + Math.ceil((Number(item.quantity) || 0) * (Number(item.rate) || 0)),
+        (sum, item) => sum + Math.ceil((item.quantity || 0) * (item.rate || 0)),
         0
       );
       const buyingAmount = items.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
+        (sum, item) => sum + (item.quantity || 0) * (item.buyingRate || 0),
         0
       );
       const gstAmount = selectedClient?.i_gst
@@ -315,11 +310,11 @@ const NewInvoise = () => {
         invoice_date: invoiceDateForPayload,
         item_details: items.map((item) => ({
           itemCodeId: item.itemCodeId,
-          quantity: Number(item.quantity) || 0,
-          rate: Number(item.rate) || 0,
+          quantity: item.quantity || 0,
+          rate: item.rate || 0,
           units: item.units,
-          selling_price: (Number(item.quantity) || 0) * (Number(item.rate) || 0),
-          buying_price: (Number(item.quantity) || 0) * (Number(item.buyingRate) || 0),
+          selling_price: (item.quantity || 0) * (item.rate || 0),
+          buying_price: (item.quantity || 0) * (item.buyingRate || 0),
         })),
       };
 
@@ -359,8 +354,8 @@ const NewInvoise = () => {
           quantity: Number(item.quantity) || 0,
           rate: Number(item.rate) || 0,
           units: item.units || 'NOS',
-          selling_price: Number(item.selling_price) || 0,
-          buying_price: Number(item.buying_price) || 0,
+          selling_price: item.selling_price || 0,
+          buying_price: Number((item.buying_price).toFixed(2)) || 0,
         }));
 
         const initialItemDetails = (initialInvoice.item_details ?? []).map((item) => ({
@@ -368,8 +363,8 @@ const NewInvoise = () => {
           quantity: Number(item.quantity) || 0,
           rate: Number(item.rate) || 0,
           units: item.units || 'NOS',
-          selling_price: Number(item.selling_price) || 0,
-          buying_price: Number(item.buying_price) || 0,
+          selling_price: item.selling_price || 0,
+          buying_price: item.buying_price || 0,
         }));
 
         const updatedPayload: Record<string, unknown> = {};
@@ -419,7 +414,7 @@ const NewInvoise = () => {
         if (itemsChanged) {
           updatedPayload.item_details = currentItemDetails;
           updatedPayload.selling_Amount = sellingAmount;
-          updatedPayload.buying_Amount = buyingAmount;
+          updatedPayload.buying_Amount = Number(buyingAmount.toFixed(2));
           updatedPayload.gst_amount = gstAmount;
         }
 
@@ -971,7 +966,7 @@ const NewInvoise = () => {
         <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-10rem)] xl:overflow-y-auto">
           <InvoicePreview
             values={formik.values}
-            items={items}
+            items={items as unknown as InvoiceItem[]}
             selectedClient={selectedClient}
             totalAmount={totalAmount}
             invoiceRef={invoicePreviewRef}
