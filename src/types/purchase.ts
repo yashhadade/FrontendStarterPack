@@ -32,11 +32,14 @@ export type Purchase = {
   _id: string;
   buyerId: string;
   buyer: BuyerDetails;
-  date: string;
+  /** API may expose `date` and/or `purchase_date`. */
+  date?: string;
+  purchase_date?: string;
   invoice_number: string;
   total_Amount: number;
   gst_amount: number;
   is_gst_claimed: boolean;
   status: string;
   lineRows: PurchaseItemDetailPayload[];
+  paid_date?: string | null;
 };

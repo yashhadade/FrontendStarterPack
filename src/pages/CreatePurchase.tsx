@@ -1,7 +1,9 @@
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -15,10 +17,12 @@ import productServices from '@/services/productServices';
 import purchaseServices from '@/services/purchaseServices';
 import type { Buyer } from '@/types/buyers';
 import type { Product } from '@/types/products';
-import { Plus, Trash2, ArrowLeft } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CreatePurchasePayload, Purchase } from '@/types/purchase';
+import { cn } from '@/lib/utils';
+import { CalendarIcon, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getIn, useFormik } from 'formik';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as Yup from 'yup';
 
@@ -71,6 +75,72 @@ const todayInputDate = () => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
+
+function purchaseDateToInput(value: string | undefined): string {
+  if (!value?.trim()) return todayInputDate();
+  const v = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+  // e.g. 13/05/2026 from API (no time)
+  if (v.includes('/') && !v.includes('T')) {
+    const parts = v.split('/').map((p) => p.trim());
+    if (parts.length === 3) {
+      const day = Number(parts[0]);
+      const month = Number(parts[1]);
+      const year = Number(parts[2]);
+      if (day && month && year) {
+        const dt = new Date(year, month - 1, day);
+        if (!Number.isNaN(dt.getTime())) return dateToYyyyMmDd(dt);
+      }
+    }
+  }
+  const d = new Date(v);
+  if (!Number.isNaN(d.getTime())) {
+    return dateToYyyyMmDd(d);
+  }
+  return todayInputDate();
+}
+
+function dateToYyyyMmDd(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function yyyyMmDdToDate(value: string): Date | undefined {
+  if (!value?.trim() || !/^\d{4}-\d{2}-\d{2}/.test(value)) return undefined;
+  const [y, m, d] = value.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return undefined;
+  const dt = new Date(y, m - 1, d);
+  return Number.isNaN(dt.getTime()) ? undefined : dt;
+}
+
+function formatDateForDisplay(date: Date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function purchaseLinesFromApi(p: Purchase & { item_details?: unknown[] }): PurchaseLineForm[] {
+  const rawLines =
+    Array.isArray(p.lineRows) && p.lineRows.length
+      ? p.lineRows
+      : Array.isArray(p.item_details) && p.item_details.length
+        ? p.item_details
+        : [];
+  if (!rawLines.length) return [emptyLine()];
+  return rawLines.map((raw) => {
+    const item = raw as Record<string, unknown>;
+    const pid = item.productId ?? item.product_id;
+    return {
+      id: crypto.randomUUID(),
+      productId: typeof pid === 'string' ? pid : String(pid ?? ''),
+      rate: item.rate != null ? String(item.rate) : '',
+      quantity: item.quantity != null ? String(item.quantity) : '',
+    };
+  });
+}
 
 /** Line shape only; rate/qty rules live in `purchaseValidationSchema` `.test()` so messages stay user-facing. */
 const lineItemSchema = Yup.object({
@@ -146,11 +216,91 @@ const purchaseValidationSchema = Yup.object({
   return true;
 });
 
+function buildPurchasePayloadFromValues(
+  values: PurchaseFormValues,
+  products: Product[]
+): CreatePurchasePayload {
+  const productById = new Map(products.map((p) => [p._id, p]));
+  const lineAmounts = values.lines.map((line) => {
+    const rate = parsePurchaseDecimal(line.rate);
+    const qty = parsePurchaseDecimal(line.quantity);
+    return Math.ceil(rate * qty);
+  });
+
+  const item_details = values.lines
+    .map((line, index) => ({ line, index }))
+    .filter(({ line }) => {
+      const r = parseDecimalLoose(line.rate);
+      const q = parseDecimalLoose(line.quantity);
+      return (
+        !!line.productId?.trim() &&
+        !Number.isNaN(r) &&
+        r >= 0 &&
+        !Number.isNaN(q) &&
+        q > 0
+      );
+    })
+    .map(({ line, index }) => {
+      const product = line.productId ? productById.get(line.productId) : undefined;
+      const rate = parsePurchaseDecimal(line.rate);
+      const quantity = parsePurchaseDecimal(line.quantity);
+      const total_price = lineAmounts[index] ?? Math.ceil(rate * quantity);
+      const units =
+        product != null && Number.isFinite(product.unit) ? String(product.unit) : 'NOS';
+      return {
+        productId: line.productId,
+        quantity,
+        rate,
+        units,
+        total_price,
+      };
+    });
+
+  const taxableSubtotal = Math.ceil(lineAmounts.reduce((s, a) => s + a, 0));
+  const cgstAmount = Math.ceil(taxableSubtotal * CGST_RATE);
+  const sgstAmount = Math.ceil(taxableSubtotal * SGST_RATE);
+  const totalGstAmount = Math.ceil(cgstAmount + sgstAmount);
+
+  return {
+    buyerId: values.buyerId,
+    purchase_date: values.purchaseDate,
+    invoice_number: values.invoiceNumber.trim(),
+    total_Amount: taxableSubtotal,
+    gst_amount: totalGstAmount,
+    item_details,
+  };
+}
+
+/** PATCH body: only keys that differ from the edit baseline (Formik initial snapshot). */
+function purchasePayloadDiff(
+  next: CreatePurchasePayload,
+  baseline: CreatePurchasePayload
+): Partial<CreatePurchasePayload> {
+  const patch: Partial<CreatePurchasePayload> = {};
+  if (next.buyerId !== baseline.buyerId) patch.buyerId = next.buyerId;
+  if (next.purchase_date !== baseline.purchase_date) patch.purchase_date = next.purchase_date;
+  if (next.invoice_number !== baseline.invoice_number) {
+    patch.invoice_number = next.invoice_number;
+  }
+  const itemsChanged =
+    JSON.stringify(next.item_details) !== JSON.stringify(baseline.item_details);
+  if (itemsChanged) {
+    patch.item_details = next.item_details;
+    patch.total_Amount = next.total_Amount;
+    patch.gst_amount = next.gst_amount;
+  }
+  return patch;
+}
+
 const CreatePurchase = () => {
   const navigate = useNavigate();
+  const { id: purchaseId } = useParams();
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [saving, setSaving] = useState(false);
+  const [purchaseLoading, setPurchaseLoading] = useState(() => Boolean(purchaseId));
+  /** Matches Formik values after `resetForm` on load — used to diff PATCH payload. */
+  const editBaselineValuesRef = useRef<PurchaseFormValues | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -171,6 +321,10 @@ const CreatePurchase = () => {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (!purchaseId) editBaselineValuesRef.current = null;
+  }, [purchaseId]);
+
   const formik = useFormik<PurchaseFormValues>({
     initialValues: {
       buyerId: '',
@@ -183,70 +337,48 @@ const CreatePurchase = () => {
     validateOnChange: false,
     validateOnMount: false,
     onSubmit: async (values) => {
-      const productById = new Map(products.map((p) => [p._id, p]));
-      const lineAmounts = values.lines.map((line) => {
-        const rate = parsePurchaseDecimal(line.rate);
-        const qty = parsePurchaseDecimal(line.quantity);
-        return Math.ceil(rate * qty);
-      });
-
-      const item_details = values.lines
-        .map((line, index) => ({ line, index }))
-        .filter(({ line }) => {
-          const r = parseDecimalLoose(line.rate);
-          const q = parseDecimalLoose(line.quantity);
-          return (
-            !!line.productId?.trim() &&
-            !Number.isNaN(r) &&
-            r >= 0 &&
-            !Number.isNaN(q) &&
-            q > 0
-          );
-        })
-        .map(({ line, index }) => {
-          const product = line.productId ? productById.get(line.productId) : undefined;
-          const rate = parsePurchaseDecimal(line.rate);
-          const quantity = parsePurchaseDecimal(line.quantity);
-          const total_price = lineAmounts[index] ?? Math.ceil(rate * quantity);
-          const units =
-            product != null && Number.isFinite(product.unit) ? String(product.unit) : 'NOS';
-          return {
-            productId: line.productId,
-            quantity,
-            rate,
-            units,
-            total_price,
-          };
-        });
-
-      const taxableSubtotal = Math.ceil(lineAmounts.reduce((s, a) => s + a, 0));
-      const cgstAmount = Math.ceil(taxableSubtotal * CGST_RATE);
-      const sgstAmount = Math.ceil(taxableSubtotal * SGST_RATE);
-      const totalGstAmount = Math.ceil(cgstAmount + sgstAmount);
-
-      const payload = {
-        buyerId: values.buyerId,
-        purchase_date: values.purchaseDate,
-        invoice_number: values.invoiceNumber.trim(),
-        total_Amount: taxableSubtotal,
-        gst_amount: totalGstAmount,
-        item_details,
-      };
+      const fullPayload = buildPurchasePayloadFromValues(values, products);
 
       setSaving(true);
       try {
-        const res = await purchaseServices.createPurchase(payload);
+        let res;
+        if (purchaseId) {
+          const baselineForm = editBaselineValuesRef.current;
+          if (!baselineForm) {
+            toast.error('Purchase data is still loading. Try again.', { position: 'top-right' });
+            setSaving(false);
+            return;
+          }
+          const baselinePayload = buildPurchasePayloadFromValues(baselineForm, products);
+          const patch = purchasePayloadDiff(fullPayload, baselinePayload);
+          if (Object.keys(patch).length === 0) {
+            toast.info('No changes to save', { position: 'top-right' });
+            setSaving(false);
+            return;
+          }
+          res = await purchaseServices.updatePurchase(purchaseId, patch);
+        } else {
+          res = await purchaseServices.createPurchase(fullPayload);
+        }
         if (res?.data) {
-          toast.success('Purchase saved successfully', { position: 'top-right' });
+          toast.success(
+            purchaseId ? 'Purchase updated successfully' : 'Purchase saved successfully',
+            { position: 'top-right' }
+          );
           navigate('/purchases');
         } else {
-          toast.error(res?.error || res?.message || 'Failed to save purchase', {
-            position: 'top-right',
-          });
+          toast.error(
+            res?.error || res?.message || (purchaseId ? 'Failed to update purchase' : 'Failed to save purchase'),
+            { position: 'top-right' }
+          );
         }
       } catch (error: unknown) {
         toast.error(
-          error instanceof Error ? error.message : 'Failed to save purchase',
+          error instanceof Error
+            ? error.message
+            : purchaseId
+              ? 'Failed to update purchase'
+              : 'Failed to save purchase',
           { position: 'top-right' }
         );
       } finally {
@@ -254,6 +386,54 @@ const CreatePurchase = () => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!purchaseId) {
+      setPurchaseLoading(false);
+      return;
+    }
+    setPurchaseLoading(true);
+    editBaselineValuesRef.current = null;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await purchaseServices.getPurchaseById(purchaseId);
+        if (cancelled) return;
+        if (res?.data) {
+          const p = res.data as Purchase & {
+            item_details?: unknown[];
+            purchase_date?: string;
+          };
+          const rawDate = p.date ?? p.purchase_date ?? '';
+          const loadedValues: PurchaseFormValues = {
+            buyerId: p.buyerId ?? '',
+            invoiceNumber: p.invoice_number ?? '',
+            purchaseDate: purchaseDateToInput(rawDate || undefined),
+            lines: purchaseLinesFromApi(p),
+          };
+          formik.resetForm({ values: loadedValues });
+          editBaselineValuesRef.current = loadedValues;
+        } else {
+          toast.error(res?.error || res?.message || 'Failed to load purchase', {
+            position: 'top-right',
+          });
+          navigate('/purchases');
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          toast.error('Failed to load purchase', { position: 'top-right' });
+          navigate('/purchases');
+        }
+      } finally {
+        if (!cancelled) setPurchaseLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap edit form once id is known
+  }, [purchaseId]);
 
   const productById = useMemo(() => {
     const m = new Map<string, Product>();
@@ -314,6 +494,18 @@ const CreatePurchase = () => {
     );
   };
 
+  if (purchaseLoading) {
+    return (
+      <div className="p-8 animate-fade-in">
+        <div className="glass-card p-10 text-center text-sm text-muted-foreground">
+          Loading purchase…
+        </div>
+      </div>
+    );
+  }
+
+  const purchaseCalendarSelected = yyyyMmDdToDate(formik.values.purchaseDate);
+
   return (
     <div className="p-8 space-y-8 animate-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -329,7 +521,7 @@ const CreatePurchase = () => {
             Back to Purchases
           </Button>
           <PageHeader
-            title="Create Purchase"
+            title={purchaseId ? 'Edit purchase' : 'Create Purchase'}
             description="Select buyer, add products, rates, and quantities"
           />
         </div>
@@ -446,16 +638,40 @@ const CreatePurchase = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="purchaseDate">Purchase date</Label>
-                  <Input
-                    id="purchaseDate"
-                    name="purchaseDate"
-                    type="date"
-                    value={formik.values.purchaseDate}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="bg-background/80"
-                    aria-invalid={Boolean(formik.touched.purchaseDate && formik.errors.purchaseDate)}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="purchaseDate"
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          'h-10 w-full justify-start bg-background/80 px-3 text-left font-normal',
+                          !formik.values.purchaseDate && 'text-muted-foreground'
+                        )}
+                        aria-invalid={Boolean(
+                          formik.touched.purchaseDate && formik.errors.purchaseDate
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {purchaseCalendarSelected
+                          ? formatDateForDisplay(purchaseCalendarSelected)
+                          : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={purchaseCalendarSelected}
+                        onSelect={(date) => {
+                          if (date) {
+                            void formik.setFieldValue('purchaseDate', dateToYyyyMmDd(date));
+                            void formik.setFieldTouched('purchaseDate', true, false);
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   {formik.touched.purchaseDate && formik.errors.purchaseDate ? (
                     <p className="text-sm text-destructive">{formik.errors.purchaseDate}</p>
                   ) : null}
@@ -466,10 +682,7 @@ const CreatePurchase = () => {
             <div className="glass-card p-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
                 <h3 className="text-sm font-semibold text-foreground">Products</h3>
-                <Button type="button" variant="outline" size="sm" className="gap-1" onClick={addLine}>
-                  <Plus className="h-4 w-4" />
-                  Add line
-                </Button>
+               
               </div>
 
               <div className="space-y-4">
@@ -611,6 +824,12 @@ const CreatePurchase = () => {
                   );
                 })}
               </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm" className="gap-1 mt-4 " onClick={addLine}>
+                  <Plus className="h-4 w-4" />
+                  Add line
+                </Button>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">
@@ -623,7 +842,7 @@ const CreatePurchase = () => {
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Saving…' : 'Save purchase'}
+                {saving ? 'Saving…' : purchaseId ? 'Update purchase' : 'Save purchase'}
               </Button>
             </div>
           </div>

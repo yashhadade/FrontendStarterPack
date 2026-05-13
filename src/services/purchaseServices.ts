@@ -22,7 +22,45 @@ const createPurchase = (data: CreatePurchasePayload) => {
     });
 };
 
+const getPurchaseById = (id: string) => {
+  return server
+    .get(`/purchase/${id}`)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.log(err);
+      return err.response?.data;
+    });
+};
+
+const updatePurchase = (id: string, data: Partial<CreatePurchasePayload> | Record<string, unknown>) => {
+  return server
+    .patch(`/purchase/${id}`, data)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.log(err);
+      return err.response?.data;
+    });
+};
+
+const updatePurchaseStatus = (data: {
+  id: string;
+  status?: string;
+  paid_date?: Date | null;
+  is_gst_claimed?: boolean;
+}) => {
+  return server
+    .post('/purchase/updateStatus', data)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.log(err);
+      return err.response?.data;
+    });
+};
+
 export default {
   getAllPurchases,
   createPurchase,
+  getPurchaseById,
+  updatePurchase,
+  updatePurchaseStatus,
 };
