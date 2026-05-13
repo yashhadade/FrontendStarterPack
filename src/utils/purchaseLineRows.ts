@@ -21,8 +21,7 @@ function mapRaw(raw: unknown, index: number): PurchaseSummaryLineRow {
   return {
     id: typeof idRaw === 'string' ? idRaw : undefined,
     _id: typeof r._id === 'string' ? r._id : undefined,
-    name:
-      typeof r.name === 'string' && r.name.trim() ? r.name.trim() : `Item ${index + 1}`,
+    name: typeof r.name === 'string' && r.name.trim() ? r.name.trim() : `Item ${index + 1}`,
     rate,
     quantity,
     total,
@@ -36,9 +35,7 @@ function mapRaw(raw: unknown, index: number): PurchaseSummaryLineRow {
 export function normalizeSummaryLineRows(input: unknown): PurchaseSummaryLineRow[] {
   if (input == null) return [];
   if (Array.isArray(input)) {
-    return input
-      .filter((x) => x != null && typeof x === 'object')
-      .map((x, i) => mapRaw(x, i));
+    return input.filter((x) => x != null && typeof x === 'object').map((x, i) => mapRaw(x, i));
   }
   if (typeof input === 'object' && !Array.isArray(input)) {
     const o = input as Record<string, unknown>;

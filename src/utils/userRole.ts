@@ -5,7 +5,10 @@ export type UserRole = 'ADMIN' | 'SUB_ADMIN';
 /** Normalize API / storage role strings so routing matches reliably. */
 export function normalizeRoleString(role: unknown): UserRole | undefined {
   if (typeof role !== 'string') return undefined;
-  const normalized = role.trim().toUpperCase().replace(/[\s-]+/g, '_');
+  const normalized = role
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_');
   if (normalized === 'ADMIN') return 'ADMIN';
   if (normalized === 'SUB_ADMIN' || normalized === 'SUBADMIN') return 'SUB_ADMIN';
   return undefined;

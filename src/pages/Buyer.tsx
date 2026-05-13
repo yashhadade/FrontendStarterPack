@@ -7,7 +7,11 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import BuyerFormDialog, { BuyerFormValues } from '@/components/BuyerFormDialog';
 import buyerServices from '@/services/buyerServices';
-import type { Buyer as BuyerData, CreateBuyerInterface, UpdateBuyerInterface } from '@/types/buyers';
+import type {
+  Buyer as BuyerData,
+  CreateBuyerInterface,
+  UpdateBuyerInterface,
+} from '@/types/buyers';
 
 const Buyer = () => {
   const [buyers, setBuyers] = useState<BuyerData[]>([]);

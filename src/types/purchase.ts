@@ -1,4 +1,4 @@
-import { BuyerDetails } from "./buyers";
+import { BuyerDetails } from './buyers';
 
 /** Normalized line for summary UI (rates API quirks: array vs single object vs map, total vs total_price). */
 export type PurchaseSummaryLineRow = {

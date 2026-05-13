@@ -337,12 +337,7 @@ const Invoices = () => {
             {hasMenuActions && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    aria-label="More actions"
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -364,9 +359,7 @@ const Invoices = () => {
                         setInvoiceForPaidConfirm(row);
                         const existing = (row as any).paidDate || (row as any).paid_date;
                         const seedDate = existing ? new Date(existing) : new Date();
-                        setPaidDateValue(
-                          Number.isNaN(seedDate.getTime()) ? new Date() : seedDate
-                        );
+                        setPaidDateValue(Number.isNaN(seedDate.getTime()) ? new Date() : seedDate);
                         setIsPaidConfirmOpen(true);
                       }}
                     >
@@ -649,8 +642,8 @@ const Invoices = () => {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Are you sure you want to cancel this invoice? This action will mark the invoice
-                  as <span className="font-medium text-red-600">CANCELLED</span>.
+                  Are you sure you want to cancel this invoice? This action will mark the invoice as{' '}
+                  <span className="font-medium text-red-600">CANCELLED</span>.
                 </p>
                 {invoiceForCancelConfirm ? (
                   <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">

@@ -35,7 +35,15 @@ import type { Buyer } from '@/types/buyers';
 import type { Purchase, PurchaseSummaryLineRow } from '@/types/purchase';
 import { formatIndianNumber } from '@/utils/numberFormat';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckCircle2, FileCheck, MoreHorizontal, Pencil, RotateCcw, XCircle } from 'lucide-react';
+import {
+  CalendarIcon,
+  CheckCircle2,
+  FileCheck,
+  MoreHorizontal,
+  Pencil,
+  RotateCcw,
+  XCircle,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -159,9 +167,7 @@ const Purchases = () => {
       try {
         const res = await purchaseServices.updatePurchaseStatus({ id, is_gst_claimed });
         if (res && res?.data) {
-          toast.success(
-            is_gst_claimed ? 'GST marked as claimed' : 'GST marked as not claimed'
-          );
+          toast.success(is_gst_claimed ? 'GST marked as claimed' : 'GST marked as not claimed');
           await loadData({ silent: true });
         } else {
           toast.error(res?.error || 'Failed to update GST claimed');
@@ -269,18 +275,20 @@ const Purchases = () => {
           const canMarkPaidToggle =
             !isCancelled &&
             (!isPaid ||
-              isWithin24Hours(
-                ext.updatedAt || ext.updated_at || ext.paidDate || ext.paid_date
-              ));
+              isWithin24Hours(ext.updatedAt || ext.updated_at || ext.paidDate || ext.paid_date));
           const canEdit = !isPaid && !isCancelled;
           const canCancel = !isPaid && !isCancelled;
           const canToggleGstClaimed = !isCancelled;
-          const hasMenuActions =
-            canEdit || canMarkPaidToggle || canCancel || canToggleGstClaimed;
+          const hasMenuActions = canEdit || canMarkPaidToggle || canCancel || canToggleGstClaimed;
 
           return (
             <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-              <Button variant="outline" size="sm" type="button" onClick={() => setDetailPurchase(row)}>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => setDetailPurchase(row)}
+              >
                 View
               </Button>
               {hasMenuActions && (
@@ -313,7 +321,9 @@ const Purchases = () => {
                           setPurchaseForPaidConfirm(row);
                           const existing = ext.paidDate || ext.paid_date;
                           const seedDate = existing ? new Date(existing) : new Date();
-                          setPaidDateValue(Number.isNaN(seedDate.getTime()) ? new Date() : seedDate);
+                          setPaidDateValue(
+                            Number.isNaN(seedDate.getTime()) ? new Date() : seedDate
+                          );
                           setIsPaidConfirmOpen(true);
                         }}
                       >
@@ -441,9 +451,7 @@ const Purchases = () => {
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>
-                  Are you sure this purchase is {paidConfirmIsPaid ? 'unpaid' : 'paid'}?
-                </p>
+                <p>Are you sure this purchase is {paidConfirmIsPaid ? 'unpaid' : 'paid'}?</p>
                 {purchaseForPaidConfirm ? (
                   <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">
                     <p>
@@ -505,7 +513,8 @@ const Purchases = () => {
             <AlertDialogAction
               onClick={async () => {
                 if (!purchaseForPaidConfirm?._id) return;
-                const isMarkingPaid = String(purchaseForPaidConfirm.status || '').toUpperCase() !== 'PAID';
+                const isMarkingPaid =
+                  String(purchaseForPaidConfirm.status || '').toUpperCase() !== 'PAID';
                 await handleUpdatePurchaseStatus(
                   purchaseForPaidConfirm._id,
                   isMarkingPaid ? 'PAID' : 'PENDING',
@@ -576,10 +585,7 @@ const Purchases = () => {
             <AlertDialogAction
               onClick={async () => {
                 if (!purchaseForGstConfirm?._id) return;
-                await handleUpdatePurchaseGstClaimed(
-                  purchaseForGstConfirm._id,
-                  gstClaimNextValue
-                );
+                await handleUpdatePurchaseGstClaimed(purchaseForGstConfirm._id, gstClaimNextValue);
                 setPurchaseForGstConfirm(null);
                 setIsGstClaimConfirmOpen(false);
               }}
@@ -597,8 +603,8 @@ const Purchases = () => {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Are you sure you want to cancel this purchase? This action will mark the
-                  purchase as <span className="font-medium text-red-600">CANCELLED</span>.
+                  Are you sure you want to cancel this purchase? This action will mark the purchase
+                  as <span className="font-medium text-red-600">CANCELLED</span>.
                 </p>
                 {purchaseForCancelConfirm ? (
                   <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-foreground space-y-1">

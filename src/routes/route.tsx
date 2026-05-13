@@ -112,7 +112,7 @@ const AppRoutes = () => {
               </RequireRole>
             }
           />
-           <Route
+          <Route
             path="purchases/:id"
             element={
               <RequireRole allowed={['ADMIN', 'SUB_ADMIN']}>

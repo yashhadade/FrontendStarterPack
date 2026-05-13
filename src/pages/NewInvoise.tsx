@@ -177,7 +177,9 @@ const NewInvoise = () => {
           (code) => code._id === (invoiceItem.itemCodeId ?? '')
         );
         const quantity = Number(invoiceItem.quantity ?? 0);
-        const itemBuyingPrice = Number(invoiceItem.buying_price ||matchedItemCode?.product_buying_price*quantity|| 0);
+        const itemBuyingPrice = Number(
+          invoiceItem.buying_price || matchedItemCode?.product_buying_price * quantity || 0
+        );
         return {
           itemCodeId: invoiceItem.itemCodeId ?? '',
           itemCode: matchedItemCode?.code ?? '',
@@ -242,7 +244,7 @@ const NewInvoise = () => {
               hsnCode: selectedItemCode?.product_hsn_code ?? '',
               rate: selectedItemCode ? selectedItemCode.product_selling_price : 0,
               buyingRate: selectedItemCode
-                ? selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price
+                ? (selectedItemCode.product_buying_price ?? selectedItemCode.product_selling_price)
                 : 0,
             }
           : item
@@ -355,7 +357,7 @@ const NewInvoise = () => {
           rate: Number(item.rate) || 0,
           units: item.units || 'NOS',
           selling_price: item.selling_price || 0,
-          buying_price: Number((item.buying_price).toFixed(2)) || 0,
+          buying_price: Number(item.buying_price.toFixed(2)) || 0,
         }));
 
         const initialItemDetails = (initialInvoice.item_details ?? []).map((item) => ({

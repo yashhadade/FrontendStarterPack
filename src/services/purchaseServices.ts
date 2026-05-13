@@ -32,7 +32,10 @@ const getPurchaseById = (id: string) => {
     });
 };
 
-const updatePurchase = (id: string, data: Partial<CreatePurchasePayload> | Record<string, unknown>) => {
+const updatePurchase = (
+  id: string,
+  data: Partial<CreatePurchasePayload> | Record<string, unknown>
+) => {
   return server
     .patch(`/purchase/${id}`, data)
     .then((res) => res.data)

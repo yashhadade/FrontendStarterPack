@@ -163,39 +163,23 @@ const purchaseValidationSchema = Yup.object({
   let hasValid = false;
 
   lines.forEach((line, i) => {
-    const hasAny = Boolean(
-      line.productId?.trim() || line.rate?.trim() || line.quantity?.trim()
-    );
+    const hasAny = Boolean(line.productId?.trim() || line.rate?.trim() || line.quantity?.trim());
     if (!hasAny) return;
 
     if (!line.productId?.trim()) {
-      errs.push(
-        new Yup.ValidationError('Select a product', undefined, `lines[${i}].productId`)
-      );
+      errs.push(new Yup.ValidationError('Select a product', undefined, `lines[${i}].productId`));
     }
     const r = parseDecimalLoose(line.rate);
     if (!line.rate?.trim() || Number.isNaN(r) || r < 0) {
-      errs.push(
-        new Yup.ValidationError('Enter a valid rate (≥ 0)', undefined, `lines[${i}].rate`)
-      );
+      errs.push(new Yup.ValidationError('Enter a valid rate (≥ 0)', undefined, `lines[${i}].rate`));
     }
     const q = parseDecimalLoose(line.quantity);
     if (!line.quantity?.trim() || Number.isNaN(q) || q <= 0) {
       errs.push(
-        new Yup.ValidationError(
-          'Enter quantity greater than 0',
-          undefined,
-          `lines[${i}].quantity`
-        )
+        new Yup.ValidationError('Enter quantity greater than 0', undefined, `lines[${i}].quantity`)
       );
     }
-    if (
-      line.productId?.trim() &&
-      !Number.isNaN(r) &&
-      r >= 0 &&
-      !Number.isNaN(q) &&
-      q > 0
-    ) {
+    if (line.productId?.trim() && !Number.isNaN(r) && r >= 0 && !Number.isNaN(q) && q > 0) {
       hasValid = true;
     }
   });
@@ -232,21 +216,14 @@ function buildPurchasePayloadFromValues(
     .filter(({ line }) => {
       const r = parseDecimalLoose(line.rate);
       const q = parseDecimalLoose(line.quantity);
-      return (
-        !!line.productId?.trim() &&
-        !Number.isNaN(r) &&
-        r >= 0 &&
-        !Number.isNaN(q) &&
-        q > 0
-      );
+      return !!line.productId?.trim() && !Number.isNaN(r) && r >= 0 && !Number.isNaN(q) && q > 0;
     })
     .map(({ line, index }) => {
       const product = line.productId ? productById.get(line.productId) : undefined;
       const rate = parsePurchaseDecimal(line.rate);
       const quantity = parsePurchaseDecimal(line.quantity);
       const total_price = lineAmounts[index] ?? Math.ceil(rate * quantity);
-      const units =
-        product != null && Number.isFinite(product.unit) ? String(product.unit) : 'NOS';
+      const units = product != null && Number.isFinite(product.unit) ? String(product.unit) : 'NOS';
       return {
         productId: line.productId,
         quantity,
@@ -282,8 +259,7 @@ function purchasePayloadDiff(
   if (next.invoice_number !== baseline.invoice_number) {
     patch.invoice_number = next.invoice_number;
   }
-  const itemsChanged =
-    JSON.stringify(next.item_details) !== JSON.stringify(baseline.item_details);
+  const itemsChanged = JSON.stringify(next.item_details) !== JSON.stringify(baseline.item_details);
   if (itemsChanged) {
     patch.item_details = next.item_details;
     patch.total_Amount = next.total_Amount;
@@ -368,7 +344,9 @@ const CreatePurchase = () => {
           navigate('/purchases');
         } else {
           toast.error(
-            res?.error || res?.message || (purchaseId ? 'Failed to update purchase' : 'Failed to save purchase'),
+            res?.error ||
+              res?.message ||
+              (purchaseId ? 'Failed to update purchase' : 'Failed to save purchase'),
             { position: 'top-right' }
           );
         }
@@ -447,9 +425,7 @@ const CreatePurchase = () => {
     return m;
   }, [buyers]);
 
-  const selectedBuyer = formik.values.buyerId
-    ? buyerById.get(formik.values.buyerId)
-    : undefined;
+  const selectedBuyer = formik.values.buyerId ? buyerById.get(formik.values.buyerId) : undefined;
 
   const lineAmounts = useMemo(() => {
     return formik.values.lines.map((line) => {
@@ -682,7 +658,6 @@ const CreatePurchase = () => {
             <div className="glass-card p-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
                 <h3 className="text-sm font-semibold text-foreground">Products</h3>
-               
               </div>
 
               <div className="space-y-4">
@@ -693,16 +668,16 @@ const CreatePurchase = () => {
                   const productIdErr = getIn(formik.errors, `lines[${index}].productId`) as
                     | string
                     | undefined;
-                  const rateErr = getIn(formik.errors, `lines[${index}].rate`) as string | undefined;
+                  const rateErr = getIn(formik.errors, `lines[${index}].rate`) as
+                    | string
+                    | undefined;
                   const qtyErr = getIn(formik.errors, `lines[${index}].quantity`) as
                     | string
                     | undefined;
                   const productIdTouched = getIn(formik.touched, `lines[${index}].productId`);
                   const rateTouched = getIn(formik.touched, `lines[${index}].rate`);
                   const qtyTouched = getIn(formik.touched, `lines[${index}].quantity`);
-                  const showProductErr = Boolean(
-                    productIdErr && (productIdTouched || submitted)
-                  );
+                  const showProductErr = Boolean(productIdErr && (productIdTouched || submitted));
                   const showRateErr = Boolean(rateErr && (rateTouched || submitted));
                   const showQtyErr = Boolean(qtyErr && (qtyTouched || submitted));
                   return (
@@ -825,7 +800,13 @@ const CreatePurchase = () => {
                 })}
               </div>
               <div className="flex justify-end">
-                <Button type="button" variant="outline" size="sm" className="gap-1 mt-4 " onClick={addLine}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 mt-4 "
+                  onClick={addLine}
+                >
                   <Plus className="h-4 w-4" />
                   Add line
                 </Button>

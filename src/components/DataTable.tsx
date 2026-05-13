@@ -359,7 +359,11 @@ function DataTable<T extends Record<string, unknown>>({
                       onClick={() => handleHeaderClick(col)}
                       className={cn(
                         'py-3 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap',
-                        col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                        col.align === 'right'
+                          ? 'text-right'
+                          : col.align === 'center'
+                            ? 'text-center'
+                            : 'text-left',
                         col.sortable === false ? '' : 'cursor-pointer select-none',
                         col.className,
                         col.headerClassName

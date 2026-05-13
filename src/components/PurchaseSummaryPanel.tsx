@@ -56,7 +56,9 @@ const PurchaseSummaryPanel = ({
         className: 'tabular-nums',
         headerClassName: 'w-[1%]',
         cellClassName: 'w-[1%]',
-        render: (row) => <span className="text-muted-foreground">₹{formatPurchaseInr(row.rate)}</span>,
+        render: (row) => (
+          <span className="text-muted-foreground">₹{formatPurchaseInr(row.rate)}</span>
+        ),
       },
       {
         key: 'quantity',
@@ -90,7 +92,9 @@ const PurchaseSummaryPanel = ({
 
   return (
     <div className={cn('glass-card p-6 space-y-4 xl:sticky xl:top-8', className)}>
-      <h3 className="text-sm font-semibold text-foreground border-b border-border/60 pb-2">Buyer</h3>
+      <h3 className="text-sm font-semibold text-foreground border-b border-border/60 pb-2">
+        Buyer
+      </h3>
       {buyer ? (
         <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2 text-sm">
           <p className="font-semibold text-foreground leading-snug">{buyer.name}</p>
@@ -144,12 +148,12 @@ const PurchaseSummaryPanel = ({
         </div>
         <div className="flex justify-between gap-4 border-t border-border/60 pt-3 text-base">
           <dt className="font-semibold text-foreground">Gross total</dt>
-          <dd className="font-semibold tabular-nums text-primary">₹{formatPurchaseInr(grossTotal)}</dd>
+          <dd className="font-semibold tabular-nums text-primary">
+            ₹{formatPurchaseInr(grossTotal)}
+          </dd>
         </div>
       </dl>
-      {gstNote ? (
-        <p className="text-xs text-muted-foreground leading-relaxed">{gstNote}</p>
-      ) : null}
+      {gstNote ? <p className="text-xs text-muted-foreground leading-relaxed">{gstNote}</p> : null}
     </div>
   );
 };

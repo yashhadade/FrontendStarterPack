@@ -45,7 +45,7 @@ const getSingleBuyer = (id: string) => {
     });
 };
 export default {
-getAllBuyers,
+  getAllBuyers,
   createBuyer,
   updateBuyer,
   getSingleBuyer,
