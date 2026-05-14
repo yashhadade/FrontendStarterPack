@@ -36,8 +36,19 @@ const updateProduct = (id: string, data: Partial<CreateProductInterface>) => {
     });
 };
 
+const getProductById = (id: string) => {
+  return server
+    .get(`/products/${id}/`)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.log(err);
+      return err.response?.data;
+    });
+};
+
 export default {
   getAllProducts,
+  getProductById,
   createProduct,
   updateProduct,
 };

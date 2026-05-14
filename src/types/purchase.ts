@@ -42,4 +42,16 @@ export type Purchase = {
   status: string;
   lineRows: PurchaseItemDetailPayload[];
   paid_date?: string | null;
+  /** How payment was made when status is PAID (e.g. CHEQUE, BANK_TRANSFER, CASH). */
+  payment_method?: string | null;
+};
+
+/** `GET /purchase/dashboard` summary (field names align with backend). */
+export type PurchaseDashboardStats = {
+  totalPurchases?: number;
+  pendingPurchases?: number;
+  pendingPurchasesAmount?: number;
+  paidPurchases?: number;
+  paidPurchasesAmount?: number;
+  cancelledPurchases?: number;
 };

@@ -1,4 +1,5 @@
 import PageHeader from '@/components/PageHeader';
+import BuyerPurchaseHistoryTable from '@/components/BuyerPurchaseHistoryTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -8,6 +9,7 @@ import type { Buyer } from '@/types/buyers';
 const BuyerDetails = () => {
   const { id } = useParams();
   const [buyer, setBuyer] = useState<Buyer | null>(null);
+  const [activeTab, setActiveTab] = useState('details');
 
   const getSingleBuyer = useCallback(async () => {
     try {
@@ -48,7 +50,7 @@ const BuyerDetails = () => {
         description="Complete buyer profile details"
       />
 
-      <Tabs defaultValue="details" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
@@ -107,12 +109,11 @@ const BuyerDetails = () => {
         </TabsContent>
 
         <TabsContent value="purchase-history" className="mt-0">
-          <div className="glass-card p-6">
-            <h3 className="text-sm font-semibold text-foreground">Purchase History</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Purchase history for this buyer will appear here.
-            </p>
-          </div>
+          <BuyerPurchaseHistoryTable
+            key={id ?? 'buyer'}
+            buyerId={id}
+            fetchEnabled={activeTab === 'purchase-history'}
+          />
         </TabsContent>
       </Tabs>
     </div>

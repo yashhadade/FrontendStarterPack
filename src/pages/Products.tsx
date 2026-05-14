@@ -7,9 +7,11 @@ import { DataTableColumn } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import ProductFormDialog, { ProductFormValues } from '@/components/ProductFormDialog';
+import { useNavigate } from 'react-router-dom';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -137,7 +139,7 @@ const Products = () => {
         searchableKeys={['name', 'code', 'hsn_code', 'selling_price']}
         getRowId={(row) => row._id}
         onRowClick={(row) => {
-          console.log(row);
+          navigate(`/products/${row._id}`); 
         }}
       />
 

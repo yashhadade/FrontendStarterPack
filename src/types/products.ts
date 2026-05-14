@@ -1,3 +1,5 @@
+import type { Buyer } from './buyers';
+
 export type Product = {
   _id: string;
   code: string;
@@ -8,6 +10,13 @@ export type Product = {
   hsn_code: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+/** Single-product API may include buyer linkage. */
+export type ProductWithBuyer = Product & {
+  buyerId?: string;
+  buyer_id?: string;
+  buyer?: Buyer | null;
 };
 
 export type CreateProductInterface = {

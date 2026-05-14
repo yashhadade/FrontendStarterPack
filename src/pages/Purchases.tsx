@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,19 +33,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import purchaseServices from '@/services/purchaseServices';
 import type { Buyer } from '@/types/buyers';
-import type { Purchase, PurchaseSummaryLineRow } from '@/types/purchase';
+import type { Purchase, PurchaseDashboardStats, PurchaseSummaryLineRow } from '@/types/purchase';
 import { formatIndianNumber } from '@/utils/numberFormat';
 import { cn } from '@/lib/utils';
 import {
   CalendarIcon,
   CheckCircle2,
+  Clock,
   FileCheck,
   MoreHorizontal,
+  Package,
   Pencil,
   RotateCcw,
   XCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -107,6 +110,65 @@ const formatDateForDisplay = (date: Date) => {
 const toUtcMidnight = (date: Date) =>
   new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 
+const PURCHASE_PAYMENT_METHODS = [
+  { value: 'CHEQUE', label: 'Cheque' },
+  { value: 'BANK_TRANSFER', label: 'Bank transfer' },
+  { value: 'CASH', label: 'Cash' },
+] as const;
+
+type PurchasePaymentMethod = (typeof PURCHASE_PAYMENT_METHODS)[number]['value'];
+
+function normalizePurchasePaymentMethod(value: unknown): PurchasePaymentMethod | null {
+  const raw = String(value ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '_');
+  if (raw === 'CHEQUE' || raw === 'BANK_TRANSFER' || raw === 'CASH') return raw;
+  return null;
+}
+
+/** Backend may return a number or legacy `[{ count }]`. */
+function parsePurchaseListTotalCount(totalCount: unknown): number {
+  if (typeof totalCount === 'number' && Number.isFinite(totalCount)) {
+    return totalCount;
+  }
+  if (Array.isArray(totalCount) && totalCount[0] != null && typeof totalCount[0] === 'object') {
+    const n = Number((totalCount[0] as { count?: unknown }).count);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+type PurchaseListEnvelope = {
+  data?: Purchase[];
+  totalCount?: number | Array<{ count?: number }>;
+  page?: number;
+  limit?: number;
+};
+
+const PURCHASE_SEARCH_DEBOUNCE_MS = 400;
+
+function normalizePurchaseDashboardPayload(res: unknown): PurchaseDashboardStats | null {
+  if (res == null || typeof res !== 'object') return null;
+  const root = res as Record<string, unknown>;
+  const raw =
+    root.data != null && typeof root.data === 'object' && !Array.isArray(root.data)
+      ? (root.data as Record<string, unknown>)
+      : root;
+  const n = (v: unknown) => {
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
+  };
+  return {
+    totalPurchases: n(raw.totalPurchases ?? raw.total_purchases),
+    pendingPurchases: n(raw.pendingPurchases ?? raw.pending_purchases),
+    pendingPurchasesAmount: n(raw.pendingPurchasesAmount ?? raw.pending_purchases_amount),
+    paidPurchases: n(raw.paidPurchases ?? raw.paid_purchases),
+    paidPurchasesAmount: n(raw.paidPurchasesAmount ?? raw.paid_purchases_amount),
+    cancelledPurchases: n(raw.cancelledPurchases ?? raw.cancelled_purchases),
+  };
+}
+
 const Purchases = () => {
   const navigate = useNavigate();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -115,20 +177,77 @@ const Purchases = () => {
   const [isPaidConfirmOpen, setIsPaidConfirmOpen] = useState(false);
   const [purchaseForPaidConfirm, setPurchaseForPaidConfirm] = useState<Purchase | null>(null);
   const [paidDateValue, setPaidDateValue] = useState<Date>(new Date());
+  const [paidPaymentMethod, setPaidPaymentMethod] = useState<PurchasePaymentMethod>('BANK_TRANSFER');
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [purchaseForCancelConfirm, setPurchaseForCancelConfirm] = useState<Purchase | null>(null);
   const [isGstClaimConfirmOpen, setIsGstClaimConfirmOpen] = useState(false);
   const [purchaseForGstConfirm, setPurchaseForGstConfirm] = useState<Purchase | null>(null);
+  const [tablePage, setTablePage] = useState(0);
+  const [tablePageSize, setTablePageSize] = useState(10);
+  const [purchaseListTotal, setPurchaseListTotal] = useState(0);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   /** Value to send as `is_gst_claimed` after the user confirms. */
   const [gstClaimNextValue, setGstClaimNextValue] = useState<boolean>(true);
+  const [purchaseDashboard, setPurchaseDashboard] = useState<PurchaseDashboardStats | null>(null);
+
+  const loadPurchaseDashboard = useCallback(async () => {
+    try {
+      const res = await purchaseServices.getPurchaseDashboard();
+      const stats = normalizePurchaseDashboardPayload(res);
+      if (stats) setPurchaseDashboard(stats);
+      else console.error((res as { error?: unknown })?.error || 'Failed to fetch purchase dashboard');
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   const loadData = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent === true;
     if (!silent) setLoading(true);
     try {
-      const purchaseRes = await purchaseServices.getAllPurchases();
-      if (purchaseRes?.data) {
-        setPurchases(purchaseRes.data);
+      const purchaseRes = await purchaseServices.getAllPurchases(
+        tablePage,
+        tablePageSize,
+        debouncedSearch
+      );
+      const root = purchaseRes?.data;
+
+      if (root != null && typeof root === 'object' && !Array.isArray(root)) {
+        const envelope = root as PurchaseListEnvelope;
+        const rows = Array.isArray(envelope.data) ? envelope.data : [];
+        setPurchases(rows);
+        setPurchaseListTotal(parsePurchaseListTotalCount(envelope.totalCount));
+        const limit = Number(envelope.limit);
+        if (Number.isFinite(limit) && limit > 0) {
+          setTablePageSize(limit);
+        }
+        const backendPage = Number(envelope.page);
+        if (Number.isFinite(backendPage) && backendPage >= 1) {
+          setTablePage(Math.max(0, backendPage - 1));
+        }
+      } else if (Array.isArray(root)) {
+        if (root.length > 0) {
+          const first = root[0] as PurchaseListEnvelope;
+          if (Array.isArray(first?.data)) {
+            setPurchases(first.data);
+            setPurchaseListTotal(parsePurchaseListTotalCount(first.totalCount));
+            const limit = Number(first.limit);
+            if (Number.isFinite(limit) && limit > 0) {
+              setTablePageSize(limit);
+            }
+            const backendPage = Number(first.page);
+            if (Number.isFinite(backendPage) && backendPage >= 1) {
+              setTablePage(Math.max(0, backendPage - 1));
+            }
+          } else {
+            setPurchases(root as Purchase[]);
+            setPurchaseListTotal(root.length);
+          }
+        } else {
+          setPurchases([]);
+          setPurchaseListTotal(0);
+        }
       } else {
         console.error(purchaseRes?.error || 'Failed to fetch purchases');
       }
@@ -137,22 +256,46 @@ const Purchases = () => {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [tablePage, tablePageSize, debouncedSearch]);
 
   useEffect(() => {
-    void loadData();
+    const t = window.setTimeout(() => {
+      setDebouncedSearch((prev) => {
+        if (prev === searchInput) return prev;
+        return searchInput;
+      });
+    }, PURCHASE_SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [searchInput]);
+
+  /** After the first load, keep the table (and search input) mounted so typing does not lose focus. */
+  const fetchSkipsFullPageLoaderRef = useRef(false);
+  useEffect(() => {
+    void loadData({ silent: fetchSkipsFullPageLoaderRef.current });
+    fetchSkipsFullPageLoaderRef.current = true;
   }, [loadData]);
+
+  useEffect(() => {
+    void loadPurchaseDashboard();
+  }, [loadPurchaseDashboard]);
 
   const handleUpdatePurchaseStatus = async (
     id: string,
     status: string,
-    paid_date?: Date | null
+    paid_date?: Date | null,
+    payment_method?: string | null
   ) => {
     try {
-      const res = await purchaseServices.updatePurchaseStatus({ id, status, paid_date });
+      const res = await purchaseServices.updatePurchaseStatus({
+        id,
+        status,
+        paid_date,
+        ...(payment_method !== undefined ? { payment_method } : {}),
+      });
       if (res && res?.data) {
         toast.success('Status updated successfully');
         await loadData({ silent: true });
+        void loadPurchaseDashboard();
       } else {
         toast.error(res?.error || 'Failed to update status');
       }
@@ -215,6 +358,12 @@ const Purchases = () => {
         header: 'Total Amount',
         align: 'center',
         render: (row) => `₹${formatInr(Number(row.total_Amount + row.gst_amount) || 0)}`,
+      },
+      {
+        key: 'payment_method',
+        header: 'Payment Method',
+        align: 'center',
+        render: (row) => row.payment_method || '—',
       },
       {
         key: 'is_gst_claimed',
@@ -324,6 +473,9 @@ const Purchases = () => {
                           setPaidDateValue(
                             Number.isNaN(seedDate.getTime()) ? new Date() : seedDate
                           );
+                          setPaidPaymentMethod(
+                            normalizePurchasePaymentMethod(row.payment_method) ?? 'BANK_TRANSFER'
+                          );
                           setIsPaidConfirmOpen(true);
                         }}
                       >
@@ -393,11 +545,83 @@ const Purchases = () => {
   const paidConfirmIsPaid = String(purchaseForPaidConfirm?.status || '').toUpperCase() === 'PAID';
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
+    <div className="p-3 sm:p-5 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader title="Purchases" description="Manage and review all purchases" />
         <Button onClick={() => navigate('/purchases/create')}>Add New Purchase</Button>
       </div>
+
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
+                Total purchases
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground tabular-nums">
+                {purchaseDashboard?.totalPurchases ?? 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-yellow-500/15 text-yellow-600 flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
+                Pending
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground tabular-nums">
+                {purchaseDashboard?.pendingPurchases ?? 0}
+              </p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground tabular-nums mt-0.5">
+                ₹{formatInr(purchaseDashboard?.pendingPurchasesAmount ?? 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-500/15 text-green-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
+                Paid
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground tabular-nums">
+                {purchaseDashboard?.paidPurchases ?? 0}
+              </p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground tabular-nums mt-0.5">
+                ₹{formatInr(purchaseDashboard?.paidPurchasesAmount ?? 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-3 sm:p-5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-red-500/15 text-red-600 flex items-center justify-center shrink-0">
+              <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide truncate">
+                Cancelled
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground tabular-nums">
+                {purchaseDashboard?.cancelledPurchases ?? 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
         <div className="glass-card p-10 text-center text-sm text-muted-foreground">
@@ -409,10 +633,22 @@ const Purchases = () => {
           columns={columns}
           data={purchases}
           getRowId={(row) => row._id ?? row.invoice_number}
-          searchableKeys={['invoice_number', 'date']}
+          onSearchChange={setSearchInput}
+          search={searchInput}
+          serverSearch
           searchPlaceholder="Search invoice, buyer, or date…"
           initialSortKey="date"
           initialSortDirection="desc"
+          serverPagination
+          totalRows={purchaseListTotal}
+          currentPage={tablePage}
+          currentPageSize={tablePageSize}
+          pageSizes={[10]}
+          onPageChange={(page) => setTablePage(page)}
+          onPageSizeChange={(size) => {
+            setTablePageSize(size);
+            setTablePage(0);
+          }}
         />
       )}
 
@@ -443,7 +679,13 @@ const Purchases = () => {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isPaidConfirmOpen} onOpenChange={setIsPaidConfirmOpen}>
+      <AlertDialog
+        open={isPaidConfirmOpen}
+        onOpenChange={(open) => {
+          setIsPaidConfirmOpen(open);
+          if (!open) setPurchaseForPaidConfirm(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -497,6 +739,28 @@ const Purchases = () => {
                         />
                       </PopoverContent>
                     </Popover>
+                    <div className="space-y-2 pt-2">
+                      <Label>Payment method</Label>
+                      <RadioGroup
+                        value={paidPaymentMethod}
+                        onValueChange={(v) =>
+                          setPaidPaymentMethod(v as PurchasePaymentMethod)
+                        }
+                        className="grid gap-2"
+                      >
+                        {PURCHASE_PAYMENT_METHODS.map((m) => (
+                          <div key={m.value} className="flex items-center space-x-2">
+                            <RadioGroupItem value={m.value} id={`purchase-pm-${m.value}`} />
+                            <Label
+                              htmlFor={`purchase-pm-${m.value}`}
+                              className="font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {m.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -518,7 +782,8 @@ const Purchases = () => {
                 await handleUpdatePurchaseStatus(
                   purchaseForPaidConfirm._id,
                   isMarkingPaid ? 'PAID' : 'PENDING',
-                  isMarkingPaid ? toUtcMidnight(paidDateValue) : null
+                  isMarkingPaid ? toUtcMidnight(paidDateValue) : null,
+                  isMarkingPaid ? paidPaymentMethod : null
                 );
                 setPurchaseForPaidConfirm(null);
                 setIsPaidConfirmOpen(false);

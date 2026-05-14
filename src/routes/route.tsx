@@ -16,6 +16,7 @@ import Buyer from '@/pages/Buyer';
 import BuyerDetails from '@/pages/BuyerDetails';
 import Purchases from '@/pages/Purchases';
 import CreatePurchase from '@/pages/CreatePurchase';
+import ProductDetails from '@/pages/ProductDetails';
 
 const AppRoutes = () => {
   return (
@@ -37,6 +38,14 @@ const AppRoutes = () => {
             element={
               <RequireRole allowed={['ADMIN']}>
                 <Products />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="products/:id"
+            element={
+              <RequireRole allowed={['ADMIN']}>
+                <ProductDetails />
               </RequireRole>
             }
           />
