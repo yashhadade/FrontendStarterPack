@@ -139,7 +139,7 @@ const Products = () => {
         searchableKeys={['name', 'code', 'hsn_code', 'selling_price']}
         getRowId={(row) => row._id}
         onRowClick={(row) => {
-          navigate(`/products/${row._id}`); 
+          navigate(`/products/${row._id}`);
         }}
       />
 

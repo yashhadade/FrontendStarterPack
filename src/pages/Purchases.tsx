@@ -177,7 +177,8 @@ const Purchases = () => {
   const [isPaidConfirmOpen, setIsPaidConfirmOpen] = useState(false);
   const [purchaseForPaidConfirm, setPurchaseForPaidConfirm] = useState<Purchase | null>(null);
   const [paidDateValue, setPaidDateValue] = useState<Date>(new Date());
-  const [paidPaymentMethod, setPaidPaymentMethod] = useState<PurchasePaymentMethod>('BANK_TRANSFER');
+  const [paidPaymentMethod, setPaidPaymentMethod] =
+    useState<PurchasePaymentMethod>('BANK_TRANSFER');
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [purchaseForCancelConfirm, setPurchaseForCancelConfirm] = useState<Purchase | null>(null);
   const [isGstClaimConfirmOpen, setIsGstClaimConfirmOpen] = useState(false);
@@ -196,67 +197,71 @@ const Purchases = () => {
       const res = await purchaseServices.getPurchaseDashboard();
       const stats = normalizePurchaseDashboardPayload(res);
       if (stats) setPurchaseDashboard(stats);
-      else console.error((res as { error?: unknown })?.error || 'Failed to fetch purchase dashboard');
+      else
+        console.error((res as { error?: unknown })?.error || 'Failed to fetch purchase dashboard');
     } catch (e) {
       console.error(e);
     }
   }, []);
 
-  const loadData = useCallback(async (options?: { silent?: boolean }) => {
-    const silent = options?.silent === true;
-    if (!silent) setLoading(true);
-    try {
-      const purchaseRes = await purchaseServices.getAllPurchases(
-        tablePage,
-        tablePageSize,
-        debouncedSearch
-      );
-      const root = purchaseRes?.data;
+  const loadData = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent === true;
+      if (!silent) setLoading(true);
+      try {
+        const purchaseRes = await purchaseServices.getAllPurchases(
+          tablePage,
+          tablePageSize,
+          debouncedSearch
+        );
+        const root = purchaseRes?.data;
 
-      if (root != null && typeof root === 'object' && !Array.isArray(root)) {
-        const envelope = root as PurchaseListEnvelope;
-        const rows = Array.isArray(envelope.data) ? envelope.data : [];
-        setPurchases(rows);
-        setPurchaseListTotal(parsePurchaseListTotalCount(envelope.totalCount));
-        const limit = Number(envelope.limit);
-        if (Number.isFinite(limit) && limit > 0) {
-          setTablePageSize(limit);
-        }
-        const backendPage = Number(envelope.page);
-        if (Number.isFinite(backendPage) && backendPage >= 1) {
-          setTablePage(Math.max(0, backendPage - 1));
-        }
-      } else if (Array.isArray(root)) {
-        if (root.length > 0) {
-          const first = root[0] as PurchaseListEnvelope;
-          if (Array.isArray(first?.data)) {
-            setPurchases(first.data);
-            setPurchaseListTotal(parsePurchaseListTotalCount(first.totalCount));
-            const limit = Number(first.limit);
-            if (Number.isFinite(limit) && limit > 0) {
-              setTablePageSize(limit);
-            }
-            const backendPage = Number(first.page);
-            if (Number.isFinite(backendPage) && backendPage >= 1) {
-              setTablePage(Math.max(0, backendPage - 1));
+        if (root != null && typeof root === 'object' && !Array.isArray(root)) {
+          const envelope = root as PurchaseListEnvelope;
+          const rows = Array.isArray(envelope.data) ? envelope.data : [];
+          setPurchases(rows);
+          setPurchaseListTotal(parsePurchaseListTotalCount(envelope.totalCount));
+          const limit = Number(envelope.limit);
+          if (Number.isFinite(limit) && limit > 0) {
+            setTablePageSize(limit);
+          }
+          const backendPage = Number(envelope.page);
+          if (Number.isFinite(backendPage) && backendPage >= 1) {
+            setTablePage(Math.max(0, backendPage - 1));
+          }
+        } else if (Array.isArray(root)) {
+          if (root.length > 0) {
+            const first = root[0] as PurchaseListEnvelope;
+            if (Array.isArray(first?.data)) {
+              setPurchases(first.data);
+              setPurchaseListTotal(parsePurchaseListTotalCount(first.totalCount));
+              const limit = Number(first.limit);
+              if (Number.isFinite(limit) && limit > 0) {
+                setTablePageSize(limit);
+              }
+              const backendPage = Number(first.page);
+              if (Number.isFinite(backendPage) && backendPage >= 1) {
+                setTablePage(Math.max(0, backendPage - 1));
+              }
+            } else {
+              setPurchases(root as Purchase[]);
+              setPurchaseListTotal(root.length);
             }
           } else {
-            setPurchases(root as Purchase[]);
-            setPurchaseListTotal(root.length);
+            setPurchases([]);
+            setPurchaseListTotal(0);
           }
         } else {
-          setPurchases([]);
-          setPurchaseListTotal(0);
+          console.error(purchaseRes?.error || 'Failed to fetch purchases');
         }
-      } else {
-        console.error(purchaseRes?.error || 'Failed to fetch purchases');
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [tablePage, tablePageSize, debouncedSearch]);
+    },
+    [tablePage, tablePageSize, debouncedSearch]
+  );
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -743,9 +748,7 @@ const Purchases = () => {
                       <Label>Payment method</Label>
                       <RadioGroup
                         value={paidPaymentMethod}
-                        onValueChange={(v) =>
-                          setPaidPaymentMethod(v as PurchasePaymentMethod)
-                        }
+                        onValueChange={(v) => setPaidPaymentMethod(v as PurchasePaymentMethod)}
                         className="grid gap-2"
                       >
                         {PURCHASE_PAYMENT_METHODS.map((m) => (

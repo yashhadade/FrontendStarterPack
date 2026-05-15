@@ -386,4 +386,4 @@ export default function ProductDetails() {
       </Tabs>
     </div>
   );
-};
+}

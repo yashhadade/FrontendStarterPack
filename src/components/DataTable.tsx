@@ -128,7 +128,10 @@ type DataTableProps<T> = {
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50] as const;
 
-function getSearchableValue<T extends Record<string, unknown>>(row: T, key: keyof T | string): unknown {
+function getSearchableValue<T extends Record<string, unknown>>(
+  row: T,
+  key: keyof T | string
+): unknown {
   if (typeof key === 'string' && key.includes('.')) {
     return key.split('.').reduce<unknown>((acc, part) => {
       if (acc != null && typeof acc === 'object' && part in (acc as object)) {

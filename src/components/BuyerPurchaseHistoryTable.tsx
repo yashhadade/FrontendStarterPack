@@ -284,7 +284,9 @@ const BuyerPurchaseHistoryTable = ({ buyerId, fetchEnabled }: BuyerPurchaseHisto
   if (!buyerId?.trim()) {
     return (
       <div className="glass-card p-6">
-        <p className="text-sm text-muted-foreground">Save the buyer first to see purchase history.</p>
+        <p className="text-sm text-muted-foreground">
+          Save the buyer first to see purchase history.
+        </p>
       </div>
     );
   }

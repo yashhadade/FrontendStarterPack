@@ -1,7 +1,17 @@
 import PageHeader from '@/components/PageHeader';
 import dashbordServices from '@/services/dashbordServices';
 import { formatIndianNumber } from '@/utils/numberFormat';
-import { CalendarRange, Eye, EyeOff, IndianRupee, Percent, ShoppingCart, Sparkles, TrendingUp, Wallet } from 'lucide-react';
+import {
+  CalendarRange,
+  Eye,
+  EyeOff,
+  IndianRupee,
+  Percent,
+  ShoppingCart,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Bar,
@@ -181,7 +191,9 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
                   Purchases
                 </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From purchase records</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  From purchase records
+                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
@@ -198,7 +210,9 @@ const Dashboard = () => {
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-purple-600">
                     <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST credits</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      GST credits
+                    </p>
                   </div>
                   <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                     {isLoading ? '—' : displayAmount(fyTotals.gst_credits)}
@@ -224,13 +238,17 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
                   Invoices
                 </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From sales invoices</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  From sales invoices
+                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total sales</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Total sales
+                    </p>
                   </div>
                   <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                     {isLoading ? '—' : displayAmount(fyTotals.selling)}
@@ -239,7 +257,9 @@ const Dashboard = () => {
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-blue-600">
                     <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total GST</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Total GST
+                    </p>
                   </div>
                   <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                     {isLoading ? '—' : displayAmount(fyTotals.gst)}
@@ -248,7 +268,9 @@ const Dashboard = () => {
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center gap-2 text-green-600">
                     <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total profit</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Total profit
+                    </p>
                   </div>
                   <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                     {isLoading ? '—' : displayAmount(fyTotals.profit)}
@@ -281,7 +303,9 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
                   Purchases
                 </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From purchase records</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  From purchase records
+                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
@@ -298,7 +322,9 @@ const Dashboard = () => {
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
                   <div className="flex items-center gap-2 text-purple-600">
                     <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST credits</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      GST credits
+                    </p>
                   </div>
                   <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                     {isLoading ? '—' : displayAmount(currentMonthTotals.gst_credits)}
@@ -315,7 +341,8 @@ const Dashboard = () => {
                     {isLoading
                       ? '—'
                       : displayAmount(
-                          (currentMonthTotals.gst_credits ?? 0) + (currentMonthTotals.purchase_total ?? 0)
+                          (currentMonthTotals.gst_credits ?? 0) +
+                            (currentMonthTotals.purchase_total ?? 0)
                         )}
                   </p>
                 </div>
@@ -326,7 +353,9 @@ const Dashboard = () => {
                 <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
                   Invoices
                 </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From sales invoices</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  From sales invoices
+                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
@@ -350,7 +379,9 @@ const Dashboard = () => {
                 <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center gap-2 text-green-600">
                     <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Profit</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Profit
+                    </p>
                   </div>
                   <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
                     {isLoading ? '—' : displayAmount(currentMonthTotals.profit)}
@@ -449,11 +480,13 @@ const Dashboard = () => {
                 </th>
               </tr>
               <tr className="border-b border-border text-left text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">Purchases</th>
                 <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">
-                  Purchases
+                  GST credits
                 </th>
-                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">GST credits</th>
-                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">Purchases Total</th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">
+                  Purchases Total
+                </th>
                 <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/20 border-l-2 border-border">
                   Sales
                 </th>
