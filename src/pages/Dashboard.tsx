@@ -1,7 +1,7 @@
 import PageHeader from '@/components/PageHeader';
-import invoiceServices from '@/services/invoiceServices';
+import dashbordServices from '@/services/dashbordServices';
 import { formatIndianNumber } from '@/utils/numberFormat';
-import { CalendarRange, Eye, EyeOff, IndianRupee, Percent, TrendingUp, Wallet } from 'lucide-react';
+import { CalendarRange, Eye, EyeOff, IndianRupee, Percent, ShoppingCart, Sparkles, TrendingUp, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Bar,
@@ -21,6 +21,9 @@ type MonthlyDatum = {
   selling_Amount: number;
   buying_Amount: number;
   gst_amount: number;
+  gst_credits: number;
+  purchase_total: number;
+  purchaseCount: number;
 };
 
 type FinancialYearSummary = {
@@ -33,6 +36,8 @@ type FinancialYearSummary = {
     selling_Amount: number;
     buying_Amount: number;
     gst_amount: number;
+    gst_credits: number;
+    purchase_total: number;
   };
 };
 
@@ -50,9 +55,15 @@ const Dashboard = () => {
   useEffect(() => {
     const getFinancialYearSummary = async () => {
       try {
-        const res = await invoiceServices.financialYearSummary();
+        const res = await dashbordServices.getDashboardData();
         if (res && res?.data) {
-          setFinancialYearSummary(res.data as FinancialYearSummary);
+          const raw = res.data as Record<string, unknown>;
+          /** API may nest under `financialYearSummary` or return the summary object at top level. */
+          const inner =
+            raw.financialYearSummary != null && typeof raw.financialYearSummary === 'object'
+              ? (raw.financialYearSummary as FinancialYearSummary)
+              : (raw as FinancialYearSummary);
+          setFinancialYearSummary(inner);
         } else {
           console.error(res?.error || 'Failed to fetch financial year summary');
         }
@@ -67,14 +78,18 @@ const Dashboard = () => {
     const selling = financialYearSummary?.totals?.selling_Amount ?? 0;
     const buying = financialYearSummary?.totals?.buying_Amount ?? 0;
     const gst = financialYearSummary?.totals?.gst_amount ?? 0;
-    return { selling, buying, gst, profit: selling - buying };
+    const purchase_total = financialYearSummary?.totals?.purchase_total ?? 0;
+    const gst_credits = financialYearSummary?.totals?.gst_credits ?? 0;
+    return { selling, buying, gst, purchase_total, gst_credits, profit: selling - buying };
   }, [financialYearSummary]);
 
   const currentMonthTotals = useMemo(() => {
     const selling = financialYearSummary?.currentMonth?.selling_Amount ?? 0;
     const buying = financialYearSummary?.currentMonth?.buying_Amount ?? 0;
     const gst = financialYearSummary?.currentMonth?.gst_amount ?? 0;
-    return { selling, buying, gst, profit: selling - buying };
+    const purchase_total = financialYearSummary?.currentMonth?.purchase_total ?? 0;
+    const gst_credits = financialYearSummary?.currentMonth?.gst_credits ?? 0;
+    return { selling, buying, gst, purchase_total, gst_credits, profit: selling - buying };
   }, [financialYearSummary]);
 
   const chartData = useMemo(() => {
@@ -84,18 +99,40 @@ const Dashboard = () => {
       Sales: Number(m.selling_Amount ?? 0),
       GST: Number(m.gst_amount ?? 0),
       Profit: Number((m.selling_Amount ?? 0) - (m.buying_Amount ?? 0)),
+      GSTCredits: Number(m.gst_credits ?? 0),
+      Purchases: Number(m.purchase_total ?? 0),
     }));
   }, [financialYearSummary]);
 
   const fyLabel = financialYearSummary?.financialYear
     ? `FY ${financialYearSummary.financialYear}`
     : 'Current FY';
-  const fyRangeLabel = financialYearSummary?.financialYear
-    ? (() => {
-        const [startYear, endYearShort] = financialYearSummary.financialYear.split('-');
-        return `April ${startYear} – March 20${endYearShort}`;
-      })()
-    : 'April – March';
+
+  const fyRangeLabel = useMemo(() => {
+    if (!financialYearSummary) return 'April – March';
+    const { fyStart, fyEnd, financialYear } = financialYearSummary;
+    if (fyStart && fyEnd) {
+      try {
+        const start = new Date(fyStart);
+        const end = new Date(fyEnd);
+        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+          const fmt = (d: Date) =>
+            d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+          return `${fmt(start)} – ${fmt(end)}`;
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+    if (financialYear) {
+      const [startYear, endYearShort] = financialYear.split('-');
+      if (startYear && endYearShort) {
+        const endFull = endYearShort.length === 2 ? `20${endYearShort}` : endYearShort;
+        return `Apr ${startYear} – Mar ${endFull}`;
+      }
+    }
+    return 'April – March';
+  }, [financialYearSummary]);
 
   const currentMonthLabel = financialYearSummary?.currentMonth
     ? `${financialYearSummary.currentMonth.month} ${financialYearSummary.currentMonth.year}`
@@ -138,37 +175,86 @@ const Dashboard = () => {
             </div>
             <span className="text-[10px] sm:text-xs text-muted-foreground">{fyRangeLabel}</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
-                  Total Sales
+          <div className="space-y-3 sm:space-y-4">
+            <div className="rounded-lg border border-border bg-muted/35 p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div>
+                <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
+                  Purchases
                 </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From purchase records</p>
               </div>
-              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : displayAmount(fyTotals.selling)}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
-              <div className="flex items-center gap-2 text-blue-600">
-                <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total GST</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Purchase total
+                    </p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(fyTotals.purchase_total)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-purple-600">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST credits</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(fyTotals.gst_credits)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2 text-foreground">
+                    <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-orange-600" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Purchases total
+                    </p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading
+                      ? '—'
+                      : displayAmount((fyTotals.gst_credits ?? 0) + (fyTotals.purchase_total ?? 0))}
+                  </p>
+                </div>
               </div>
-              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : displayAmount(fyTotals.gst)}
-              </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
-              <div className="flex items-center gap-2 text-green-600">
-                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
-                  Total Profit
+            <div className="rounded-lg border border-border bg-muted/20 border-l-2 border-l-border p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div>
+                <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
+                  Invoices
                 </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From sales invoices</p>
               </div>
-              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : displayAmount(fyTotals.profit)}
-              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total sales</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(fyTotals.selling)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total GST</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(fyTotals.gst)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Total profit</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(fyTotals.profit)}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -189,33 +275,88 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Sales</p>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="rounded-lg border border-border bg-muted/35 p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div>
+                <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
+                  Purchases
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From purchase records</p>
               </div>
-              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : displayAmount(currentMonthTotals.selling)}
-              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Purchase total
+                    </p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(currentMonthTotals.purchase_total)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-purple-600">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST credits</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(currentMonthTotals.gst_credits)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2 text-foreground">
+                    <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-orange-600" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">
+                      Purchases total
+                    </p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading
+                      ? '—'
+                      : displayAmount(
+                          (currentMonthTotals.gst_credits ?? 0) + (currentMonthTotals.purchase_total ?? 0)
+                        )}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
-              <div className="flex items-center gap-2 text-blue-600">
-                <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST</p>
+            <div className="rounded-lg border border-border bg-muted/20 border-l-2 border-l-border p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div>
+                <p className="text-[10px] sm:text-xs font-semibold text-foreground uppercase tracking-wide">
+                  Invoices
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">From sales invoices</p>
               </div>
-              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : displayAmount(currentMonthTotals.gst)}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:p-4 min-w-0">
-              <div className="flex items-center gap-2 text-green-600">
-                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Profit</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Sales</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(currentMonthTotals.selling)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0">
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">GST</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(currentMonthTotals.gst)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3 sm:p-4 min-w-0 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide truncate">Profit</p>
+                  </div>
+                  <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
+                    {isLoading ? '—' : displayAmount(currentMonthTotals.profit)}
+                  </p>
+                </div>
               </div>
-              <p className="mt-1.5 sm:mt-2 text-base sm:text-lg lg:text-xl font-semibold text-foreground whitespace-nowrap">
-                {isLoading ? '—' : displayAmount(currentMonthTotals.profit)}
-              </p>
             </div>
           </div>
         </div>
@@ -264,6 +405,8 @@ const Dashboard = () => {
                 <Bar dataKey="Sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="GST" fill="#2563eb" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Profit" fill="#16a34a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="GSTCredits" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Purchases" fill="#ea580c" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -278,18 +421,45 @@ const Dashboard = () => {
         <div>
           <h2 className="text-base sm:text-lg font-semibold text-foreground">Monthly Details</h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Month-wise sales, buying, GST and profit for {fyLabel}
+            Purchase figures (from purchase records) and invoice figures (from sales invoices) for{' '}
+            {fyLabel}. Profit is sales minus buying on invoices.
           </p>
         </div>
         <div className="-mx-3 sm:mx-0 overflow-x-auto">
-          <table className="w-full min-w-[560px] text-xs sm:text-sm">
+          <table className="w-full min-w-[640px] text-xs sm:text-sm">
             <thead>
+              <tr className="border-b border-border text-left text-[10px] sm:text-xs uppercase tracking-wide">
+                <th
+                  rowSpan={2}
+                  className="py-2 px-3 sm:px-4 align-bottom font-normal text-muted-foreground"
+                >
+                  Month
+                </th>
+                <th
+                  colSpan={3}
+                  className="py-1.5 px-3 sm:px-4 text-center font-medium text-foreground bg-muted/35 border-l border-border"
+                >
+                  Purchases
+                </th>
+                <th
+                  colSpan={4}
+                  className="py-1.5 px-3 sm:px-4 text-center font-medium text-foreground bg-muted/20 border-l-2 border-border"
+                >
+                  Invoices
+                </th>
+              </tr>
               <tr className="border-b border-border text-left text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="py-2 px-3 sm:px-4">Month</th>
-                <th className="py-2 px-3 sm:px-4 text-right">Sales</th>
-                <th className="py-2 px-3 sm:px-4 text-right">Buying</th>
-                <th className="py-2 px-3 sm:px-4 text-right">GST</th>
-                <th className="py-2 px-3 sm:px-4 text-right">Profit</th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">
+                  Purchases
+                </th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">GST credits</th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/35">Purchases Total</th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/20 border-l-2 border-border">
+                  Sales
+                </th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/20">Buying</th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/20">GST</th>
+                <th className="py-2 px-3 sm:px-4 text-right font-normal bg-muted/20">Profit</th>
               </tr>
             </thead>
             <tbody>
@@ -311,17 +481,26 @@ const Dashboard = () => {
                         </span>
                       ) : null}
                     </td>
-                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap bg-muted/15">
+                      {displayAmount(m.purchase_total ?? 0)}
+                    </td>
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap bg-muted/15">
+                      {displayAmount(m.gst_credits ?? 0)}
+                    </td>
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap bg-muted/15">
+                      {displayAmount((m.gst_credits ?? 0) + (m.purchase_total ?? 0))}
+                    </td>
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap border-l-2 border-border bg-muted/10">
                       {displayAmount(m.selling_Amount ?? 0)}
                     </td>
-                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap bg-muted/10">
                       {displayAmount(m.buying_Amount ?? 0)}
                     </td>
-                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap">
+                    <td className="py-2 px-3 sm:px-4 text-right text-foreground whitespace-nowrap bg-muted/10">
                       {displayAmount(m.gst_amount ?? 0)}
                     </td>
                     <td
-                      className={`py-2 px-3 sm:px-4 text-right font-medium whitespace-nowrap ${
+                      className={`py-2 px-3 sm:px-4 text-right font-medium whitespace-nowrap bg-muted/10 ${
                         profit >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
@@ -335,17 +514,26 @@ const Dashboard = () => {
                   <td className="py-2 px-3 sm:px-4 font-semibold text-foreground whitespace-nowrap">
                     Total
                   </td>
-                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap bg-muted/15">
+                    {displayAmount(fyTotals.purchase_total ?? 0)}
+                  </td>
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap bg-muted/15">
+                    {displayAmount(fyTotals.gst_credits ?? 0)}
+                  </td>
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap bg-muted/15">
+                    {displayAmount((fyTotals.gst_credits ?? 0) + (fyTotals.purchase_total ?? 0))}
+                  </td>
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap border-l-2 border-border bg-muted/10">
                     {displayAmount(fyTotals.selling)}
                   </td>
-                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap bg-muted/10">
                     {displayAmount(fyTotals.buying)}
                   </td>
-                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap">
+                  <td className="py-2 px-3 sm:px-4 text-right font-semibold text-foreground whitespace-nowrap bg-muted/10">
                     {displayAmount(fyTotals.gst)}
                   </td>
                   <td
-                    className={`py-2 px-3 sm:px-4 text-right font-semibold whitespace-nowrap ${
+                    className={`py-2 px-3 sm:px-4 text-right font-semibold whitespace-nowrap bg-muted/10 ${
                       fyTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
@@ -357,7 +545,7 @@ const Dashboard = () => {
           </table>
           {!financialYearSummary?.monthlyData?.length ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              {isLoading ? 'Loading…' : 'No invoices found for this financial year.'}
+              {isLoading ? 'Loading…' : 'No monthly breakdown for this financial year.'}
             </div>
           ) : null}
         </div>

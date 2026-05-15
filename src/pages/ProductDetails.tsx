@@ -1,10 +1,10 @@
+import DataTable, { DataTableColumn } from '@/components/DataTable';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import buyerServices from '@/services/buyerServices';
 import productServices from '@/services/productServices';
-import type { Buyer } from '@/types/buyers';
+import type { BuyerMapping } from '@/types/buyers';
 import type { ProductWithBuyer } from '@/types/products';
 import {
   ArrowLeft,
@@ -100,15 +100,22 @@ function MessagePanel({
   );
 }
 
-const ProductDetails = () => {
+function parseBuyerMappingList(res: unknown): BuyerMapping[] {
+  if (res == null || typeof res !== 'object') return [];
+  const root = res as Record<string, unknown>;
+  const raw = root.data;
+  if (!Array.isArray(raw)) return [];
+  return raw as BuyerMapping[];
+}
+
+export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('product-info');
   const [product, setProduct] = useState<ProductWithBuyer | null>(null);
   const [productLoading, setProductLoading] = useState(true);
-  const [buyer, setBuyer] = useState<Buyer | null>(null);
+  const [buyerMappings, setBuyerMappings] = useState<BuyerMapping[]>([]);
   const [buyerLoading, setBuyerLoading] = useState(false);
-
   const loadProduct = useCallback(async () => {
     if (!id) {
       setProductLoading(false);
@@ -116,7 +123,7 @@ const ProductDetails = () => {
       return;
     }
     setProduct(null);
-    setBuyer(null);
+    setBuyerMappings([]);
     setProductLoading(true);
     try {
       const res = await productServices.getProductById(id);
@@ -130,54 +137,60 @@ const ProductDetails = () => {
     void loadProduct();
   }, [loadProduct]);
 
-  const resolvedBuyerId =
-    product?.buyer?._id ??
-    product?.buyerId ??
-    (typeof product?.buyer_id === 'string' ? product.buyer_id : undefined);
-
-  const hasEmbeddedBuyer =
-    product?.buyer != null &&
-    (Boolean(product.buyer.name) || Boolean(product.buyer.address) || Boolean(product.buyer._id));
-  const hasBuyerLink = Boolean(resolvedBuyerId) || hasEmbeddedBuyer;
-
-  const loadBuyer = useCallback(async () => {
-    if (product?.buyer != null && (product.buyer.name || product.buyer._id)) {
-      setBuyer(product.buyer);
-      return;
-    }
-    const bid = resolvedBuyerId;
-    if (!bid) {
-      setBuyer(null);
+  const loadBuyerMappings = useCallback(async () => {
+    if (!id) {
+      setBuyerMappings([]);
       return;
     }
     setBuyerLoading(true);
     try {
-      const res = await buyerServices.getSingleBuyer(bid);
-      if (res && res?.data) setBuyer(res.data as Buyer);
-      else setBuyer(null);
-    } catch {
-      setBuyer(null);
+      const res = await productServices.productBuyerMapping(id);
+      setBuyerMappings(parseBuyerMappingList(res));
+    } catch (error) {
+      console.error(error);
+      setBuyerMappings([]);
     } finally {
       setBuyerLoading(false);
     }
-  }, [product, resolvedBuyerId]);
+  }, [id]);
 
   useEffect(() => {
-    void loadBuyer();
-  }, [loadBuyer]);
+    void loadBuyerMappings();
+  }, [loadBuyerMappings]);
 
-  const primaryBuyerRows = [
-    { label: 'Name', value: buyer?.name },
-    { label: 'Address', value: buyer?.address },
-    { label: 'GST number', value: buyer?.gst_number },
+  const buyerColumns: DataTableColumn<BuyerMapping>[] = [
+    {
+      key: 'totalOrders',
+      header: 'Orders',
+      align: 'center',
+      render: (row) => String(row.totalOrders ?? 0),
+    },
+    {
+      key: 'buyerDetails.name',
+      header: 'Name',
+      render: (row) => row.buyerDetails?.name ?? '—',
+    },
+    {
+      key: 'buyerDetails.address',
+      header: 'Address',
+      render: (row) => row.buyerDetails?.address ?? '—',
+    },
+    {
+      key: 'buyerDetails.contact_Person_name',
+      header: 'Contact Person Name',
+      render: (row) => row.buyerDetails?.contact_Person_name ?? '—',
+    },
+    {
+      key: 'buyerDetails.contact_Person_number',
+      header: 'Contact Person Number',
+      render: (row) => row.buyerDetails?.contact_Person_number ?? '—',
+    },
+    {
+      key: 'buyerDetails.contact_Person_email',
+      header: 'Contact Person Email',
+      render: (row) => row.buyerDetails?.contact_Person_email ?? '—',
+    },
   ];
-
-  const contactBuyerRows = [
-    { label: 'Contact person', value: buyer?.contact_Person_name },
-    { label: 'Email', value: buyer?.contact_Person_email },
-    { label: 'Phone', value: buyer?.contact_Person_number },
-  ];
-
   return (
     <div className="p-3 sm:p-5 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -336,76 +349,37 @@ const ProductDetails = () => {
                 description="Product details are still loading."
                 loading={productLoading}
               />
-            ) : !hasBuyerLink ? (
+            ) : buyerLoading ? (
+              <MessagePanel
+                icon={UserRound}
+                title="Loading buyers"
+                description="Fetching buyer mappings for this product…"
+                loading
+              />
+            ) : buyerMappings.length === 0 ? (
               <MessagePanel
                 icon={Building2}
                 title="No linked buyer"
                 description="This product is not associated with a buyer in the system yet. Link a buyer from your admin or catalog settings if needed."
               />
-            ) : buyerLoading && !buyer ? (
-              <MessagePanel
-                icon={UserRound}
-                title="Loading buyer"
-                description="Fetching buyer profile…"
-                loading
-              />
-            ) : !buyer ? (
-              <MessagePanel
-                icon={UserRound}
-                title="Could not load buyer"
-                description="The buyer record may be missing or you may not have access."
-              />
             ) : (
-              <>
-                <div className="rounded-xl border border-border/60 bg-gradient-to-br from-muted/50 to-muted/20 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 rounded-xl bg-primary/12 text-primary items-center justify-center border border-primary/15">
-                      <Building2 className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                        Linked buyer
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-foreground">{buyer.name}</p>
-                      {buyer.gst_number ? (
-                        <p className="mt-1 text-xs text-muted-foreground">GST · {buyer.gst_number}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                  {buyer._id ? (
-                    <Button asChild variant="secondary" size="sm" className="shrink-0 shadow-sm">
-                      <Link to={`/buyer/${buyer._id}`}>Open buyer profile</Link>
-                    </Button>
-                  ) : null}
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-border/60 bg-card p-5 space-y-4">
-                    <h3 className="text-sm font-semibold text-foreground border-b border-border/60 pb-2 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      Primary details
-                    </h3>
-                    {primaryBuyerRows.map((row) => (
-                      <DetailField key={row.label} label={row.label} value={row.value} />
-                    ))}
-                  </div>
-
-                  <div className="rounded-xl border border-border/60 bg-card p-5 space-y-4">
-                    <h3 className="text-sm font-semibold text-foreground border-b border-border/60 pb-2 flex items-center gap-2">
-                      <UserRound className="h-4 w-4 text-muted-foreground" />
-                      Contact details
-                    </h3>
-                    {contactBuyerRows.map((row, i) => (
-                      <DetailField
-                        key={row.label}
-                        label={row.label}
-                        value={row.value}
-                        icon={i === 0 ? UserRound : i === 1 ? Mail : Phone}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </>
+              <DataTable<BuyerMapping>
+                title="Linked buyers"
+                data={buyerMappings}
+                columns={buyerColumns}
+                getRowId={(row) => row._id}
+                searchableKeys={[
+                  'totalOrders',
+                  'buyerDetails.name',
+                  'buyerDetails.address',
+                  'buyerDetails.gst_number',
+                  'buyerDetails.contact_Person_name',
+                  'buyerDetails.contact_Person_number',
+                  'buyerDetails.contact_Person_email',
+                ]}
+                searchPlaceholder="Search buyers…"
+                onRowClick={(row) => navigate(`/buyer/${row.buyerDetails._id}`)}
+              />
             )}
           </div>
         </TabsContent>
@@ -413,5 +387,3 @@ const ProductDetails = () => {
     </div>
   );
 };
-
-export default ProductDetails;

@@ -53,8 +53,9 @@ type DataTableProps<T> = {
   /**
    * Keys to use when filtering with the search box.
    * If omitted, all primitive fields will be considered.
+   * Use dot paths (e.g. `buyer.name`) for nested fields.
    */
-  searchableKeys?: (keyof T)[];
+  searchableKeys?: (keyof T | string)[];
   /**
    * Function to extract a unique ID for each row.
    */
@@ -127,6 +128,18 @@ type DataTableProps<T> = {
 
 const DEFAULT_PAGE_SIZES = [5, 10, 25, 50] as const;
 
+function getSearchableValue<T extends Record<string, unknown>>(row: T, key: keyof T | string): unknown {
+  if (typeof key === 'string' && key.includes('.')) {
+    return key.split('.').reduce<unknown>((acc, part) => {
+      if (acc != null && typeof acc === 'object' && part in (acc as object)) {
+        return (acc as Record<string, unknown>)[part];
+      }
+      return undefined;
+    }, row as unknown);
+  }
+  return (row as Record<string, unknown>)[key as string];
+}
+
 function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
@@ -165,9 +178,9 @@ function DataTable<T extends Record<string, unknown>>({
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState<number>(0);
 
-  const effectiveSearchKeys = useMemo(() => {
+  const effectiveSearchKeys = useMemo((): (keyof T | string)[] => {
     if (searchableKeys && searchableKeys.length > 0) return searchableKeys;
-    if (data.length === 0) return [] as (keyof T)[];
+    if (data.length === 0) return [];
     return Object.keys(data[0]) as (keyof T)[];
   }, [data, searchableKeys]);
 
@@ -177,7 +190,7 @@ function DataTable<T extends Record<string, unknown>>({
     const query = searchQuery.toLowerCase();
     return data.filter((row) =>
       effectiveSearchKeys.some((key) => {
-        const value = row[key];
+        const value = getSearchableValue(row, key);
         if (value == null) return false;
         return String(value).toLowerCase().includes(query);
       })

@@ -46,9 +46,20 @@ const getProductById = (id: string) => {
     });
 };
 
+const productBuyerMapping = (id: string) => {
+  return server
+    .get(`/products/${id}/buyer-mapping`)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.log(err);
+      return err.response?.data;
+    });
+};
+
 export default {
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
+  productBuyerMapping,
 };
