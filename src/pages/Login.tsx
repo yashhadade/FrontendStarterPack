@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ const Login = () => {
 
     try {
       const res = await custodianServices.custodianLogin({
-        usernameOrEmail: email,
+        usernameOrEmail,
         password: password,
       });
       if (res?.data) {
@@ -65,7 +65,7 @@ const Login = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Mahalaxmi <span className="neon-text">Enterprise</span>
+            {import.meta.env.VITE_COMPANY_FIRST_NAME} <span className="neon-text">{import.meta.env.VITE_COMPANY_LAST_NAME}</span>
           </h1>
         </div>
 
@@ -73,15 +73,16 @@ const Login = () => {
         <div className="glass-card p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-muted-foreground text-sm">
-                Email Address
+              <Label htmlFor="usernameOrEmail" className="text-muted-foreground text-sm">
+                Email or Username
               </Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="admin@whitebox.io"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="usernameOrEmail"
+                type="text"
+                autoComplete="username"
+                placeholder="admin@whitebox.io or your username"
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
                 className="bg-muted/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 h-11"
                 required
               />

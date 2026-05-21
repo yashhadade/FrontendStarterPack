@@ -44,19 +44,6 @@ const AppSidebar = () => {
 
   const navItems: NavItem[] = [
     userRole === 'ADMIN' && { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    userRole === 'ADMIN' && { title: 'Products', path: '/products', icon: Package },
-    userRole === 'ADMIN' && { title: 'Clients', path: '/clients', icon: Users },
-    userRole === 'ADMIN' && { title: 'Invoices', path: '/invoices', icon: FileText },
-    (userRole === 'SUB_ADMIN' || userRole === 'ADMIN') && {
-      title: 'Buyer',
-      path: '/buyer',
-      icon: Users,
-    },
-    (userRole === 'SUB_ADMIN' || userRole === 'ADMIN') && {
-      title: 'Purchases',
-      path: '/purchases',
-      icon: ShoppingCart,
-    },
   ].filter(Boolean) as NavItem[];
   const handleLogout = () => {
     logout();
@@ -77,18 +64,18 @@ const AppSidebar = () => {
       >
         {!isCollapsed ? (
           <div>
-            <h2 className="text-sm font-bold text-foreground tracking-tight">Mahalaxmi</h2>
+            <h2 className="text-sm font-bold text-foreground tracking-tight">{import.meta.env.VITE_COMPANY_FIRST_NAME}</h2>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-              Enterprise Panel
+              {import.meta.env.VITE_COMPANY_LAST_NAME} Panel 
             </p>
           </div>
         ) : (
           <div
             className="w-8 h-8 rounded-md bg-primary/15 text-primary flex items-center justify-center text-xs font-bold tracking-wide"
-            aria-label="Mahalaxmi Enterprise"
-            title="Mahalaxmi Enterprise"
+            aria-label={`${import.meta.env.VITE_COMPANY_FIRST_NAME} ${import.meta.env.VITE_COMPANY_LAST_NAME}`}
+            title={`${import.meta.env.VITE_COMPANY_FIRST_NAME} ${import.meta.env.VITE_COMPANY_LAST_NAME}`}
           >
-            ME
+            {import.meta.env.VITE_COMPANY_FIRST_NAME} {import.meta.env.VITE_COMPANY_LAST_NAME}
           </div>
         )}
         <button
