@@ -39,6 +39,10 @@ const AppSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
+  const companyFirstName = import.meta.env.VITE_COMPANY_FIRST_NAME ?? '';
+  const companyLastName = import.meta.env.VITE_COMPANY_LAST_NAME ?? '';
+  const companyInitials = `${companyFirstName.charAt(0)}${companyLastName.charAt(0)}`.toUpperCase();
+
   const user = JSON.parse(getStorageItem('user') || '{}');
   const userRole = getNormalizedUserRole();
 
@@ -64,18 +68,18 @@ const AppSidebar = () => {
       >
         {!isCollapsed ? (
           <div>
-            <h2 className="text-sm font-bold text-foreground tracking-tight">{import.meta.env.VITE_COMPANY_FIRST_NAME}</h2>
+            <h2 className="text-sm font-bold text-foreground tracking-tight">{companyFirstName}</h2>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-              {import.meta.env.VITE_COMPANY_LAST_NAME} Panel 
+              {companyLastName} Panel 
             </p>
           </div>
         ) : (
           <div
             className="w-8 h-8 rounded-md bg-primary/15 text-primary flex items-center justify-center text-xs font-bold tracking-wide"
-            aria-label={`${import.meta.env.VITE_COMPANY_FIRST_NAME} ${import.meta.env.VITE_COMPANY_LAST_NAME}`}
-            title={`${import.meta.env.VITE_COMPANY_FIRST_NAME} ${import.meta.env.VITE_COMPANY_LAST_NAME}`}
+            aria-label={`${companyFirstName} ${companyLastName}`}
+            title={`${companyFirstName} ${companyLastName}`}
           >
-            {import.meta.env.VITE_COMPANY_FIRST_NAME} {import.meta.env.VITE_COMPANY_LAST_NAME}
+            {companyInitials}
           </div>
         )}
         <button
